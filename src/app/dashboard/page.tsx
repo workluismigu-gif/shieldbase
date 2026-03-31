@@ -1,0 +1,191 @@
+"use client";
+import { mockOrg, mockControls, mockTasks, mockPolicies, mockEvidenceItems, mockTimeline } from "@/lib/mock-data";
+
+function ScoreRing({ score }: { score: number }) {
+  const circumference = 2 * Math.PI * 54;
+  const offset = circumference - (score / 100) * circumference;
+  const color = score >= 80 ? "#22c55e" : score >= 50 ? "#3b82f6" : "#ef4444";
+  return (
+    <div className="relative w-36 h-36">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="54" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+        <circle cx="60" cy="60" r="54" fill="none" stroke={color} strokeWidth="8"
+          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
+          className="transition-all duration-1000" />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-3xl font-black text-gray-900">{score}%</span>
+        <span className="text-xs text-gray-500">Ready</span>
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, sub, color = "text-gray-900" }: { label: string; value: string; sub?: string; color?: string }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="text-xs text-gray-500 font-medium mb-1">{label}</div>
+      <div className={`text-2xl font-bold ${color}`}>{value}</div>
+      {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
+const priorityColor = { critical: "bg-red-100 text-red-700", high: "bg-orange-100 text-orange-700", medium: "bg-yellow-100 text-yellow-700", low: "bg-blue-100 text-blue-700" };
+const statusColor = { todo: "bg-gray-100 text-gray-600", in_progress: "bg-blue-100 text-blue-700", done: "bg-green-100 text-green-700" };
+const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
+const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
+
+export default function DashboardPage() {
+  const doneTasks = mockTasks.filter(t => t.status === "done").length;
+  const inProgressTasks = mockTasks.filter(t => t.status === "in_progress").length;
+  const todoTasks = mockTasks.filter(t => t.status === "todo").length;
+  const totalEvidence = mockEvidenceItems.reduce((a, b) => a + b.items, 0);
+  const collectedEvidence = mockEvidenceItems.reduce((a, b) => a + b.collected, 0);
+  const approvedPolicies = mockPolicies.filter(p => p.status === "approved").length;
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">SOC 2 Compliance Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-1">Track your progress toward SOC 2 Type I certification</p>
+      </div>
+
+      {/* Score + Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="md:col-span-1 bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center">
+          <ScoreRing score={mockOrg.compliance_score} />
+          <div className="mt-3 text-sm font-medium text-gray-600">Overall Readiness</div>
+        </div>
+        <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard label="Controls Passing" value={`${mockControls.compliant}/${mockControls.total}`} sub={`${Math.round(mockControls.compliant/mockControls.total*100)}% compliant`} color="text-green-600" />
+          <StatCard label="Policies" value={`${approvedPolicies}/${mockPolicies.length}`} sub={`${mockPolicies.length - approvedPolicies} pending`} color="text-blue-600" />
+          <StatCard label="Evidence Collected" value={`${collectedEvidence}/${totalEvidence}`} sub={`${Math.round(collectedEvidence/totalEvidence*100)}% complete`} color="text-purple-600" />
+          <StatCard label="Tasks Completed" value={`${doneTasks}/${mockTasks.length}`} sub={`${inProgressTasks} in progress`} color="text-orange-600" />
+        </div>
+      </div>
+
+      {/* Controls by Category */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Controls by Category</h2>
+        <div className="space-y-4">
+          {mockControls.byCategory.map((cat, i) => {
+            const pct = Math.round(cat.compliant / cat.total * 100);
+            return (
+              <div key={i}>
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-sm font-medium text-gray-700">{cat.category}</span>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-green-600">{cat.compliant} pass</span>
+                    <span className="text-yellow-600">{cat.partial} partial</span>
+                    <span className="text-red-500">{cat.non_compliant} fail</span>
+                    <span className="font-semibold text-gray-700">{pct}%</span>
+                  </div>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2.5 flex overflow-hidden">
+                  <div className="bg-green-500 h-full" style={{ width: `${cat.compliant/cat.total*100}%` }} />
+                  <div className="bg-yellow-400 h-full" style={{ width: `${cat.partial/cat.total*100}%` }} />
+                  <div className="bg-red-400 h-full" style={{ width: `${cat.non_compliant/cat.total*100}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Two columns: Tasks + Policies */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Active Tasks */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Active Tasks</h2>
+            <a href="/dashboard/remediation" className="text-xs text-blue-600 font-medium hover:underline">View all →</a>
+          </div>
+          <div className="space-y-2">
+            {mockTasks.filter(t => t.status !== "done").slice(0, 6).map((task) => (
+              <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === "critical" ? "bg-red-500" : task.priority === "high" ? "bg-orange-500" : "bg-yellow-500"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-800 truncate">{task.title}</div>
+                  <div className="text-xs text-gray-400">{task.category} · Due {task.due}</div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor[task.status]}`}>
+                  {statusLabel[task.status]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Policies */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Policies</h2>
+            <a href="/dashboard/policies" className="text-xs text-blue-600 font-medium hover:underline">View all →</a>
+          </div>
+          <div className="space-y-2">
+            {mockPolicies.slice(0, 6).map((policy) => (
+              <div key={policy.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-800 truncate">{policy.title}</div>
+                  <div className="text-xs text-gray-400">Updated {policy.updated}</div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${policyStatusColor[policy.status]}`}>
+                  {policy.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Evidence Progress */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Evidence Collection</h2>
+          <a href="/dashboard/evidence" className="text-xs text-blue-600 font-medium hover:underline">View runbook →</a>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {mockEvidenceItems.map((item, i) => {
+            const pct = item.items > 0 ? Math.round(item.collected / item.items * 100) : 0;
+            return (
+              <div key={i} className="border border-gray-100 rounded-lg p-3 text-center">
+                <div className={`text-xl font-bold ${pct === 100 ? "text-green-600" : pct > 0 ? "text-blue-600" : "text-gray-300"}`}>
+                  {pct}%
+                </div>
+                <div className="text-xs text-gray-500 mt-1 leading-tight">{item.category}</div>
+                <div className="text-xs text-gray-400">{item.collected}/{item.items}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h2>
+        <div className="space-y-4">
+          {mockTimeline.slice().reverse().map((event, i) => (
+            <div key={i} className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${
+                  event.type === "milestone" ? "bg-blue-500" :
+                  event.type === "remediation" ? "bg-green-500" :
+                  event.type === "deliverable" ? "bg-purple-500" :
+                  event.type === "scan" ? "bg-orange-500" :
+                  "bg-gray-400"
+                }`} />
+                {i < mockTimeline.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
+              </div>
+              <div className="pb-4">
+                <div className="text-sm text-gray-800">{event.event}</div>
+                <div className="text-xs text-gray-400 mt-0.5">{event.date}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
