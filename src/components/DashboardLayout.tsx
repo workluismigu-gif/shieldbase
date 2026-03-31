@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "🔍" },
+  { href: "/dashboard/scan", label: "Run Scan", icon: "🔍", badge: "New" },
+  { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "📄" },
   { href: "/dashboard/policies", label: "Policies", icon: "📋" },
   { href: "/dashboard/evidence", label: "Evidence", icon: "📁" },
   { href: "/dashboard/remediation", label: "Remediation", icon: "🔧" },
@@ -50,7 +51,10 @@ export default function DashboardLayout({ children, orgName = "Acme SaaS Inc." }
                     : "text-slate hover:text-white hover:bg-white/5"
                 }`}>
                 <span className="text-base">{item.icon}</span>
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {"badge" in item && item.badge && (
+                  <span className="text-xs bg-blue/20 text-blue-light px-1.5 py-0.5 rounded-full">{item.badge}</span>
+                )}
               </Link>
             );
           })}
