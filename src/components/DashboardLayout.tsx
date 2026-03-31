@@ -3,9 +3,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navItems = [
+const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/dashboard/scan", label: "Run Scan", icon: "🔍", badge: "Phase B" },
+  { href: "/dashboard/integrations", label: "Integrations", icon: "🔌" },
+  { href: "/dashboard/scan", label: "Run Scan", icon: "🔍" },
   { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "📄" },
   { href: "/dashboard/policies", label: "Policies", icon: "📋" },
   { href: "/dashboard/evidence", label: "Evidence", icon: "📁" },
