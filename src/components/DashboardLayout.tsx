@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useOrg } from "@/lib/org-context";
+import { signOut } from "@/lib/supabase";
 
 const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
@@ -75,6 +76,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="text-sm text-white font-medium truncate">{org?.name ?? "User"}</div>
               <div className="text-xs text-slate truncate">{displayEmail}</div>
             </div>
+            <button
+              onClick={async () => { await signOut(); window.location.href = "/auth"; }}
+              className="text-slate hover:text-white transition text-xs" title="Sign out">
+              ↩
+            </button>
           </div>
         </div>
       </aside>

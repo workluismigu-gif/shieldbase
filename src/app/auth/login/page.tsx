@@ -52,12 +52,7 @@ export default function LoginPage() {
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
-          <div className="mt-4 text-center border-t pt-4">
-            <button onClick={() => router.push("/dashboard")}
-              className="text-sm text-gray-400 hover:text-gray-600 transition">
-              View demo dashboard (no login)
-            </button>
-          </div>
+
         </div>
         <p className="text-center text-xs text-gray-400 mt-6">
           No account? <Link href="/auth/signup" className="text-blue-600 hover:underline">Start free assessment →</Link>
