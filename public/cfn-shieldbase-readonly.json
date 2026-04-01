@@ -1,0 +1,50 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "ShieldBase read-only security audit role for SOC 2 compliance scanning",
+  "Parameters": {
+    "ShieldBaseAccountId": {
+      "Type": "String",
+      "Default": "886821787192",
+      "Description": "ShieldBase AWS Account ID that will assume this role"
+    }
+  },
+  "Resources": {
+    "ShieldBaseReadOnlyRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "ShieldBaseReadOnly",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": { "Fn::Sub": "arn:aws:iam::${ShieldBaseAccountId}:root" }
+              },
+              "Action": "sts:AssumeRole",
+              "Condition": {
+                "StringEquals": {
+                  "sts:ExternalId": "shieldbase-scan"
+                }
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          "arn:aws:iam::aws:policy/ReadOnlyAccess",
+          "arn:aws:iam::aws:policy/SecurityAudit"
+        ],
+        "Tags": [
+          { "Key": "CreatedBy", "Value": "ShieldBase" },
+          { "Key": "Purpose", "Value": "SOC2-Compliance-Scanning" }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "ShieldBaseRoleARN": {
+      "Description": "Paste this ARN into ShieldBase to connect your AWS account",
+      "Value": { "Fn::GetAtt": ["ShieldBaseReadOnlyRole", "Arn"] }
+    }
+  }
+}

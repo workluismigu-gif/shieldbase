@@ -1,52 +1,23 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useOrg } from "@/lib/org-context";
 
-// Our ShieldBase AWS Account ID — clients grant this account access to assume a role in theirs
-// In production this would be your real AWS account ID
 const SHIELDBASE_AWS_ACCOUNT_ID = "886821787192";
-
-// Pre-built CloudFormation template URL — clients click this to auto-create the role
-const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase-public.s3.amazonaws.com/cfn-shieldbase-readonly.json`;
+const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase.vercel.app/cfn-shieldbase-readonly.json`;
 
 type Step = "choose" | "aws" | "github" | "google" | "slack" | "done";
 
-interface ConnectedIntegration {
-  id: string;
-  name: string;
-  logo: string;
-  connectedAt: string;
-  status: "active" | "error";
-}
-
-const MOCK_CONNECTED: ConnectedIntegration[] = [
-  { id: "github", name: "GitHub", logo: "🐙", connectedAt: "March 26, 2026", status: "active" },
-  { id: "google", name: "Google Workspace", logo: "📧", connectedAt: "March 26, 2026", status: "active" },
-  { id: "slack", name: "Slack", logo: "💬", connectedAt: "March 26, 2026", status: "active" },
-];
-
 export default function ConnectPage() {
+  const { org } = useOrg();
+  const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
+  const awsConnected = !!techStack.aws_role_arn;
+
   const [step, setStep] = useState<Step>("choose");
   const [arnInput, setArnInput] = useState("");
-  const [region, setRegion] = useState("us-east-1");
-  const [arnSaved, setArnSaved] = useState(false);
+  const [arnSaved, setArnSaved] = useState(awsConnected);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  const AWS_REGIONS = [
-    { value: "us-east-1", label: "US East (N. Virginia)" },
-    { value: "us-east-2", label: "US East (Ohio)" },
-    { value: "us-west-1", label: "US West (N. California)" },
-    { value: "us-west-2", label: "US West (Oregon)" },
-    { value: "eu-west-1", label: "EU West (Ireland)" },
-    { value: "eu-west-2", label: "EU West (London)" },
-    { value: "eu-central-1", label: "EU Central (Frankfurt)" },
-    { value: "ap-southeast-1", label: "Asia Pacific (Singapore)" },
-    { value: "ap-southeast-2", label: "Asia Pacific (Sydney)" },
-    { value: "ap-northeast-1", label: "Asia Pacific (Tokyo)" },
-    { value: "ca-central-1", label: "Canada (Central)" },
-    { value: "sa-east-1", label: "South America (São Paulo)" },
-  ];
 
   const saveArn = async () => {
     if (!arnInput.startsWith("arn:aws:iam::")) {
@@ -79,25 +50,24 @@ export default function ConnectPage() {
         </div>
 
         {/* Already connected */}
-        {MOCK_CONNECTED.length > 0 && (
+        {awsConnected && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">✅ Connected ({MOCK_CONNECTED.length})</h2>
-            <div className="space-y-3">
-              {MOCK_CONNECTED.map(int => (
-                <div key={int.id} className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{int.logo}</span>
-                    <div>
-                      <div className="text-sm font-medium text-gray-800">{int.name}</div>
-                      <div className="text-xs text-gray-400">Connected {int.connectedAt}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">● Active</span>
-                    <button className="text-xs text-gray-400 hover:text-red-500 transition">Disconnect</button>
-                  </div>
+            <h2 className="font-semibold text-gray-800 mb-4">✅ Connected (1)</h2>
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">☁️</span>
+                <div>
+                  <div className="text-sm font-medium text-gray-800">Amazon Web Services</div>
+                  <div className="text-xs text-gray-400 font-mono truncate max-w-xs">{techStack.aws_role_arn}</div>
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">● Active</span>
+                <button onClick={async () => {
+                  await supabase.from("organizations").update({ tech_stack: {} }).eq("id", org!.id);
+                  window.location.reload();
+                }} className="text-xs text-gray-400 hover:text-red-500 transition">Disconnect</button>
+              </div>
             </div>
           </div>
         )}

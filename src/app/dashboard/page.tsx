@@ -43,6 +43,8 @@ export default function DashboardPage() {
   // Use real data if available, fallback to mock
   const score = org?.readiness_score ?? mockControls.compliant;
   const orgName = org?.name ?? "Your Organization";
+  const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
+  const awsConnected = !!techStack.aws_role_arn;
   const hasRealData = controls.length > 0;
 
   const realCompliant = controls.filter(c => c.status === "compliant").length;
@@ -73,6 +75,21 @@ export default function DashboardPage() {
               <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live</>  
             ) : "✅"} AWS scan data
           </div>
+        )}
+      </div>
+
+      {/* Integrations bar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-xs text-gray-500 font-medium">Connected:</span>
+        {awsConnected ? (
+          <span className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full font-medium">
+            ☁️ AWS
+            {realtimeConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block ml-1" />}
+          </span>
+        ) : (
+          <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-blue-600 hover:border-blue-300 transition">
+            + Connect AWS
+          </a>
         )}
       </div>
 
