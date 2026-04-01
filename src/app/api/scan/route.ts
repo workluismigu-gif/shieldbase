@@ -5,17 +5,18 @@ import { parseProwlerOutput, generateSummary } from "@/lib/prowler-mapper";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { org_id, scan_data, auth_token } = body;
+    const { org_id, scan_data, auth_token, service_role_key } = body;
 
     if (!org_id || !scan_data) {
       return NextResponse.json({ error: "Missing org_id or scan_data" }, { status: 400 });
     }
 
-    // Use service role key for server-side writes (falls back to anon for now)
+    // Prefer service role key (from Lambda) for RLS bypass, then env, then user token
+    const serviceKey = service_role_key || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      auth_token ? { global: { headers: { Authorization: `Bearer ${auth_token}` } } } : undefined
+      serviceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      !serviceKey && auth_token ? { global: { headers: { Authorization: `Bearer ${auth_token}` } } } : undefined
     );
 
     // Parse Prowler findings
