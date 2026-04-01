@@ -28,12 +28,29 @@ export default function ConnectPage() {
     setError("");
     try {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData?.session) {
-        await supabase.from("organizations")
-          .update({ tech_stack: { aws_role_arn: arnInput } })
-          .eq("owner_id", sessionData.session.user.id);
-      }
+      if (!sessionData?.session) throw new Error("Not logged in");
+
+      // Save ARN to org
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .update({ tech_stack: { aws_role_arn: arnInput } })
+        .eq("owner_id", sessionData.session.user.id)
+        .select("id")
+        .single();
+
       setArnSaved(true);
+
+      // Trigger onboarding scan immediately
+      if (orgData?.id) {
+        fetch("/api/scan/trigger", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_INTERNAL_TRIGGER_SECRET ?? ""}`,
+          },
+          body: JSON.stringify({ org_id: orgData.id }),
+        }).catch(console.error); // fire and forget
+      }
     } catch {
       setError("Failed to save. Please try again.");
     } finally {
