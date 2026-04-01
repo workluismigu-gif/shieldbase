@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
 
 const SHIELDBASE_AWS_ACCOUNT_ID = "886821787192";
-const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase.vercel.app/cfn-shieldbase-readonly.json`;
+const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase-public-cfn.s3.amazonaws.com/cfn-shieldbase-readonly.json`;
 
 type Step = "choose" | "aws" | "github" | "google" | "slack" | "done";
 
