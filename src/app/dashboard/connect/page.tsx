@@ -30,29 +30,22 @@ export default function ConnectPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) throw new Error("Not logged in");
 
-      // Save ARN to org
-      const { data: orgData } = await supabase
-        .from("organizations")
-        .update({ tech_stack: { aws_role_arn: arnInput } })
-        .eq("owner_id", sessionData.session.user.id)
-        .select("id")
-        .single();
+      // Call server-side endpoint — saves ARN + triggers scan (secret stays on server)
+      const res = await fetch("/api/connect/aws", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role_arn: arnInput,
+          auth_token: sessionData.session.access_token,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to save");
 
       setArnSaved(true);
-
-      // Trigger onboarding scan immediately
-      if (orgData?.id) {
-        fetch("/api/scan/trigger", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${process.env.NEXT_PUBLIC_INTERNAL_TRIGGER_SECRET ?? ""}`,
-          },
-          body: JSON.stringify({ org_id: orgData.id }),
-        }).catch(console.error); // fire and forget
-      }
-    } catch {
-      setError("Failed to save. Please try again.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save. Please try again.");
     } finally {
       setSaving(false);
     }
