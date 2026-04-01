@@ -1,16 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { mockControls, mockTasks, mockPolicies, mockEvidenceItems, mockTimeline } from "@/lib/mock-data";
 import { useOrg } from "@/lib/org-context";
-
-interface ControlRow {
-  control_id: string;
-  category: string;
-  title: string;
-  status: string;
-  severity: string;
-}
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 54;
@@ -48,44 +38,7 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
-  const { org, loading: orgLoading } = useOrg();
-  const [controls, setControls] = useState<ControlRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [lastScan, setLastScan] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (orgLoading) return; // wait for org to load first
-    if (!org) {
-      setLoading(false);
-      return;
-    }
-    async function fetchData() {
-      try {
-        // Fetch controls from real scan
-        const { data: controlData } = await supabase
-          .from("controls")
-          .select("control_id, category, title, status, severity")
-          .eq("org_id", org!.id);
-        if (controlData && controlData.length > 0) setControls(controlData);
-
-        // Fetch last scan date
-        const { data: scanData } = await supabase
-          .from("scan_results")
-          .select("created_at")
-          .eq("org_id", org!.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single();
-        if (scanData) setLastScan(new Date(scanData.created_at).toLocaleDateString());
-
-      } catch (e) {
-        console.error("Failed to load data:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [org, orgLoading]);
+  const { org, loading, controls, lastScan, realtimeConnected } = useOrg();
 
   // Use real data if available, fallback to mock
   const score = org?.readiness_score ?? mockControls.compliant;
@@ -116,7 +69,9 @@ export default function DashboardPage() {
         </div>
         {hasRealData && (
           <div className="flex items-center gap-2 text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-2 rounded-lg font-medium">
-            ✅ Live AWS scan data
+            {realtimeConnected ? (
+              <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live</>  
+            ) : "✅"} AWS scan data
           </div>
         )}
       </div>
