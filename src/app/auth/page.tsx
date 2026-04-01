@@ -23,7 +23,11 @@ function AuthForm() {
 
     try {
       if (mode === "signup") {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { data, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shieldbase.vercel.app"}/auth/callback` },
+          });
         if (signUpError) throw signUpError;
 
         if (data.user) {
