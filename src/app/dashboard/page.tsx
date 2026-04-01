@@ -1,5 +1,23 @@
 "use client";
-import { mockOrg, mockControls, mockTasks, mockPolicies, mockEvidenceItems, mockTimeline } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { mockControls, mockTasks, mockPolicies, mockEvidenceItems, mockTimeline } from "@/lib/mock-data";
+
+// Demo org ID — in production this comes from the logged-in user's session
+const DEMO_ORG_ID = process.env.NEXT_PUBLIC_DEMO_ORG_ID || "ed30927c-bb81-48fe-9cef-653986dc83db";
+
+interface OrgData {
+  name: string;
+  readiness_score: number;
+}
+
+interface ControlRow {
+  control_id: string;
+  category: string;
+  title: string;
+  status: string;
+  severity: string;
+}
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 54;
@@ -37,9 +55,59 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
+  const [org, setOrg] = useState<OrgData | null>(null);
+  const [controls, setControls] = useState<ControlRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastScan, setLastScan] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch org
+        const { data: orgData } = await supabase
+          .from("organizations")
+          .select("name, readiness_score")
+          .eq("id", DEMO_ORG_ID)
+          .single();
+        if (orgData) setOrg(orgData);
+
+        // Fetch controls from real scan
+        const { data: controlData } = await supabase
+          .from("controls")
+          .select("control_id, category, title, status, severity")
+          .eq("org_id", DEMO_ORG_ID);
+        if (controlData && controlData.length > 0) setControls(controlData);
+
+        // Fetch last scan date
+        const { data: scanData } = await supabase
+          .from("scan_results")
+          .select("created_at")
+          .eq("org_id", DEMO_ORG_ID)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (scanData) setLastScan(new Date(scanData.created_at).toLocaleDateString());
+
+      } catch (e) {
+        console.error("Failed to load data:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Use real data if available, fallback to mock
+  const score = org?.readiness_score ?? mockControls.compliant;
+  const orgName = org?.name ?? "Your Organization";
+  const hasRealData = controls.length > 0;
+
+  const realCompliant = controls.filter(c => c.status === "compliant").length;
+  const realNonCompliant = controls.filter(c => c.status === "non_compliant").length;
+  const realTotal = controls.length;
+
   const doneTasks = mockTasks.filter(t => t.status === "done").length;
   const inProgressTasks = mockTasks.filter(t => t.status === "in_progress").length;
-  const todoTasks = mockTasks.filter(t => t.status === "todo").length;
   const totalEvidence = mockEvidenceItems.reduce((a, b) => a + b.items, 0);
   const collectedEvidence = mockEvidenceItems.reduce((a, b) => a + b.collected, 0);
   const approvedPolicies = mockPolicies.filter(p => p.status === "approved").length;
@@ -47,56 +115,112 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">SOC 2 Compliance Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Track your progress toward SOC 2 Type I certification</p>
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">SOC 2 Compliance Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {hasRealData
+              ? `Real scan data from your AWS account • Last scanned: ${lastScan || "today"}`
+              : "Track your progress toward SOC 2 Type I certification"}
+          </p>
+        </div>
+        {hasRealData && (
+          <div className="flex items-center gap-2 text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-2 rounded-lg font-medium">
+            ✅ Live AWS scan data
+          </div>
+        )}
       </div>
 
       {/* Score + Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <div className="md:col-span-1 bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center">
-          <ScoreRing score={mockOrg.compliance_score} />
+          {loading ? (
+            <div className="w-36 h-36 rounded-full border-8 border-gray-100 flex items-center justify-center">
+              <span className="text-gray-400 text-sm">Loading...</span>
+            </div>
+          ) : (
+            <ScoreRing score={score} />
+          )}
           <div className="mt-3 text-sm font-medium text-gray-600">Overall Readiness</div>
         </div>
         <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Controls Passing" value={`${mockControls.compliant}/${mockControls.total}`} sub={`${Math.round(mockControls.compliant/mockControls.total*100)}% compliant`} color="text-green-600" />
+          <StatCard
+            label="Controls Passing"
+            value={hasRealData ? `${realCompliant}/${realTotal}` : `${mockControls.compliant}/${mockControls.total}`}
+            sub={hasRealData ? `${realNonCompliant} failing` : `${Math.round(mockControls.compliant/mockControls.total*100)}% compliant`}
+            color={hasRealData && realNonCompliant > 0 ? "text-orange-600" : "text-green-600"}
+          />
           <StatCard label="Policies" value={`${approvedPolicies}/${mockPolicies.length}`} sub={`${mockPolicies.length - approvedPolicies} pending`} color="text-blue-600" />
           <StatCard label="Evidence Collected" value={`${collectedEvidence}/${totalEvidence}`} sub={`${Math.round(collectedEvidence/totalEvidence*100)}% complete`} color="text-purple-600" />
           <StatCard label="Tasks Completed" value={`${doneTasks}/${mockTasks.length}`} sub={`${inProgressTasks} in progress`} color="text-orange-600" />
         </div>
       </div>
 
-      {/* Controls by Category */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Controls by Category</h2>
-        <div className="space-y-4">
-          {mockControls.byCategory.map((cat, i) => {
-            const pct = Math.round(cat.compliant / cat.total * 100);
-            return (
-              <div key={i}>
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-sm font-medium text-gray-700">{cat.category}</span>
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="text-green-600">{cat.compliant} pass</span>
-                    <span className="text-yellow-600">{cat.partial} partial</span>
-                    <span className="text-red-500">{cat.non_compliant} fail</span>
-                    <span className="font-semibold text-gray-700">{pct}%</span>
+      {/* Real Controls from Scan */}
+      {hasRealData && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">AWS Scan Results</h2>
+            <span className="text-xs text-gray-400">Prowler SOC 2 scan • {controls.length} checks</span>
+          </div>
+          <div className="space-y-2">
+            {controls.map((ctrl, i) => {
+              const statusMap: Record<string, string> = { compliant: "bg-green-100 text-green-700", non_compliant: "bg-red-100 text-red-700", partial: "bg-yellow-100 text-yellow-700", not_assessed: "bg-gray-100 text-gray-600" };
+              const dotMap: Record<string, string> = { compliant: "bg-green-500", non_compliant: "bg-red-500", partial: "bg-yellow-400", not_assessed: "bg-gray-300" };
+              const labelMap: Record<string, string> = { compliant: "Pass", non_compliant: "Fail", partial: "Partial", not_assessed: "Unknown" };
+              const sevMap: Record<string, string> = { critical: "bg-red-100 text-red-700", high: "bg-orange-100 text-orange-700", medium: "bg-yellow-100 text-yellow-700", low: "bg-blue-100 text-blue-700" };
+              return (
+                <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border ${ctrl.status === "non_compliant" ? "border-red-100 bg-red-50" : "border-gray-100"}`}>
+                  <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotMap[ctrl.status] || "bg-gray-300"}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">{ctrl.title}</div>
+                    <div className="text-xs text-gray-400">{ctrl.control_id}</div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {ctrl.status === "non_compliant" && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${sevMap[ctrl.severity] || ""}`}>{ctrl.severity}</span>
+                    )}
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusMap[ctrl.status] || ""}`}>{labelMap[ctrl.status] || ctrl.status}</span>
                   </div>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2.5 flex overflow-hidden">
-                  <div className="bg-green-500 h-full" style={{ width: `${cat.compliant/cat.total*100}%` }} />
-                  <div className="bg-yellow-400 h-full" style={{ width: `${cat.partial/cat.total*100}%` }} />
-                  <div className="bg-red-400 h-full" style={{ width: `${cat.non_compliant/cat.total*100}%` }} />
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Two columns: Tasks + Policies */}
+      {/* Mock controls breakdown (when no real data) */}
+      {!hasRealData && (
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Controls by Category</h2>
+          <div className="space-y-4">
+            {mockControls.byCategory.map((cat, i) => {
+              const pct = Math.round(cat.compliant / cat.total * 100);
+              return (
+                <div key={i}>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <span className="text-sm font-medium text-gray-700">{cat.category}</span>
+                    <div className="flex items-center gap-3 text-xs">
+                      <span className="text-green-600">{cat.compliant} pass</span>
+                      <span className="text-yellow-600">{cat.partial} partial</span>
+                      <span className="text-red-500">{cat.non_compliant} fail</span>
+                      <span className="font-semibold text-gray-700">{pct}%</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2.5 flex overflow-hidden">
+                    <div className="bg-green-500 h-full" style={{ width: `${cat.compliant/cat.total*100}%` }} />
+                    <div className="bg-yellow-400 h-full" style={{ width: `${cat.partial/cat.total*100}%` }} />
+                    <div className="bg-red-400 h-full" style={{ width: `${cat.non_compliant/cat.total*100}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Tasks + Policies */}
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Active Tasks */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Active Tasks</h2>
@@ -110,15 +234,14 @@ export default function DashboardPage() {
                   <div className="text-sm font-medium text-gray-800 truncate">{task.title}</div>
                   <div className="text-xs text-gray-400">{task.category} · Due {task.due}</div>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor[task.status]}`}>
-                  {statusLabel[task.status]}
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor[task.status as keyof typeof statusColor]}`}>
+                  {statusLabel[task.status as keyof typeof statusLabel]}
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Policies */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-900">Policies</h2>
@@ -140,42 +263,26 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Evidence Progress */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Evidence Collection</h2>
-          <a href="/dashboard/evidence" className="text-xs text-blue-600 font-medium hover:underline">View runbook →</a>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {mockEvidenceItems.map((item, i) => {
-            const pct = item.items > 0 ? Math.round(item.collected / item.items * 100) : 0;
-            return (
-              <div key={i} className="border border-gray-100 rounded-lg p-3 text-center">
-                <div className={`text-xl font-bold ${pct === 100 ? "text-green-600" : pct > 0 ? "text-blue-600" : "text-gray-300"}`}>
-                  {pct}%
-                </div>
-                <div className="text-xs text-gray-500 mt-1 leading-tight">{item.category}</div>
-                <div className="text-xs text-gray-400">{item.collected}/{item.items}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Timeline */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h2>
         <div className="space-y-4">
+          {lastScan && (
+            <div className="flex gap-4">
+              <div className="flex flex-col items-center">
+                <div className="w-2.5 h-2.5 rounded-full mt-1.5 bg-orange-500" />
+                <div className="w-px flex-1 bg-gray-200 mt-1" />
+              </div>
+              <div className="pb-4">
+                <div className="text-sm text-gray-800">Prowler AWS scan completed — {controls.length} controls assessed, score: {score}%</div>
+                <div className="text-xs text-gray-400 mt-0.5">{lastScan}</div>
+              </div>
+            </div>
+          )}
           {mockTimeline.slice().reverse().map((event, i) => (
             <div key={i} className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${
-                  event.type === "milestone" ? "bg-blue-500" :
-                  event.type === "remediation" ? "bg-green-500" :
-                  event.type === "deliverable" ? "bg-purple-500" :
-                  event.type === "scan" ? "bg-orange-500" :
-                  "bg-gray-400"
-                }`} />
+                <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${event.type === "milestone" ? "bg-blue-500" : event.type === "remediation" ? "bg-green-500" : event.type === "deliverable" ? "bg-purple-500" : event.type === "scan" ? "bg-orange-500" : "bg-gray-400"}`} />
                 {i < mockTimeline.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
               </div>
               <div className="pb-4">
