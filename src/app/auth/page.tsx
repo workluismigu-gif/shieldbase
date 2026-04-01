@@ -23,19 +23,27 @@ function AuthForm() {
 
     try {
       if (mode === "signup") {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email,
             password,
             options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shieldbase.vercel.app"}/auth/callback` },
           });
         if (signUpError) throw signUpError;
 
-        // Store org name so callback can create it after session is active
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("pending_org_name", companyName);
+        if (signUpData.session) {
+          // Email confirmation is disabled — session is active immediately, create org now
+          await supabase.from("organizations").insert({
+            name: companyName,
+            owner_id: signUpData.session.user.id,
+          });
+          router.push("/dashboard");
+        } else {
+          // Email confirmation is enabled — store org name for after callback
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("pending_org_name", companyName);
+          }
+          setMessage("Check your email to confirm your account, then log in.");
         }
-
-        setMessage("Check your email to confirm your account, then log in.");
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
