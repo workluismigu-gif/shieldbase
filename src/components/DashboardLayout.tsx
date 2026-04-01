@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useOrg } from "@/lib/org-context";
 import { signOut } from "@/lib/supabase";
+import { useEffect } from "react";
 
 const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
@@ -24,6 +25,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const orgName = loading ? "Loading..." : (org?.name ?? "Your Organization");
   const displayEmail = userEmail ?? "";
   const displayInitial = displayEmail ? displayEmail[0].toUpperCase() : "U";
+
+  useEffect(() => {
+    if (!loading && !userEmail) {
+      window.location.href = "/auth";
+    }
+  }, [loading, userEmail]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

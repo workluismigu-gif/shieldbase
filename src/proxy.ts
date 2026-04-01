@@ -1,23 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-
-  // Only protect /dashboard routes
-  if (!pathname.startsWith("/dashboard")) return NextResponse.next();
-
-  // Check for Supabase auth token in cookies
-  const token =
-    req.cookies.get("sb-lbptlxxqfhfqywufdfdu-auth-token") ??
-    req.cookies.get("sb-access-token");
-
-  if (!token) {
-    const loginUrl = req.nextUrl.clone();
-    loginUrl.pathname = "/auth";
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
+// Auth is handled client-side via useOrg/getSession.
+// Server-side cookie detection is unreliable with Supabase's localStorage-based sessions.
+// This proxy is intentionally a pass-through — keep it for future server-side auth if needed.
+export function proxy(_req: NextRequest) {
   return NextResponse.next();
 }
 
