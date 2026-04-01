@@ -1,13 +1,20 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useOrg } from "@/lib/org-context";
 
-const PROWLER_COMMAND = `prowler aws -M json -o /tmp/shieldbase-scan --compliance aws_soc2`;
 const PROWLER_INSTALL = `pip install prowler`;
 
 type ScanStatus = "idle" | "uploading" | "success" | "error";
 
 export default function ScanPage() {
+  const { org } = useOrg();
+  const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
+  const roleArn = techStack.aws_role_arn ?? "";
+  const PROWLER_COMMAND = roleArn
+    ? `prowler aws -M json -o /tmp/shieldbase-scan --compliance aws_soc2 --role ${roleArn}`
+    : `prowler aws -M json -o /tmp/shieldbase-scan --compliance aws_soc2`;
+
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [result, setResult] = useState<{ summary?: Record<string, number>; controls_mapped?: number } | null>(null);
@@ -32,12 +39,8 @@ export default function ScanPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
 
-      const { data: orgData } = await supabase
-        .from("organizations")
-        .select("id")
-        .single();
-
-      const org_id = orgData?.id;
+      const org_id = org?.id;
+      if (!org_id) throw new Error("No organization found.");
       if (!org_id) throw new Error("No organization found. Please complete onboarding first.");
 
       const res = await fetch("/api/scan", {
@@ -63,6 +66,26 @@ export default function ScanPage() {
         <h1 className="text-2xl font-bold text-gray-900">Run Your Security Scan</h1>
         <p className="text-gray-500 mt-1 text-sm">Use Prowler to scan your AWS account — it&apos;s free and open source. Takes about 10 minutes.</p>
       </div>
+
+      {!roleArn && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
+          <span className="text-yellow-500 text-lg flex-shrink-0">⚠️</span>
+          <div>
+            <p className="text-sm font-semibold text-yellow-800">AWS not connected yet</p>
+            <p className="text-xs text-yellow-700 mt-0.5">Connect your AWS account first so we can pre-fill your role ARN in the scan command. <a href="/dashboard/connect" className="underline font-medium">Connect AWS →</a></p>
+          </div>
+        </div>
+      )}
+
+      {roleArn && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-green-500">✅</span>
+          <div>
+            <p className="text-sm font-semibold text-green-800">AWS connected — role ARN pre-filled in scan command</p>
+            <p className="text-xs text-green-700 font-mono mt-0.5 truncate">{roleArn}</p>
+          </div>
+        </div>
+      )}
 
       {/* Step 1 */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
