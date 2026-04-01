@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useOrg } from "@/lib/org-context";
 
 const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
@@ -15,9 +16,13 @@ const navItems: { href: string; label: string; icon: string; badge?: string }[] 
   { href: "/dashboard/settings", label: "Settings", icon: "⚙️" },
 ];
 
-export default function DashboardLayout({ children, orgName = "Acme SaaS Inc." }: { children: React.ReactNode; orgName?: string }) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { org, userEmail, loading } = useOrg();
+  const orgName = loading ? "Loading..." : (org?.name ?? "Your Organization");
+  const displayEmail = userEmail ?? "";
+  const displayInitial = displayEmail ? displayEmail[0].toUpperCase() : "U";
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -65,10 +70,10 @@ export default function DashboardLayout({ children, orgName = "Acme SaaS Inc." }
         {/* Bottom */}
         <div className="px-4 py-4 border-t border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue/20 flex items-center justify-center text-sm text-blue-light font-bold">D</div>
+            <div className="w-8 h-8 rounded-full bg-blue/20 flex items-center justify-center text-sm text-blue-light font-bold">{displayInitial}</div>
             <div className="flex-1 min-w-0">
-              <div className="text-sm text-white font-medium truncate">Demo User</div>
-              <div className="text-xs text-slate truncate">demo@acme.com</div>
+              <div className="text-sm text-white font-medium truncate">{org?.name ?? "User"}</div>
+              <div className="text-xs text-slate truncate">{displayEmail}</div>
             </div>
           </div>
         </div>

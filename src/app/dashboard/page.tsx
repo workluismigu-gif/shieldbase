@@ -2,14 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { mockControls, mockTasks, mockPolicies, mockEvidenceItems, mockTimeline } from "@/lib/mock-data";
-
-// Demo org ID — in production this comes from the logged-in user's session
-const DEMO_ORG_ID = process.env.NEXT_PUBLIC_DEMO_ORG_ID || "ed30927c-bb81-48fe-9cef-653986dc83db";
-
-interface OrgData {
-  name: string;
-  readiness_score: number;
-}
+import { useOrg } from "@/lib/org-context";
 
 interface ControlRow {
   control_id: string;
@@ -55,34 +48,31 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
-  const [org, setOrg] = useState<OrgData | null>(null);
+  const { org, loading: orgLoading } = useOrg();
   const [controls, setControls] = useState<ControlRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastScan, setLastScan] = useState<string | null>(null);
 
   useEffect(() => {
+    if (orgLoading) return; // wait for org to load first
+    if (!org) {
+      setLoading(false);
+      return;
+    }
     async function fetchData() {
       try {
-        // Fetch org
-        const { data: orgData } = await supabase
-          .from("organizations")
-          .select("name, readiness_score")
-          .eq("id", DEMO_ORG_ID)
-          .single();
-        if (orgData) setOrg(orgData);
-
         // Fetch controls from real scan
         const { data: controlData } = await supabase
           .from("controls")
           .select("control_id, category, title, status, severity")
-          .eq("org_id", DEMO_ORG_ID);
+          .eq("org_id", org!.id);
         if (controlData && controlData.length > 0) setControls(controlData);
 
         // Fetch last scan date
         const { data: scanData } = await supabase
           .from("scan_results")
           .select("created_at")
-          .eq("org_id", DEMO_ORG_ID)
+          .eq("org_id", org!.id)
           .order("created_at", { ascending: false })
           .limit(1)
           .single();
@@ -95,7 +85,7 @@ export default function DashboardPage() {
       }
     }
     fetchData();
-  }, []);
+  }, [org, orgLoading]);
 
   // Use real data if available, fallback to mock
   const score = org?.readiness_score ?? mockControls.compliant;
