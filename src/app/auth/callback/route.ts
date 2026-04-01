@@ -14,5 +14,6 @@ export async function GET(req: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(new URL(next, req.nextUrl.origin));
+  // Redirect to setup page which will create the org if needed
+  return NextResponse.redirect(new URL("/auth/setup", req.nextUrl.origin));
 }

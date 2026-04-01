@@ -23,20 +23,16 @@ function AuthForm() {
 
     try {
       if (mode === "signup") {
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
             email,
             password,
             options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shieldbase.vercel.app"}/auth/callback` },
           });
         if (signUpError) throw signUpError;
 
-        if (data.user) {
-          // Create organization for the new user
-          const { error: orgError } = await supabase.from("organizations").insert({
-            name: companyName,
-            owner_id: data.user.id,
-          });
-          if (orgError) console.error("Org creation error:", orgError);
+        // Store org name so callback can create it after session is active
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("pending_org_name", companyName);
         }
 
         setMessage("Check your email to confirm your account, then log in.");
