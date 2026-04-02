@@ -254,7 +254,7 @@ export default function ConnectPage() {
 
   // GitHub OAuth flow
   if (step === "github") {
-    const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=read%3Aorg%2Cread%3Auser%2Crepo&redirect_uri=https%3A%2F%2Fshieldbase.vercel.app%2Fapi%2Fauth%2Fgithub%2Fcallback&state=${org?.id ?? ""}`;
+    const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=read%3Aorg%2Cread%3Auser%2Crepo%3Astatus%2Csecurity_events&redirect_uri=https%3A%2F%2Fshieldbase.vercel.app%2Fapi%2Fauth%2Fgithub%2Fcallback&state=${org?.id ?? ""}`;
     return (
       <div className="max-w-2xl space-y-6">
         <div className="flex items-center gap-3">
