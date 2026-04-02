@@ -11,6 +11,24 @@ export interface ControlRow {
   updated_at?: string;
 }
 
+export interface TaskRow {
+  id: string;
+  phase: string;
+  task: string;
+  description?: string;
+  completed: boolean;
+  completed_at?: string;
+  order: number;
+}
+
+export interface PolicyRow {
+  id: string;
+  title: string;
+  type: string;
+  status: string;
+  updated_at: string;
+}
+
 export interface ScanEvent {
   id: string;
   created_at: string;
@@ -29,6 +47,8 @@ interface OrgContextValue {
   controls: ControlRow[];
   lastScan: string | null;
   scanHistory: ScanEvent[];
+  tasks: TaskRow[];
+  policies: PolicyRow[];
   realtimeConnected: boolean;
 }
 
@@ -39,6 +59,8 @@ const OrgContext = createContext<OrgContextValue>({
   controls: [],
   lastScan: null,
   scanHistory: [],
+  tasks: [],
+  policies: [],
   realtimeConnected: false,
 });
 
@@ -49,6 +71,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [controls, setControls] = useState<ControlRow[]>([]);
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanEvent[]>([]);
+  const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [policies, setPolicies] = useState<PolicyRow[]>([]);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   useEffect(() => {
@@ -81,6 +105,22 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             setLastScan(new Date(scanData[0].created_at).toLocaleString());
             setScanHistory(scanData as ScanEvent[]);
           }
+
+          // Fetch tasks
+          const { data: taskData } = await supabase
+            .from("checklist_items")
+            .select("id, phase, task, description, completed, completed_at, order")
+            .eq("org_id", orgId)
+            .order("order", { ascending: true });
+          if (taskData) setTasks(taskData as TaskRow[]);
+
+          // Fetch policies
+          const { data: policyData } = await supabase
+            .from("documents")
+            .select("id, title, type, status, updated_at")
+            .eq("org_id", orgId)
+            .order("updated_at", { ascending: false });
+          if (policyData) setPolicies(policyData as PolicyRow[]);
         }
       } catch (e) {
         console.error("Failed to load org context:", e);
@@ -127,7 +167,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, realtimeConnected }}>
+    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, tasks, policies, realtimeConnected }}>
       {children}
     </OrgContext.Provider>
   );

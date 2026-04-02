@@ -38,7 +38,22 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
-  const { org, loading, controls, lastScan, scanHistory, realtimeConnected } = useOrg();
+  const { org, loading, controls, lastScan, scanHistory, tasks: realTasks, policies: realPolicies, realtimeConnected } = useOrg();
+
+  // Use real data if available, fall back to mock
+  const activeTasks = realTasks.length > 0
+    ? realTasks.filter(t => !t.completed).slice(0, 6).map(t => ({
+        id: t.id, title: t.task, category: t.phase,
+        priority: "medium" as const, status: "todo" as const, due: "",
+      }))
+    : mockTasks.filter(t => t.status !== "done").slice(0, 6);
+
+  const displayPolicies = realPolicies.length > 0
+    ? realPolicies.slice(0, 6).map(p => ({
+        id: p.id, title: p.title, status: p.status,
+        updated: new Date(p.updated_at).toLocaleDateString(),
+      }))
+    : mockPolicies.slice(0, 6).map(p => ({ id: p.id, title: p.title, status: p.status, updated: p.updated }));
 
   // Use real data if available, fallback to mock
   const score = org?.readiness_score ?? mockControls.compliant;
@@ -51,11 +66,13 @@ export default function DashboardPage() {
   const realNonCompliant = controls.filter(c => c.status === "non_compliant").length;
   const realTotal = controls.length;
 
-  const doneTasks = mockTasks.filter(t => t.status === "done").length;
-  const inProgressTasks = mockTasks.filter(t => t.status === "in_progress").length;
+  const doneTasks = realTasks.length > 0 ? realTasks.filter(t => t.completed).length : mockTasks.filter(t => t.status === "done").length;
+  const totalTaskCount = realTasks.length > 0 ? realTasks.length : mockTasks.length;
+  const inProgressTasks = realTasks.length > 0 ? 0 : mockTasks.filter(t => t.status === "in_progress").length;
   const totalEvidence = mockEvidenceItems.reduce((a, b) => a + b.items, 0);
   const collectedEvidence = mockEvidenceItems.reduce((a, b) => a + b.collected, 0);
-  const approvedPolicies = mockPolicies.filter(p => p.status === "approved").length;
+  const approvedPolicies = realPolicies.length > 0 ? realPolicies.filter(p => p.status === "approved").length : mockPolicies.filter(p => p.status === "approved").length;
+  const totalPolicies = realPolicies.length > 0 ? realPolicies.length : mockPolicies.length;
 
   return (
     <div className="space-y-8">
@@ -112,9 +129,9 @@ export default function DashboardPage() {
             sub={hasRealData ? `${realNonCompliant} failing` : `${Math.round(mockControls.compliant/mockControls.total*100)}% compliant`}
             color={hasRealData && realNonCompliant > 0 ? "text-orange-600" : "text-green-600"}
           />
-          <StatCard label="Policies" value={`${approvedPolicies}/${mockPolicies.length}`} sub={`${mockPolicies.length - approvedPolicies} pending`} color="text-blue-600" />
+          <StatCard label="Policies" value={`${approvedPolicies}/${totalPolicies}`} sub={`${totalPolicies - approvedPolicies} pending`} color="text-blue-600" />
           <StatCard label="Evidence Collected" value={`${collectedEvidence}/${totalEvidence}`} sub={`${Math.round(collectedEvidence/totalEvidence*100)}% complete`} color="text-purple-600" />
-          <StatCard label="Tasks Completed" value={`${doneTasks}/${mockTasks.length}`} sub={`${inProgressTasks} in progress`} color="text-orange-600" />
+          <StatCard label="Tasks Completed" value={`${doneTasks}/${totalTaskCount}`} sub={`${inProgressTasks} in progress`} color="text-orange-600" />
         </div>
       </div>
 
@@ -189,7 +206,9 @@ export default function DashboardPage() {
             <a href="/dashboard/remediation" className="text-xs text-blue-600 font-medium hover:underline">View all →</a>
           </div>
           <div className="space-y-2">
-            {mockTasks.filter(t => t.status !== "done").slice(0, 6).map((task) => (
+            {activeTasks.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">All tasks complete ✅</p>
+            ) : activeTasks.map((task) => (
               <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === "critical" ? "bg-red-500" : task.priority === "high" ? "bg-orange-500" : "bg-yellow-500"}`} />
                 <div className="flex-1 min-w-0">
@@ -210,13 +229,15 @@ export default function DashboardPage() {
             <a href="/dashboard/policies" className="text-xs text-blue-600 font-medium hover:underline">View all →</a>
           </div>
           <div className="space-y-2">
-            {mockPolicies.slice(0, 6).map((policy) => (
+            {displayPolicies.length === 0 ? (
+              <p className="text-sm text-gray-400 text-center py-4">No policies yet</p>
+            ) : displayPolicies.map((policy) => (
               <div key={policy.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-800 truncate">{policy.title}</div>
                   <div className="text-xs text-gray-400">Updated {policy.updated}</div>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${policyStatusColor[policy.status]}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${policyStatusColor[policy.status as keyof typeof policyStatusColor] ?? "bg-gray-100 text-gray-600"}`}>
                   {policy.status}
                 </span>
               </div>
