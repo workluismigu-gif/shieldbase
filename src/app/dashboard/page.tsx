@@ -407,8 +407,7 @@ function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgI
   const scrollRef = useRef<HTMLDivElement>(null);
   const { pushActivityEvent } = useOrg();
 
-  useGithubAutoPoll(orgId, pushActivityEvent);
-
+  // Server-side cron handles polling — no client-side trigger needed
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [timeline]);
