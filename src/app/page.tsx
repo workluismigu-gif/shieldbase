@@ -127,14 +127,14 @@ function Hero() {
               No hidden fees. No enterprise sales calls. Just results.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
-              <a href="#cta" className="bg-blue hover:bg-blue-dark text-white px-7 py-3.5 rounded-lg font-semibold text-base transition-all hover:shadow-lg hover:shadow-blue/25 text-center">
+              <a href="/auth" className="bg-blue hover:bg-blue-dark text-white px-7 py-3.5 rounded-lg font-semibold text-base transition-all hover:shadow-lg hover:shadow-blue/25 text-center">
                 Start Free Assessment →
               </a>
-              <a href="#how-it-works" className="border border-white/20 text-white px-7 py-3.5 rounded-lg font-semibold text-base hover:bg-white/5 transition text-center">
-                See How It Works
+              <a href="/auth" className="border border-white/20 text-white px-7 py-3.5 rounded-lg font-semibold text-base hover:bg-white/5 transition text-center">
+                Sign In
               </a>
             </div>
-            <p className="text-sm text-slate mt-4">No credit card required · 5 minute assessment</p>
+            <p className="text-sm text-slate mt-4">No credit card required · Free to start</p>
           </div>
 
           {/* Right — mock dashboard */}
