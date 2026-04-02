@@ -160,15 +160,6 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             .order("order", { ascending: true });
           if (taskData) setTasks(taskData as TaskRow[]);
 
-          async function refreshTasks() {
-            const { data } = await supabase
-              .from("checklist_items")
-              .select("id, phase, task, description, completed, completed_at, order")
-              .eq("org_id", orgId)
-              .order("order", { ascending: true });
-            if (data) setTasks(data as TaskRow[]);
-          }
-
           // Fetch policies
           const { data: policyData } = await supabase
             .from("documents")
@@ -200,7 +191,14 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           }
         )
         .on("postgres_changes", { event: "*", schema: "public", table: "checklist_items", filter: `org_id=eq.${orgId}` },
-          async () => { await refreshTasks(); }
+          async () => {
+            const { data } = await supabase
+              .from("checklist_items")
+              .select("id, phase, task, description, completed, completed_at, order")
+              .eq("org_id", orgId)
+              .order("order", { ascending: true });
+            if (data) setTasks(data as TaskRow[]);
+          }
         )
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_results", filter: `org_id=eq.${orgId}` },
           async () => {
