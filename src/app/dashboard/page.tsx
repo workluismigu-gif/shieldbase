@@ -227,6 +227,13 @@ export default function DashboardPage() {
             <ScoreRing score={score} />
           )}
           <div className="mt-3 text-sm font-medium text-gray-600">Overall Readiness</div>
+          {scores.length > 1 && (
+            <div className="mt-1 text-xs text-gray-400 text-center space-y-0.5">
+              {awsScore !== null && <div>☁️ AWS: {awsScore}%</div>}
+              {githubScore !== null && <div>🐙 GitHub: {githubScore}%</div>}
+              {manualScore !== null && <div>📋 Tasks: {manualScore}%</div>}
+            </div>
+          )}
         </div>
         <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
