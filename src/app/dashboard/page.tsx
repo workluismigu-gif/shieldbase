@@ -195,20 +195,20 @@ export default function DashboardPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs text-gray-500 font-medium">Connected:</span>
         {awsConnected ? (
-          <span className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full font-medium">
+          <a href="/dashboard/monitoring" className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full font-medium hover:bg-orange-100 transition cursor-pointer">
             ☁️ AWS
-            <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} title={hasRealData ? "Scan data live" : "Awaiting scan"} />
-          </span>
+            <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
+          </a>
         ) : (
           <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-orange-600 hover:border-orange-300 transition">
             + AWS
           </a>
         )}
         {githubConnected ? (
-          <span className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-full font-medium">
+          <a href="/dashboard/monitoring?provider=github" className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-full font-medium hover:bg-gray-700 transition cursor-pointer">
             🐙 GitHub
-            <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} title={hasGithubData ? "Scan data live" : "Scan pending"} />
-          </span>
+            <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
+          </a>
         ) : (
           <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-gray-700 hover:border-gray-400 transition">
             + GitHub

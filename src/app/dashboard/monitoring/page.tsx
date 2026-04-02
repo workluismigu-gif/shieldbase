@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useOrg, type ControlRow, type RawFinding } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
+import { useSearchParams } from "next/navigation";
 
 // ─── AWS CATEGORIES ───────────────────────────────────────────────────────────
 
@@ -369,9 +370,15 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
-export default function MonitoringPage() {
+function MonitoringPage() {
   const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org } = useOrg();
-  const [provider, setProvider] = useState<"aws" | "github">("aws");
+  const searchParams = useSearchParams();
+  const [provider, setProvider] = useState<"aws" | "github">(searchParams.get("provider") === "github" ? "github" : "aws");
+
+  useEffect(() => {
+    const p = searchParams.get("provider");
+    if (p === "github" || p === "aws") setProvider(p);
+  }, [searchParams]);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState("");
 
@@ -443,5 +450,13 @@ export default function MonitoringPage() {
       {provider === "aws" && <AWSMonitoring controls={controls} lastScan={lastScan} realtimeConnected={realtimeConnected} />}
       {provider === "github" && <GitHubMonitoring findings={githubFindings} lastScan={lastGithubScan} />}
     </div>
+  );
+}
+
+export default function MonitoringPageWrapper() {
+  return (
+    <Suspense fallback={null}>
+      <MonitoringPage />
+    </Suspense>
   );
 }
