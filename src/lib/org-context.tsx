@@ -250,7 +250,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           async () => {
             const { data } = await supabase
               .from("scan_results")
-              .select("id, created_at, summary")
+              .select("id, created_at, summary, scan_type")
               .eq("org_id", orgId)
               .order("created_at", { ascending: false })
               .limit(10);
@@ -262,6 +262,18 @@ export function OrgProvider({ children }: { children: ReactNode }) {
                 setTimeline(buildTimeline(current, updatedScans));
                 return current;
               });
+            }
+            // Re-fetch GitHub findings on new scan
+            const { data: ghScan } = await supabase
+              .from("scan_results")
+              .select("findings")
+              .eq("org_id", orgId)
+              .eq("scan_type", "github")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
+            if (ghScan?.findings && Array.isArray(ghScan.findings) && (ghScan.findings as unknown[]).length > 0) {
+              setGithubFindings(ghScan.findings as RawFinding[]);
             }
           }
         )
