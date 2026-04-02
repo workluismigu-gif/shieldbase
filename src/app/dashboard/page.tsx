@@ -390,6 +390,8 @@ function useGithubAutoPoll(orgId: string | undefined, intervalMs = 5 * 60 * 1000
 function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgId?: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [blink, setBlink] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
+  const [minimized, setMinimized] = useState(false);
 
   useGithubAutoPoll(orgId);
 
@@ -399,49 +401,89 @@ function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgI
   }, []);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [timeline]);
+    if (!collapsed && !minimized && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [timeline, collapsed, minimized]);
 
   const lines = toCliLines([...timeline].reverse().slice(0, 50));
+  const unreadCount = lines.filter(l => l.level === "error" || l.level === "warn").length;
+
+  // Minimized dock pill
+  if (minimized) {
+    return (
+      <button onClick={() => setMinimized(false)}
+        className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 font-mono text-xs text-gray-400 hover:text-white hover:border-gray-500 transition shadow-lg w-fit">
+        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <span>activity-monitor</span>
+        {unreadCount > 0 && <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{unreadCount}</span>}
+        <span className="text-gray-600 ml-1">[expand]</span>
+      </button>
+    );
+  }
 
   return (
     <div className="rounded-xl overflow-hidden border border-gray-800 shadow-xl">
-      {/* Terminal chrome */}
-      <div className="bg-gray-900 px-4 py-2.5 flex items-center gap-2 border-b border-gray-800">
+      {/* Title bar — IRC style */}
+      <div className="bg-gray-900 px-3 py-2 flex items-center gap-2 border-b border-gray-800 select-none">
+        {/* Window controls */}
         <div className="flex gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-red-500" />
-          <div className="w-3 h-3 rounded-full bg-yellow-500" />
-          <div className="w-3 h-3 rounded-full bg-green-500" />
+          <button onClick={() => setMinimized(true)}
+            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition flex items-center justify-center"
+            title="Minimize">
+            <span className="text-red-900 text-[8px] font-bold leading-none opacity-0 hover:opacity-100">−</span>
+          </button>
+          <button onClick={() => setCollapsed(c => !c)}
+            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition"
+            title={collapsed ? "Expand" : "Collapse"} />
+          <div className="w-3 h-3 rounded-full bg-green-500 opacity-40 cursor-default" />
         </div>
-        <div className="flex-1 text-center">
-          <span className="text-xs text-gray-500 font-mono">shieldbase — activity monitor</span>
+
+        {/* Channel name */}
+        <div className="flex-1 flex items-center justify-center gap-2">
+          <span className="text-gray-600 font-mono text-xs">#</span>
+          <span className="text-gray-400 font-mono text-xs">activity-monitor</span>
+          {!collapsed && (
+            <span className="flex items-center gap-1 text-xs text-green-500 font-mono ml-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> LIVE
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 text-xs text-green-500 font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> LIVE
-          </span>
-          <span className="text-xs text-gray-600 font-mono">GitHub ↓ 5min</span>
+
+        {/* Right side controls */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-600 font-mono">gh↓ 5m</span>
+          <button onClick={() => setCollapsed(c => !c)}
+            className="text-gray-600 hover:text-gray-300 transition font-mono text-xs px-1">
+            {collapsed ? "▲ expand" : "▼ collapse"}
+          </button>
         </div>
       </div>
 
       {/* Terminal body */}
-      <div ref={scrollRef} className="bg-gray-950 p-4 h-72 overflow-y-auto font-mono text-xs space-y-1 scroll-smooth">
-        {lines.length === 0 ? (
-          <div className="text-gray-600">No activity yet. Connect an integration to start scanning.</div>
-        ) : lines.map(line => (
-          <div key={line.id} className="flex items-start gap-2 leading-relaxed">
-            <span className="text-gray-600 flex-shrink-0 tabular-nums">{line.ts}</span>
-            <span className={`flex-shrink-0 font-bold ${CLI_PREFIX_COLORS[line.level]}`}>{line.prefix}</span>
-            <span className={CLI_COLORS[line.level]}>{line.msg}</span>
+      {!collapsed && (
+        <div ref={scrollRef} className="bg-gray-950 p-4 h-64 overflow-y-auto font-mono text-xs space-y-1 scroll-smooth">
+          {/* Channel join message */}
+          <div className="text-gray-600 mb-2">--- Joined #activity-monitor | read-only feed | {lines.length} events ---</div>
+
+          {lines.length === 0 ? (
+            <div className="text-gray-600">No activity yet. Connect an integration to start scanning.</div>
+          ) : lines.map(line => (
+            <div key={line.id} className="flex items-start gap-2 leading-relaxed">
+              <span className="text-gray-600 flex-shrink-0 tabular-nums">{line.ts}</span>
+              <span className={`flex-shrink-0 font-bold ${CLI_PREFIX_COLORS[line.level]}`}>{line.prefix}</span>
+              <span className={CLI_COLORS[line.level]}>{line.msg}</span>
+            </div>
+          ))}
+
+          {/* Blinking cursor — no input */}
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-green-600 font-bold">$</span>
+            <span className={`inline-block w-2 h-3.5 bg-green-500 ${blink ? "opacity-100" : "opacity-0"} transition-opacity duration-100`} />
+            <span className="text-gray-700 text-xs italic">read-only</span>
           </div>
-        ))}
-        {/* Blinking cursor */}
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600">&#8203;</span>
-          <span className="text-green-500 font-bold">$</span>
-          <span className={`inline-block w-2 h-3.5 bg-green-500 ${blink ? "opacity-100" : "opacity-0"} transition-opacity`} />
         </div>
-      </div>
+      )}
     </div>
   );
 }
