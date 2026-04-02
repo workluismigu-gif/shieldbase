@@ -1,6 +1,70 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { parseProwlerOutput, generateSummary } from "@/lib/prowler-mapper";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { parseProwlerOutput, generateSummary, type MappedControl } from "@/lib/prowler-mapper";
+
+// Keywords that map Prowler check titles to checklist task names
+const TASK_AUTO_COMPLETE: Array<{ keywords: string[]; taskMatch: string }> = [
+  { keywords: ["mfa", "multi-factor"], taskMatch: "Enable MFA for all AWS IAM users" },
+  { keywords: ["cloudtrail"], taskMatch: "Enable CloudTrail in all regions" },
+  { keywords: ["s3", "public access", "block public"], taskMatch: "Block public S3 access at account level" },
+  { keywords: ["guardduty"], taskMatch: "Enable GuardDuty" },
+  { keywords: ["vpc flow", "flow log"], taskMatch: "Enable VPC Flow Logs" },
+  { keywords: ["rds", "encrypt", "storage encrypt"], taskMatch: "Encrypt RDS instances at rest" },
+  { keywords: ["kms", "key rotation"], taskMatch: "Enable KMS key rotation" },
+];
+
+async function autoCompleteChecklistTasks(
+  supabase: SupabaseClient,
+  orgId: string,
+  controls: MappedControl[]
+) {
+  try {
+    const { data: tasks } = await supabase
+      .from("checklist_items")
+      .select("id, task, completed")
+      .eq("org_id", orgId)
+      .eq("completed", false);
+
+    if (!tasks || tasks.length === 0) return;
+
+    const now = new Date().toISOString();
+    const toComplete: string[] = [];
+
+    for (const mapping of TASK_AUTO_COMPLETE) {
+      // Check if relevant controls are all passing
+      const relevant = controls.filter(c =>
+        mapping.keywords.some(kw =>
+          c.title.toLowerCase().includes(kw) ||
+          c.prowler_checks.some(ch => ch.toLowerCase().includes(kw))
+        )
+      );
+      if (relevant.length === 0) continue;
+      const allPassing = relevant.every(c => c.status === "compliant");
+      if (!allPassing) continue;
+
+      // Find matching task
+      const task = tasks.find(t =>
+        t.task.toLowerCase().includes(mapping.taskMatch.toLowerCase()) ||
+        mapping.taskMatch.toLowerCase().includes(t.task.toLowerCase())
+      );
+      if (task) toComplete.push(task.id);
+    }
+
+    // Also auto-complete "Connect AWS account" since scan ran = AWS is connected
+    const connectTask = tasks.find(t => t.task.toLowerCase().includes("connect aws"));
+    if (connectTask) toComplete.push(connectTask.id);
+
+    if (toComplete.length > 0) {
+      await supabase
+        .from("checklist_items")
+        .update({ completed: true, completed_at: now })
+        .in("id", [...new Set(toComplete)]);
+      console.log(`Auto-completed ${toComplete.length} checklist tasks`);
+    }
+  } catch (e) {
+    console.error("Auto-complete tasks error:", e);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,6 +121,9 @@ export async function POST(req: NextRequest) {
       .from("organizations")
       .update({ readiness_score: summary.score })
       .eq("id", org_id);
+
+    // Auto-complete checklist tasks based on passing controls
+    await autoCompleteChecklistTasks(supabase, org_id, controls);
 
     return NextResponse.json({ ok: true, summary, controls_mapped: controls.length });
   } catch (err: unknown) {
