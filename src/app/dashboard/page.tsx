@@ -497,7 +497,6 @@ export default function DashboardPage() {
   const scores = [awsScore, githubScore, manualScore].filter(s => s !== null) as number[];
   const combinedScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   const score = combinedScore;
-  const inProgressTasks = realTasks.length > 0 ? 0 : mockTasks.filter(t => t.status === "in_progress").length;
   // Evidence: count controls with evidence (compliant = evidence exists)
   const totalEvidence = hasRealData ? realTotal : 0;
   const collectedEvidence = hasRealData ? realCompliant : 0;
