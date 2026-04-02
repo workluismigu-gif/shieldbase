@@ -138,11 +138,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     const providerLabels: Record<string, string> = { aws: "☁️ AWS", github: "🐙 GitHub", gcp: "GCP", azure: "Azure", kubernetes: "Kubernetes" };
     for (const scan of scans) {
       const s = scan.summary ?? {};
-      const providerLabel = providerLabels[(scan as ScanEvent & { provider?: string }).provider ?? "aws"] ?? "AWS";
+      const scanProvider = scan.scan_type || "aws";
+      const providerLabel = providerLabels[scanProvider] ?? scanProvider.toUpperCase();
       events.push({
         id: scan.id,
         type: "scan",
-        title: `Prowler ${providerLabel} scan completed`,
+        title: `${providerLabel} scan completed`,
         detail: s.total ? `${s.total} controls assessed${s.score != null ? ` • ${s.score}% score` : ""}${s.nonCompliant ? ` • ${s.nonCompliant} failing` : ""}` : undefined,
         timestamp: scan.created_at,
       });
