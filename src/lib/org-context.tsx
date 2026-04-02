@@ -210,7 +210,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             .order("created_at", { ascending: false })
             .limit(1)
             .single();
-          if (githubScan?.findings && Array.isArray(githubScan.findings)) {
+          if (githubScan?.findings && Array.isArray(githubScan.findings) && githubScan.findings.length > 0) {
             setGithubFindings(githubScan.findings as RawFinding[]);
           }
         }
