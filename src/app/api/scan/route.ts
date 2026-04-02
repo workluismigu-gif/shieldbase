@@ -69,7 +69,7 @@ async function autoCompleteChecklistTasks(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { org_id, scan_data, auth_token, service_role_key } = body;
+    const { org_id, scan_data, auth_token, service_role_key, provider = "aws" } = body;
 
     if (!org_id || !scan_data) {
       return NextResponse.json({ error: "Missing org_id or scan_data" }, { status: 400 });
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     const { error: scanError } = await supabase.from("scan_results").insert({
       org_id,
       scanner: "prowler",
-      scan_type: "aws",
+      scan_type: provider,
       findings: scan_data,
       summary,
     });

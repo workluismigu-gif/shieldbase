@@ -100,12 +100,9 @@ export default function DashboardPage() {
         {/* Track 1: Automated */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">☁️</span>
-              <div>
-                <div className="text-sm font-semibold text-gray-800">Automated Checks</div>
-                <div className="text-xs text-gray-400">Prowler AWS scan</div>
-              </div>
+            <div>
+              <div className="text-sm font-semibold text-gray-800">Automated Checks</div>
+              <div className="text-xs text-gray-400">Prowler security scans</div>
             </div>
             {realtimeConnected && (
               <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
@@ -114,15 +111,46 @@ export default function DashboardPage() {
               </span>
             )}
           </div>
-          <div className="flex items-center justify-between mb-2">
+
+          {/* Per-provider breakdown */}
+          <div className="space-y-2 mb-3">
+            {awsConnected && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm">☁️</span>
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs mb-0.5">
+                    <span className="text-gray-600">AWS</span>
+                    <span className="text-gray-400">{hasRealData ? `${realCompliant}/${realTotal}` : "pending"}</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%` }} />
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-gray-700 w-8 text-right">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
+              </div>
+            )}
+            {techStack.github_token && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🐙</span>
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs mb-0.5">
+                    <span className="text-gray-600">GitHub</span>
+                    <span className="text-gray-400 italic">scanning...</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                    <div className="h-full bg-purple-400 rounded-full animate-pulse" style={{ width: "40%" }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between">
             <span className="text-2xl font-black text-gray-900">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
             <span className="text-xs text-gray-400">{hasRealData ? `${realCompliant}/${realTotal} passing` : "No scan yet"}</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-            <div className="h-full bg-green-500 transition-all duration-700 rounded-full" style={{ width: `${hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%` }} />
-          </div>
           {realNonCompliant > 0 && (
-            <div className="mt-2 text-xs text-red-600 font-medium">{realNonCompliant} failing — needs attention</div>
+            <div className="mt-1 text-xs text-red-600 font-medium">{realNonCompliant} failing — needs attention</div>
           )}
         </div>
 
