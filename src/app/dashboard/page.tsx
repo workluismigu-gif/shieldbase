@@ -1,5 +1,5 @@
 "use client";
-import { mockControls, mockTasks, mockPolicies, mockEvidenceItems } from "@/lib/mock-data";
+import { mockTasks, mockPolicies } from "@/lib/mock-data";
 import { useOrg } from "@/lib/org-context";
 
 function ScoreRing({ score }: { score: number }) {
@@ -83,10 +83,11 @@ export default function DashboardPage() {
   const combinedScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   const score = combinedScore;
   const inProgressTasks = realTasks.length > 0 ? 0 : mockTasks.filter(t => t.status === "in_progress").length;
-  const totalEvidence = mockEvidenceItems.reduce((a, b) => a + b.items, 0);
-  const collectedEvidence = mockEvidenceItems.reduce((a, b) => a + b.collected, 0);
-  const approvedPolicies = realPolicies.length > 0 ? realPolicies.filter(p => p.status === "approved").length : mockPolicies.filter(p => p.status === "approved").length;
-  const totalPolicies = realPolicies.length > 0 ? realPolicies.length : mockPolicies.length;
+  // Evidence: count controls with evidence (compliant = evidence exists)
+  const totalEvidence = hasRealData ? realTotal : 0;
+  const collectedEvidence = hasRealData ? realCompliant : 0;
+  const approvedPolicies = realPolicies.length > 0 ? realPolicies.filter(p => p.status === "approved").length : 0;
+  const totalPolicies = realPolicies.length > 0 ? realPolicies.length : 0;
 
   return (
     <div className="space-y-8">
@@ -229,13 +230,12 @@ export default function DashboardPage() {
         </div>
         <div className="md:col-span-4 grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
-            label="Controls Passing"
-            value={hasRealData ? `${realCompliant}/${realTotal}` : `${mockControls.compliant}/${mockControls.total}`}
-            sub={hasRealData ? `${realNonCompliant} failing` : `${Math.round(mockControls.compliant/mockControls.total*100)}% compliant`}
+            label="AWS Controls"
+            value={hasRealData ? `${realCompliant}/${realTotal}` : "—"}
+            sub={hasRealData ? `${realNonCompliant} failing` : "No scan yet"}
             color={hasRealData && realNonCompliant > 0 ? "text-orange-600" : "text-green-600"}
           />
-          <StatCard label="Policies" value={`${approvedPolicies}/${totalPolicies}`} sub={`${totalPolicies - approvedPolicies} pending`} color="text-blue-600" />
-          <StatCard label="Evidence Collected" value={`${collectedEvidence}/${totalEvidence}`} sub={`${Math.round(collectedEvidence/totalEvidence*100)}% complete`} color="text-purple-600" />
+          <StatCard label="Policies" value={totalPolicies > 0 ? `${approvedPolicies}/${totalPolicies}` : "—"} sub={totalPolicies > 0 ? `${totalPolicies - approvedPolicies} to review` : "No policies yet"} color="text-blue-600" />
           <StatCard label="Tasks Completed" value={`${doneTasks}/${totalTaskCount}`} sub={`${inProgressTasks} in progress`} color="text-orange-600" />
         </div>
       </div>
@@ -273,33 +273,13 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Mock controls breakdown (when no real data) */}
+      {/* No data CTA */}
       {!hasRealData && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Controls by Category</h2>
-          <div className="space-y-4">
-            {mockControls.byCategory.map((cat, i) => {
-              const pct = Math.round(cat.compliant / cat.total * 100);
-              return (
-                <div key={i}>
-                  <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-sm font-medium text-gray-700">{cat.category}</span>
-                    <div className="flex items-center gap-3 text-xs">
-                      <span className="text-green-600">{cat.compliant} pass</span>
-                      <span className="text-yellow-600">{cat.partial} partial</span>
-                      <span className="text-red-500">{cat.non_compliant} fail</span>
-                      <span className="font-semibold text-gray-700">{pct}%</span>
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2.5 flex overflow-hidden">
-                    <div className="bg-green-500 h-full" style={{ width: `${cat.compliant/cat.total*100}%` }} />
-                    <div className="bg-yellow-400 h-full" style={{ width: `${cat.partial/cat.total*100}%` }} />
-                    <div className="bg-red-400 h-full" style={{ width: `${cat.non_compliant/cat.total*100}%` }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <div className="text-3xl mb-3">☁️</div>
+          <h2 className="text-lg font-semibold text-gray-800 mb-2">No scan data yet</h2>
+          <p className="text-sm text-gray-500 mb-4">Connect your AWS account to run your first security scan and populate this dashboard.</p>
+          <a href="/dashboard/connect" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
         </div>
       )}
 
