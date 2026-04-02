@@ -72,6 +72,7 @@ interface OrgContextValue {
   loading: boolean;
   controls: ControlRow[];
   lastScan: string | null;
+  lastGithubScan: string | null;
   scanHistory: ScanEvent[];
   timeline: TimelineEvent[];
   tasks: TaskRow[];
@@ -86,6 +87,7 @@ const OrgContext = createContext<OrgContextValue>({
   loading: true,
   controls: [],
   lastScan: null,
+  lastGithubScan: null,
   scanHistory: [],
   timeline: [],
   tasks: [],
@@ -99,7 +101,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [controls, setControls] = useState<ControlRow[]>([]);
-  const [lastScan, setLastScan] = useState<string | null>(null);
+  const [lastScan, setLastScan] = useState<string | null>(null); // AWS last scan
+  const [lastGithubScan, setLastGithubScan] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanEvent[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -180,8 +183,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             .limit(10);
           const scans = (scanData ?? []) as ScanEvent[];
           if (scans.length > 0) {
-            setLastScan(new Date(scans[0].created_at).toLocaleString());
             setScanHistory(scans);
+            // Set last scan per provider
+            const lastAws = scans.find(s => s.scan_type === "aws" || !s.scan_type);
+            const lastGh = scans.find(s => s.scan_type === "github");
+            if (lastAws) setLastScan(new Date(lastAws.created_at).toLocaleString());
+            if (lastGh) setLastGithubScan(new Date(lastGh.created_at).toLocaleString());
           }
           setTimeline(buildTimeline(orgData, scans));
 
@@ -293,7 +300,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected }}>
+    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, lastGithubScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected }}>
       {children}
     </OrgContext.Provider>
   );
