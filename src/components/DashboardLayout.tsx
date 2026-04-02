@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useOrg } from "@/lib/org-context";
 import { signOut } from "@/lib/supabase";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
@@ -25,6 +25,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const orgName = loading ? "Loading..." : (org?.name ?? "Your Organization");
   const displayEmail = userEmail ?? "";
   const displayInitial = displayEmail ? displayEmail[0].toUpperCase() : "U";
+
+  // Calculate day of journey from org created_at
+  const dayOfJourney = useMemo(() => {
+    if (!org?.created_at) return null;
+    const created = new Date(org.created_at);
+    const now = new Date();
+    const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    return days;
+  }, [org?.created_at]);
+
+  // Frameworks from org
+  const frameworks = (org?.frameworks ?? ["soc2"]) as string[];
+  const frameworkLabel = frameworks.map(f =>
+    f === "soc2" ? "SOC 2 Type I" :
+    f === "iso27001" ? "ISO 27001" :
+    f === "hipaa" ? "HIPAA" :
+    f === "pci" ? "PCI DSS" : f.toUpperCase()
+  ).join(" · ");
 
   useEffect(() => {
     if (!loading && !userEmail) {
@@ -103,8 +121,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <div className="hidden md:block" />
           <div className="flex items-center gap-4">
-            <span className="text-xs bg-green/10 text-green px-2.5 py-1 rounded-full font-medium">SOC 2 Type I</span>
-            <span className="text-xs bg-blue/10 text-blue px-2.5 py-1 rounded-full font-medium">Day 6 of 30</span>
+            <span className="text-xs bg-green/10 text-green px-2.5 py-1 rounded-full font-medium">{frameworkLabel}</span>
+            {dayOfJourney !== null && (
+              <span className="text-xs bg-blue/10 text-blue px-2.5 py-1 rounded-full font-medium">Day {dayOfJourney} of 90</span>
+            )}
           </div>
         </header>
 
