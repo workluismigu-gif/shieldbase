@@ -24,6 +24,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, message: "No orgs with GitHub connected" });
   }
 
+  // Log initiation to Supabase activity_events (if table exists)
+  const now = new Date().toISOString();
+  for (const org of orgs) {
+    await supabase.from("activity_events").insert({
+      org_id: org.id,
+      type: "scan",
+      title: "🐙 GitHub auto-scan initiated",
+      detail: "GitHub Actions cron poll",
+      timestamp: now,
+    }).catch(() => {}); // silent if table doesn't exist
+  }
+
   const lambda = new LambdaClient({ region: "us-east-1" });
   const results = [];
 

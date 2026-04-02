@@ -217,16 +217,30 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           if (policyData) setPolicies(policyData as PolicyRow[]);
 
           // Fetch latest GitHub scan findings
-          const { data: githubScan } = await supabase
+          console.log("[useOrg] Fetching GitHub findings for org:", orgId);
+          const { data: allScans, error: scansErr } = await supabase
             .from("scan_results")
-            .select("findings")
+            .select("id, scan_type, created_at, summary")
             .eq("org_id", orgId)
-            .eq("scan_type", "github")
+            .order("created_at", { ascending: false })
+            .limit(5);
+          console.log("[useOrg] All scans:", allScans, "error:", scansErr);
+
+          const { data: githubScan, error: ghErr } = await supabase
+            .from("scan_results")
+            .select("findings, scan_type, created_at")
+            .eq("org_id", orgId)
+            // .eq("scan_type", "github")  // TEMP: removed to debug
             .order("created_at", { ascending: false })
             .limit(1)
             .single();
+          console.log("[useOrg] Latest scan:", githubScan, "error:", ghErr);
+
           if (githubScan?.findings && Array.isArray(githubScan.findings) && githubScan.findings.length > 0) {
+            console.log("[useOrg] ✅ GitHub findings loaded:", githubScan.findings.length, "items, scan_type:", githubScan.scan_type);
             setGithubFindings(githubScan.findings as RawFinding[]);
+          } else {
+            console.log("[useOrg] ❌ No GitHub findings. scan_type:", githubScan?.scan_type, "has findings:", !!githubScan?.findings);
           }
         }
       } catch (e) {
