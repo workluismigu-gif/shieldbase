@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/nightly",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/github-poll",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
