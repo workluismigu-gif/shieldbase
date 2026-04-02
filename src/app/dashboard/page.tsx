@@ -74,10 +74,14 @@ export default function DashboardPage() {
   const githubPct = githubTotal > 0 ? Math.round((githubCompliant / githubTotal) * 100) : 0;
   const hasGithubData = githubTotal > 0;
 
-  // Combined score: avg AWS + manual
-  const awsScore = hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0;
-  const manualScore = totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0;
-  const score = org?.readiness_score ?? (hasRealData || totalTaskCount > 0 ? Math.round((awsScore + manualScore) / 2) : 0);
+  // Combined score across all connected integrations + manual tasks
+  const awsScore = hasRealData ? Math.round((realCompliant / realTotal) * 100) : null;
+  const githubScore = hasGithubData ? githubPct : null;
+  const manualScore = totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : null;
+
+  const scores = [awsScore, githubScore, manualScore].filter(s => s !== null) as number[];
+  const combinedScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  const score = combinedScore;
   const inProgressTasks = realTasks.length > 0 ? 0 : mockTasks.filter(t => t.status === "in_progress").length;
   const totalEvidence = mockEvidenceItems.reduce((a, b) => a + b.items, 0);
   const collectedEvidence = mockEvidenceItems.reduce((a, b) => a + b.collected, 0);
@@ -91,16 +95,16 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">SOC 2 Compliance Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {hasRealData
-              ? `Real scan data from your AWS account • Last scanned: ${lastScan || "today"}`
+            {scores.length > 0
+              ? `Overall readiness across ${scores.length} source${scores.length > 1 ? "s" : ""} • ${lastScan ? `Last scanned: ${lastScan}` : ""}`
               : "Track your progress toward SOC 2 Type I certification"}
           </p>
         </div>
-        {hasRealData && (
+        {scores.length > 0 && (
           <div className="flex items-center gap-2 text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-2 rounded-lg font-medium">
             {realtimeConnected ? (
               <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live</>  
-            ) : "✅"} AWS scan data
+            ) : "✅"} {scores.length} source{scores.length > 1 ? "s" : ""} connected
           </div>
         )}
       </div>
