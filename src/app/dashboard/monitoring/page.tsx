@@ -337,7 +337,10 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
       <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
         <div className="text-4xl mb-4">🐙</div>
         <h2 className="text-lg font-semibold text-gray-800 mb-2">No GitHub scan data yet</h2>
-        <a href="/dashboard/connect" className="inline-block bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
+        <p className="text-sm text-gray-500 mb-4">GitHub is connected. A scan will run automatically within 15 minutes, or trigger one manually.</p>
+        <button className="inline-block bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition" disabled>
+          Scan pending...
+        </button>
       </div>
     );
   }

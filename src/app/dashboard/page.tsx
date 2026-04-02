@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { mockTasks, mockPolicies } from "@/lib/mock-data";
-import { useOrg, type ControlRow, type RawFinding, type TimelineEvent } from "@/lib/org-context";
+import { useOrg, type ControlRow, type RawFinding, type TimelineEvent, type TaskRow, type PolicyRow } from "@/lib/org-context";
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 54;
@@ -455,20 +454,20 @@ const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-
 export default function DashboardPage() {
   const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings } = useOrg();
 
-  // Use real data if available, fall back to mock
+  // Only use real data — no fallback to mock for fresh orgs
   const activeTasks = realTasks.length > 0
     ? realTasks.filter(t => !t.completed).slice(0, 6).map(t => ({
         id: t.id, title: t.task, category: t.phase,
         priority: "medium" as const, status: "todo" as const, due: "",
       }))
-    : mockTasks.filter(t => t.status !== "done").slice(0, 6);
+    : []; // Empty for fresh orgs
 
   const displayPolicies = realPolicies.length > 0
     ? realPolicies.slice(0, 6).map(p => ({
         id: p.id, title: p.title, status: p.status,
         updated: new Date(p.updated_at).toLocaleDateString(),
       }))
-    : mockPolicies.slice(0, 6).map(p => ({ id: p.id, title: p.title, status: p.status, updated: p.updated }));
+    : []; // Empty for fresh orgs
 
   const orgName = org?.name ?? "Your Organization";
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
@@ -480,8 +479,9 @@ export default function DashboardPage() {
   const realNonCompliant = controls.filter(c => c.status === "non_compliant").length;
   const realTotal = controls.length;
 
-  const doneTasks = realTasks.length > 0 ? realTasks.filter(t => t.completed).length : mockTasks.filter(t => t.status === "done").length;
-  const totalTaskCount = realTasks.length > 0 ? realTasks.length : mockTasks.length;
+  const doneTasks = realTasks.length > 0 ? realTasks.filter(t => t.completed).length : 0;
+  const totalTaskCount = realTasks.length;
+  const inProgressTasks = 0; // Real data doesn't track in-progress separately
 
   const githubScans = scanHistory.filter(s => s.scan_type === "github");
   const githubCompliant = githubScans.length > 0 ? (githubScans[0].summary?.compliant ?? 0) : 0;
@@ -690,7 +690,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-2">
             {activeTasks.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">All tasks complete ✅</p>
+              <p className="text-sm text-gray-400 text-center py-4">{totalTaskCount === 0 ? "No tasks yet — connect integrations to get started" : "All tasks complete ✅"}</p>
             ) : activeTasks.map((task) => (
               <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === "critical" ? "bg-red-500" : task.priority === "high" ? "bg-orange-500" : "bg-yellow-500"}`} />
