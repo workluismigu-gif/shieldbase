@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { DEFAULT_CHECKLIST, DEFAULT_POLICIES } from "@/lib/onboarding-defaults";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -32,13 +33,28 @@ export default function SetupPage() {
           user.email?.split("@")[0] ||
           "My Organization";
 
-        await supabase.from("organizations").insert({
-          name: orgName,
-          owner_id: user.id,
-        });
+        const { data: newOrg } = await supabase
+          .from("organizations")
+          .insert({ name: orgName, owner_id: user.id })
+          .select("id")
+          .single();
 
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("pending_org_name");
+        }
+
+        // Seed default checklist items
+        if (newOrg?.id) {
+          await supabase.from("checklist_items").insert(
+            DEFAULT_CHECKLIST.map(item => ({ ...item, org_id: newOrg.id, completed: false }))
+          );
+          await supabase.from("documents").insert(
+            DEFAULT_POLICIES.map(policy => ({
+              ...policy,
+              org_id: newOrg.id,
+              updated_at: new Date().toISOString(),
+            }))
+          );
         }
       }
 

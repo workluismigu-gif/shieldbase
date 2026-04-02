@@ -2,6 +2,7 @@
 import { useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
+import { DEFAULT_CHECKLIST, DEFAULT_POLICIES } from "@/lib/onboarding-defaults";
 
 function AuthForm() {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -32,10 +33,22 @@ function AuthForm() {
 
         if (signUpData.session) {
           // Email confirmation is disabled — session is active immediately, create org now
-          await supabase.from("organizations").insert({
-            name: companyName,
-            owner_id: signUpData.session.user.id,
-          });
+          const { data: newOrg } = await supabase
+            .from("organizations")
+            .insert({ name: companyName, owner_id: signUpData.session.user.id })
+            .select("id")
+            .single();
+
+          if (newOrg?.id) {
+            await supabase.from("checklist_items").insert(
+              DEFAULT_CHECKLIST.map(item => ({ ...item, org_id: newOrg.id, completed: false }))
+            );
+            await supabase.from("documents").insert(
+              DEFAULT_POLICIES.map(policy => ({
+                ...policy, org_id: newOrg.id, updated_at: new Date().toISOString(),
+              }))
+            );
+          }
           router.push("/dashboard");
         } else {
           // Email confirmation is enabled — store org name for after callback
