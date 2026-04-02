@@ -1,6 +1,7 @@
 "use client";
+import { useState } from "react";
 import { mockTasks, mockPolicies } from "@/lib/mock-data";
-import { useOrg } from "@/lib/org-context";
+import { useOrg, type ControlRow, type RawFinding } from "@/lib/org-context";
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 54;
@@ -32,13 +33,309 @@ function StatCard({ label, value, sub, color = "text-gray-900" }: { label: strin
   );
 }
 
+// ─── SCAN CATEGORY MAPS ─────────────────────────────────────────────────────
+
+const AWS_CATS: Record<string, { label: string; icon: string; desc: string; controls: string[] }> = {
+  CC6: { label: "Access Controls", icon: "🔑", desc: "IAM, MFA, public exposure", controls: ["CC6","CC.6"] },
+  CC7: { label: "Monitoring", icon: "📡", desc: "CloudTrail, GuardDuty, logs", controls: ["CC7","CC.7"] },
+  C1:  { label: "Encryption", icon: "🔒", desc: "S3, RDS, EBS, KMS", controls: ["C1","CC.C.1"] },
+  A1:  { label: "Availability", icon: "💾", desc: "Backups, recovery, uptime", controls: ["A1","CC.A.1"] },
+  CC8: { label: "Change Mgmt", icon: "🔧", desc: "Infra change pipelines", controls: ["CC8","CC.8"] },
+  PI1: { label: "Processing", icon: "⚙️", desc: "Audit logging, data integrity", controls: ["PI1","PI.1"] },
+  CC3: { label: "Risk Assessment", icon: "📊", desc: "AWS Config, drift detection", controls: ["CC3","CC.3"] },
+  OTHER: { label: "Other", icon: "🔹", desc: "Additional checks", controls: [] },
+};
+
+const GITHUB_CATS: Record<string, { label: string; icon: string; desc: string; checks: string[] }> = {
+  branch: { label: "Branch Protection", icon: "🌿", desc: "Force push, deletion, PRs", checks: ["repository_default_branch"] },
+  scanning: { label: "Secret Scanning", icon: "🔍", desc: "Secrets, Dependabot", checks: ["repository_secret","repository_dependency"] },
+  hygiene: { label: "Repo Hygiene", icon: "🗂️", desc: "Signed commits, SECURITY.md", checks: ["repository_branch_delete","repository_default_branch_requires_signed","repository_public_has_securitymd","repository_inactive","repository_immutable"] },
+  org: { label: "Org Security", icon: "🏢", desc: "Verified badge, org settings", checks: ["organization"] },
+};
+
+function getAwsCat(controlId: string) {
+  const id = controlId.toUpperCase();
+  for (const [key, cat] of Object.entries(AWS_CATS)) {
+    if (key === "OTHER") continue;
+    if (cat.controls.some(p => id.startsWith(p.toUpperCase()))) return key;
+  }
+  return "OTHER";
+}
+
+function getGithubCat(checkId: string) {
+  for (const [key, cat] of Object.entries(GITHUB_CATS)) {
+    if (cat.checks.some(p => checkId.startsWith(p))) return key;
+  }
+  return "branch";
+}
+
+function QuestCard({ icon, label, desc, passing, total, allPass, children }: {
+  icon: string; label: string; desc: string;
+  passing: number; total: number; allPass: boolean;
+  children?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const pct = total > 0 ? Math.round((passing / total) * 100) : 0;
+  const failing = total - passing;
+
+  return (
+    <div className={`rounded-xl border-2 overflow-hidden transition-all ${
+      allPass ? "border-green-300 bg-gradient-to-br from-green-50 to-emerald-50"
+              : failing > 0 ? "border-red-200 bg-gradient-to-br from-red-50 to-orange-50"
+              : "border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50"
+    }`}>
+      <button onClick={() => setOpen(!open)} className="w-full p-4 flex items-center gap-3 text-left">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+          allPass ? "bg-green-200" : failing > 0 ? "bg-red-100" : "bg-yellow-100"
+        }`}>{icon}</div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold text-gray-900">{label}</span>
+            {allPass
+              ? <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full font-bold">✓ CLEARED</span>
+              : <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">{failing} OPEN</span>}
+          </div>
+          <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+          <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex-1 bg-white/70 rounded-full h-1.5 overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-700 ${
+                allPass ? "bg-green-500" : failing > 0 ? "bg-gradient-to-r from-red-400 to-orange-400" : "bg-yellow-400"
+              }`} style={{ width: `${pct}%` }} />
+            </div>
+            <span className="text-xs font-bold text-gray-600 flex-shrink-0">{pct}%</span>
+          </div>
+        </div>
+        <span className="text-gray-400 text-xs flex-shrink-0">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && <div className="border-t border-white/60">{children}</div>}
+    </div>
+  );
+}
+
+const sevBadge: Record<string, string> = {
+  critical: "bg-red-600 text-white",
+  high: "bg-orange-500 text-white",
+  medium: "bg-yellow-400 text-gray-900",
+  low: "bg-blue-400 text-white",
+};
+
+function ScanResultsTabs({
+  controls, githubFindings, hasRealData, hasGithubData, awsConnected, githubConnected
+}: {
+  controls: ControlRow[];
+  githubFindings: RawFinding[];
+  hasRealData: boolean;
+  hasGithubData: boolean;
+  awsConnected: boolean;
+  githubConnected: boolean;
+}) {
+  const [tab, setTab] = useState<"aws" | "github">("aws");
+
+  const awsFailing = controls.filter(c => c.status === "non_compliant").length;
+  const ghFailing = githubFindings.filter(f => (f.status_code || f.status) === "FAIL").length;
+
+  // Group AWS controls by category
+  const awsGrouped: Record<string, ControlRow[]> = {};
+  for (const ctrl of controls) {
+    const key = getAwsCat(ctrl.control_id);
+    if (!awsGrouped[key]) awsGrouped[key] = [];
+    awsGrouped[key].push(ctrl);
+  }
+  const awsKeys = Object.keys(awsGrouped).sort((a, b) => {
+    const af = awsGrouped[a].filter(c => c.status === "non_compliant").length;
+    const bf = awsGrouped[b].filter(c => c.status === "non_compliant").length;
+    return bf - af;
+  });
+
+  // Group GitHub findings by category
+  const ghGrouped: Record<string, RawFinding[]> = {};
+  for (const f of githubFindings) {
+    const key = getGithubCat(f.metadata?.event_code || f.check_id || "");
+    if (!ghGrouped[key]) ghGrouped[key] = [];
+    ghGrouped[key].push(f);
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {/* Tab Header */}
+      <div className="flex border-b border-gray-100 bg-gray-50">
+        <button onClick={() => setTab("aws")}
+          className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
+            tab === "aws" ? "border-orange-500 text-orange-700 bg-white" : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}>
+          ☁️ AWS
+          {hasRealData && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+              awsFailing > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
+            }`}>
+              {awsFailing > 0 ? `${awsFailing} ⚠` : "✓"}
+            </span>
+          )}
+        </button>
+        <button onClick={() => setTab("github")}
+          className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
+            tab === "github" ? "border-gray-900 text-gray-900 bg-white" : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}>
+          🐙 GitHub
+          {hasGithubData && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+              ghFailing > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
+            }`}>
+              {ghFailing > 0 ? `${ghFailing} ⚠` : "✓"}
+            </span>
+          )}
+        </button>
+        <div className="flex-1" />
+        <a href="/dashboard/monitoring" className="self-center mr-4 text-xs text-blue-600 font-medium hover:underline">
+          Full report →
+        </a>
+      </div>
+
+      {/* AWS Tab */}
+      {tab === "aws" && (
+        <div className="p-5">
+          {!awsConnected ? (
+            <div className="text-center py-10">
+              <div className="text-4xl mb-3">☁️</div>
+              <p className="text-gray-500 text-sm mb-4">Connect AWS to start scanning your infrastructure</p>
+              <a href="/dashboard/connect" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
+            </div>
+          ) : !hasRealData ? (
+            <div className="text-center py-10">
+              <div className="text-4xl mb-3 animate-pulse">🔍</div>
+              <p className="text-gray-500 text-sm">Scan in progress — results will appear here shortly</p>
+            </div>
+          ) : (
+            <>
+              {/* XP bar */}
+              <div className="mb-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 flex items-center gap-4">
+                <div className="text-3xl font-black text-orange-600">{Math.round((controls.filter(c=>c.status==="compliant").length/controls.length)*100)}%</div>
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span className="font-semibold text-gray-700">SOC 2 Compliance Score</span>
+                    <span>{controls.filter(c=>c.status==="compliant").length}/{controls.length} checks passing</span>
+                  </div>
+                  <div className="w-full bg-orange-100 rounded-full h-3 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-orange-400 to-green-500 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.round((controls.filter(c=>c.status==="compliant").length/controls.length)*100)}%` }} />
+                  </div>
+                </div>
+                {awsFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold">🚨 {awsFailing} to fix</div>}
+              </div>
+              <div className="space-y-3">
+                {awsKeys.map(key => {
+                  const cat = AWS_CATS[key];
+                  const group = awsGrouped[key];
+                  const passing = group.filter(c => c.status === "compliant").length;
+                  const allPass = group.every(c => c.status === "compliant");
+                  return (
+                    <QuestCard key={key} icon={cat.icon} label={cat.label} desc={cat.desc}
+                      passing={passing} total={group.length} allPass={allPass}>
+                      <div className="divide-y divide-white/60">
+                        {group.map(ctrl => (
+                          <div key={ctrl.control_id} className={`flex items-center gap-3 px-4 py-2.5 ${
+                            ctrl.status === "non_compliant" ? "bg-red-50/60" : ""
+                          }`}>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${
+                              ctrl.status === "compliant" ? "bg-green-500" : ctrl.status === "non_compliant" ? "bg-red-500" : "bg-yellow-400"
+                            }`}>
+                              {ctrl.status === "compliant" ? "✓" : ctrl.status === "non_compliant" ? "✗" : "!"}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-medium text-gray-800 truncate">{ctrl.title}</div>
+                              <div className="text-xs text-gray-400">{ctrl.control_id}</div>
+                            </div>
+                            {ctrl.severity && ctrl.status === "non_compliant" && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded font-bold capitalize flex-shrink-0 ${sevBadge[ctrl.severity] || "bg-gray-200 text-gray-700"}`}>
+                                {ctrl.severity}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </QuestCard>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* GitHub Tab */}
+      {tab === "github" && (
+        <div className="p-5">
+          {!githubConnected ? (
+            <div className="text-center py-10">
+              <div className="text-4xl mb-3">🐙</div>
+              <p className="text-gray-500 text-sm mb-4">Connect GitHub to monitor your repos</p>
+              <a href="/dashboard/connect" className="inline-block bg-gray-900 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
+            </div>
+          ) : !hasGithubData ? (
+            <div className="text-center py-10">
+              <div className="text-4xl mb-3 animate-pulse">🔍</div>
+              <p className="text-gray-500 text-sm">Scan in progress — results will appear here shortly</p>
+            </div>
+          ) : (
+            <>
+              {/* XP bar */}
+              <div className="mb-5 bg-gradient-to-r from-gray-900 to-gray-700 rounded-xl p-4 flex items-center gap-4">
+                <div className="text-3xl font-black text-white">{Math.round((githubFindings.filter(f=>(f.status_code||f.status)==="PASS").length/githubFindings.length)*100)}%</div>
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs text-gray-300 mb-1">
+                    <span className="font-semibold text-white">GitHub Security Score</span>
+                    <span>{githubFindings.filter(f=>(f.status_code||f.status)==="PASS").length}/{githubFindings.length} checks passing</span>
+                  </div>
+                  <div className="w-full bg-gray-600 rounded-full h-3 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-purple-400 to-blue-400 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.round((githubFindings.filter(f=>(f.status_code||f.status)==="PASS").length/githubFindings.length)*100)}%` }} />
+                  </div>
+                </div>
+                {ghFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold">🚨 {ghFailing} to fix</div>}
+              </div>
+              <div className="space-y-3">
+                {Object.entries(GITHUB_CATS).map(([key, cat]) => {
+                  const group = ghGrouped[key] ?? [];
+                  if (group.length === 0) return null;
+                  const passing = group.filter(f => (f.status_code || f.status) === "PASS").length;
+                  const allPass = group.every(f => (f.status_code || f.status) === "PASS");
+                  return (
+                    <QuestCard key={key} icon={cat.icon} label={cat.label} desc={cat.desc}
+                      passing={passing} total={group.length} allPass={allPass}>
+                      <div className="divide-y divide-white/60">
+                        {group.map((f, i) => {
+                          const pass = (f.status_code || f.status) === "PASS";
+                          return (
+                            <div key={i} className={`flex items-center gap-3 px-4 py-2.5 ${!pass ? "bg-red-50/60" : ""}`}>
+                              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${pass ? "bg-green-500" : "bg-red-500"}`}>
+                                {pass ? "✓" : "✗"}
+                              </span>
+                              <div className="text-xs font-medium text-gray-800 flex-1 min-w-0 truncate">
+                                {f.finding_info?.title || f.metadata?.event_code || f.check_id || "Check"}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </QuestCard>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const priorityColor = { critical: "bg-red-100 text-red-700", high: "bg-orange-100 text-orange-700", medium: "bg-yellow-100 text-yellow-700", low: "bg-blue-100 text-blue-700" };
 const statusColor = { todo: "bg-gray-100 text-gray-600", in_progress: "bg-blue-100 text-blue-700", done: "bg-green-100 text-green-700" };
 const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
-  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected } = useOrg();
+  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings } = useOrg();
 
   // Use real data if available, fall back to mock
   const activeTasks = realTasks.length > 0
@@ -256,48 +553,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Real Controls from Scan */}
-      {hasRealData && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">AWS Scan Results</h2>
-            <span className="text-xs text-gray-400">Prowler SOC 2 scan • {controls.length} checks</span>
-          </div>
-          <div className="space-y-2">
-            {controls.map((ctrl, i) => {
-              const statusMap: Record<string, string> = { compliant: "bg-green-100 text-green-700", non_compliant: "bg-red-100 text-red-700", partial: "bg-yellow-100 text-yellow-700", not_assessed: "bg-gray-100 text-gray-600" };
-              const dotMap: Record<string, string> = { compliant: "bg-green-500", non_compliant: "bg-red-500", partial: "bg-yellow-400", not_assessed: "bg-gray-300" };
-              const labelMap: Record<string, string> = { compliant: "Pass", non_compliant: "Fail", partial: "Partial", not_assessed: "Unknown" };
-              const sevMap: Record<string, string> = { critical: "bg-red-100 text-red-700", high: "bg-orange-100 text-orange-700", medium: "bg-yellow-100 text-yellow-700", low: "bg-blue-100 text-blue-700" };
-              return (
-                <div key={i} className={`flex items-center gap-3 p-3 rounded-lg border ${ctrl.status === "non_compliant" ? "border-red-100 bg-red-50" : "border-gray-100"}`}>
-                  <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dotMap[ctrl.status] || "bg-gray-300"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-800 truncate">{ctrl.title}</div>
-                    <div className="text-xs text-gray-400">{ctrl.control_id}</div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {ctrl.status === "non_compliant" && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${sevMap[ctrl.severity] || ""}`}>{ctrl.severity}</span>
-                    )}
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusMap[ctrl.status] || ""}`}>{labelMap[ctrl.status] || ctrl.status}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* No data CTA */}
-      {!hasRealData && (
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <div className="text-3xl mb-3">☁️</div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">No scan data yet</h2>
-          <p className="text-sm text-gray-500 mb-4">Connect your AWS account to run your first security scan and populate this dashboard.</p>
-          <a href="/dashboard/connect" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
-        </div>
-      )}
+      {/* Gamified Scan Results Tabs */}
+      <ScanResultsTabs
+        controls={controls}
+        githubFindings={githubFindings}
+        hasRealData={hasRealData}
+        hasGithubData={hasGithubData}
+        awsConnected={awsConnected}
+        githubConnected={githubConnected}
+      />
 
       {/* Tasks + Policies */}
       <div className="grid md:grid-cols-2 gap-6">
