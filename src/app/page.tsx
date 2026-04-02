@@ -77,7 +77,10 @@ function Header() {
               {item}
             </a>
           ))}
-          <a href="#cta" className="bg-blue hover:bg-blue-dark text-white px-5 py-2.5 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-blue/25">
+          <a href="/auth" className={`transition-colors font-medium ${scrolled ? "text-navy-lighter hover:text-navy" : "text-white/80 hover:text-white"}`}>
+            Sign In
+          </a>
+          <a href="/auth" className="bg-blue hover:bg-blue-dark text-white px-5 py-2.5 rounded-lg font-semibold transition-all hover:shadow-lg hover:shadow-blue/25">
             Get Started Free →
           </a>
         </nav>
@@ -92,7 +95,8 @@ function Header() {
           <a href="#how-it-works" onClick={() => setOpen(false)} className="py-2">How It Works</a>
           <a href="#pricing" onClick={() => setOpen(false)} className="py-2">Pricing</a>
           <a href="#faq" onClick={() => setOpen(false)} className="py-2">FAQ</a>
-          <a href="#cta" onClick={() => setOpen(false)} className="bg-blue text-white text-center py-2.5 rounded-lg font-semibold">Get Started Free →</a>
+          <a href="/auth" onClick={() => setOpen(false)} className="py-2 text-blue-600 font-medium">Sign In</a>
+          <a href="/auth" onClick={() => setOpen(false)} className="bg-blue text-white text-center py-2.5 rounded-lg font-semibold">Get Started Free →</a>
         </nav>
       )}
     </header>
