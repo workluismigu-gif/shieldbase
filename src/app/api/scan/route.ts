@@ -85,7 +85,24 @@ export async function POST(req: NextRequest) {
 
     // Parse Prowler findings
     const controls = parseProwlerOutput(scan_data);
-    const summary = generateSummary(controls);
+    let summary = generateSummary(controls);
+
+    // For non-AWS providers (GitHub etc), controls won't map to SOC2
+    // Build summary directly from raw findings
+    if (provider !== "aws" && Array.isArray(scan_data) && scan_data.length > 0) {
+      const rawTotal = scan_data.length;
+      const rawPass = scan_data.filter((f: Record<string,string>) => (f.status_code || f.status) === "PASS").length;
+      const rawFail = scan_data.filter((f: Record<string,string>) => (f.status_code || f.status) === "FAIL").length;
+      summary = {
+        total: rawTotal,
+        compliant: rawPass,
+        partial: 0,
+        nonCompliant: rawFail,
+        notAssessed: 0,
+        critical: 0,
+        score: Math.round((rawPass / rawTotal) * 100),
+      };
+    }
 
     // Save raw scan result
     const { error: scanError } = await supabase.from("scan_results").insert({
