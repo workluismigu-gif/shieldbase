@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useOrg, type ControlRow, type RawFinding } from "@/lib/org-context";
+import { supabase } from "@/lib/supabase";
 
 // ─── AWS ──────────────────────────────────────────────────────────────────────
 
@@ -285,8 +286,36 @@ function GitHubMonitoring({ findings }: { findings: RawFinding[] }) {
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 export default function MonitoringPage() {
-  const { controls, lastScan, loading, realtimeConnected, githubFindings } = useOrg();
+  const { controls, lastScan, loading, realtimeConnected, githubFindings, org } = useOrg();
   const [provider, setProvider] = useState<"aws" | "github">("aws");
+  const [scanning, setScanning] = useState(false);
+  const [scanMsg, setScanMsg] = useState("");
+
+  const triggerScan = async () => {
+    setScanning(true);
+    setScanMsg("");
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const res = await fetch("/api/scan/trigger", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer shieldbase-internal-2026`,
+        },
+        body: JSON.stringify({ org_id: org?.id, provider }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setScanMsg(`Scan triggered — results will update automatically in ~${provider === "github" ? "2" : "10-15"} minutes.`);
+      } else {
+        setScanMsg(`Error: ${json.error}`);
+      }
+    } catch (e) {
+      setScanMsg("Failed to trigger scan.");
+    } finally {
+      setScanning(false);
+    }
+  };
 
   if (loading) return <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Loading monitoring data...</div>;
 
@@ -297,12 +326,26 @@ export default function MonitoringPage() {
           <h1 className="text-2xl font-bold text-gray-900">Continuous Monitoring</h1>
           <p className="text-sm text-gray-500 mt-1">Real-time security checks across your connected integrations</p>
         </div>
-        {realtimeConnected && (
-          <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {realtimeConnected && (
+            <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live
+            </span>
+          )}
+          <button
+            onClick={triggerScan}
+            disabled={scanning || !org?.id}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
+            <span className={scanning ? "animate-spin" : ""}>🔍</span>
+            {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
+          </button>
+        </div>
       </div>
+      {scanMsg && (
+        <div className={`text-sm px-4 py-3 rounded-lg ${scanMsg.startsWith("Error") ? "bg-red-50 text-red-700 border border-red-200" : "bg-blue-50 text-blue-700 border border-blue-200"}`}>
+          {scanMsg}
+        </div>
+      )}
 
       {/* Provider tabs */}
       <div className="flex gap-2 border-b border-gray-200 pb-1">
