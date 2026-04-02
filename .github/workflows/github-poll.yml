@@ -1,0 +1,15 @@
+name: GitHub Poll
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger GitHub scan
+        run: |
+          curl -sS -X POST "https://shieldbase.vercel.app/api/cron/github-poll" \
+            -H "Authorization: Bearer ${{ secrets.INTERNAL_TRIGGER_SECRET }}" \
+            -H "Content-Type: application/json"
