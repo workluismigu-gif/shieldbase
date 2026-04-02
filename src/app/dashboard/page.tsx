@@ -38,7 +38,7 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
-  const { org, loading, controls, lastScan, scanHistory, tasks: realTasks, policies: realPolicies, realtimeConnected } = useOrg();
+  const { org, loading, controls, lastScan, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected } = useOrg();
 
   // Use real data if available, fall back to mock
   const activeTasks = realTasks.length > 0
@@ -249,29 +249,26 @@ export default function DashboardPage() {
       {/* Timeline */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h2>
-        {scanHistory.length === 0 ? (
+        {timeline.length === 0 ? (
           <div className="text-center py-8 text-gray-400">
             <div className="text-3xl mb-2">📡</div>
-            <p className="text-sm">No scan history yet. Connect AWS to start scanning.</p>
+            <p className="text-sm">No activity yet. Connect AWS to get started.</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {scanHistory.map((scan, i) => {
-              const summary = scan.summary ?? {};
+            {timeline.map((event, i) => {
+              const dotColor = event.type === "scan" ? "bg-orange-500" : event.type === "integration" ? "bg-blue-500" : "bg-gray-400";
+              const icon = event.type === "scan" ? "🔍" : event.type === "integration" ? "🔌" : "🏢";
               return (
-                <div key={scan.id} className="flex gap-4">
+                <div key={event.id} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="w-2.5 h-2.5 rounded-full mt-1.5 bg-orange-500" />
-                    {i < scanHistory.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
+                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${dotColor}`} />
+                    {i < timeline.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
                   </div>
                   <div className="pb-4">
-                    <div className="text-sm text-gray-800">
-                      Prowler AWS scan completed
-                      {summary.total ? ` — ${summary.total} controls assessed` : ""}
-                      {summary.score != null ? `, score: ${summary.score}%` : ""}
-                      {summary.nonCompliant ? ` (${summary.nonCompliant} failing)` : ""}
-                    </div>
-                    <div className="text-xs text-gray-400 mt-0.5">{new Date(scan.created_at).toLocaleString()}</div>
+                    <div className="text-sm text-gray-800">{icon} {event.title}</div>
+                    {event.detail && <div className="text-xs text-gray-500 mt-0.5 truncate max-w-md">{event.detail}</div>}
+                    <div className="text-xs text-gray-400 mt-0.5">{new Date(event.timestamp).toLocaleString()}</div>
                   </div>
                 </div>
               );

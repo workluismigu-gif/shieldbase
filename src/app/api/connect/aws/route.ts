@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     const { data: org, error } = await supabase
       .from("organizations")
-      .update({ tech_stack: { aws_role_arn: role_arn } })
+      .update({ tech_stack: { aws_role_arn: role_arn, aws_connected_at: new Date().toISOString() } })
       .eq("owner_id", (await supabase.auth.getUser(auth_token)).data.user?.id ?? "")
       .select("id")
       .single();

@@ -29,6 +29,14 @@ export interface PolicyRow {
   updated_at: string;
 }
 
+export interface TimelineEvent {
+  id: string;
+  type: "scan" | "integration" | "org_created";
+  title: string;
+  detail?: string;
+  timestamp: string;
+}
+
 export interface ScanEvent {
   id: string;
   created_at: string;
@@ -47,6 +55,7 @@ interface OrgContextValue {
   controls: ControlRow[];
   lastScan: string | null;
   scanHistory: ScanEvent[];
+  timeline: TimelineEvent[];
   tasks: TaskRow[];
   policies: PolicyRow[];
   realtimeConnected: boolean;
@@ -59,6 +68,7 @@ const OrgContext = createContext<OrgContextValue>({
   controls: [],
   lastScan: null,
   scanHistory: [],
+  timeline: [],
   tasks: [],
   policies: [],
   realtimeConnected: false,
@@ -71,9 +81,43 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [controls, setControls] = useState<ControlRow[]>([]);
   const [lastScan, setLastScan] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanEvent[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [policies, setPolicies] = useState<PolicyRow[]>([]);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
+
+  function buildTimeline(org: OrgRow | null, scans: ScanEvent[]): TimelineEvent[] {
+    const events: TimelineEvent[] = [];
+
+    // Org created
+    if (org?.created_at) {
+      events.push({ id: "org-created", type: "org_created", title: "Organization created", detail: org.name, timestamp: org.created_at });
+    }
+
+    // AWS connected
+    const tech = (org?.tech_stack ?? {}) as Record<string, string>;
+    if (tech.aws_connected_at) {
+      events.push({ id: "aws-connected", type: "integration", title: "AWS connected", detail: tech.aws_role_arn, timestamp: tech.aws_connected_at });
+    } else if (tech.aws_role_arn) {
+      // Fallback: no timestamp stored yet, use now as approximation
+      events.push({ id: "aws-connected", type: "integration", title: "AWS connected", detail: tech.aws_role_arn, timestamp: new Date().toISOString() });
+    }
+
+    // Scans
+    for (const scan of scans) {
+      const s = scan.summary ?? {};
+      events.push({
+        id: scan.id,
+        type: "scan",
+        title: "Prowler AWS scan completed",
+        detail: s.total ? `${s.total} controls assessed${s.score != null ? ` • ${s.score}% score` : ""}${s.nonCompliant ? ` • ${s.nonCompliant} failing` : ""}` : undefined,
+        timestamp: scan.created_at,
+      });
+    }
+
+    // Sort newest first
+    return events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
 
   useEffect(() => {
     let orgId: string | null = null;
@@ -101,10 +145,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             .eq("org_id", orgId)
             .order("created_at", { ascending: false })
             .limit(10);
-          if (scanData && scanData.length > 0) {
-            setLastScan(new Date(scanData[0].created_at).toLocaleString());
-            setScanHistory(scanData as ScanEvent[]);
+          const scans = (scanData ?? []) as ScanEvent[];
+          if (scans.length > 0) {
+            setLastScan(new Date(scans[0].created_at).toLocaleString());
+            setScanHistory(scans);
           }
+          setTimeline(buildTimeline(orgData, scans));
 
           // Fetch tasks
           const { data: taskData } = await supabase
@@ -154,7 +200,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
               .limit(10);
             if (data && data.length > 0) {
               setLastScan(new Date(data[0].created_at).toLocaleString());
-              setScanHistory(data as ScanEvent[]);
+              const updatedScans = data as ScanEvent[];
+              setScanHistory(updatedScans);
+              setOrg(current => {
+                setTimeline(buildTimeline(current, updatedScans));
+                return current;
+              });
             }
           }
         )
@@ -167,7 +218,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, tasks, policies, realtimeConnected }}>
+    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, timeline, tasks, policies, realtimeConnected }}>
       {children}
     </OrgContext.Provider>
   );
