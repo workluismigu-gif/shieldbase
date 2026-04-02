@@ -129,7 +129,8 @@ export default function DashboardPage() {
                 <span className="text-xs font-bold text-gray-700 w-8 text-right">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
               </div>
             )}
-            {techStack.github_token && (() => {
+            {(() => {
+              if (!techStack.github_token) return null;
               const githubScans = scanHistory.filter(s => s.scan_type === "github");
               const latestGithubScan = githubScans[0];
               const githubCompliant = githubScans.length > 0 ? (latestGithubScan.summary?.compliant ?? 0) : 0;
