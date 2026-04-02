@@ -228,6 +228,13 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       // Subscribe to realtime updates
       const channel = supabase
         .channel(`org-${orgId}`)
+        // Org changes (tech_stack updates when integrations connect/disconnect)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "organizations", filter: `id=eq.${orgId}` },
+          async () => {
+            const updated = await getOrg();
+            if (updated) setOrg(updated);
+          }
+        )
         .on("postgres_changes", { event: "*", schema: "public", table: "controls", filter: `org_id=eq.${orgId}` },
           async () => {
             const { data } = await supabase
