@@ -456,13 +456,20 @@ function MonitoringPage() {
       {/* Provider tabs */}
       <div className="flex gap-2 border-b border-gray-200 pb-1">
         <button onClick={() => setProvider("aws")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${provider === "aws" ? "border-orange-500 text-orange-700 bg-orange-50" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
+            provider === "aws" ? "border-orange-500 text-orange-700 bg-orange-50" : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}>
           ☁️ AWS
+          {scanning && provider === "aws" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
           <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"}`}>{controls.length}</span>
         </button>
         <button onClick={() => setProvider("github")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${provider === "github" ? "border-gray-900 text-gray-900 bg-gray-50" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
+            provider === "github" ? "border-gray-900 text-gray-900 bg-gray-50" : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}>
           🐙 GitHub
+          {scanning && provider === "github" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
+          {!scanning && githubFindings.length > 0 && <span className="w-2 h-2 rounded-full bg-green-500" />}
           {githubFindings.length > 0
             ? <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "github" ? "bg-gray-200 text-gray-700" : "bg-gray-100 text-gray-500"}`}>{githubFindings.length}</span>
             : <span className="text-xs text-gray-400 ml-1">not scanned</span>}

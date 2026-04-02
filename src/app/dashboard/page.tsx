@@ -376,12 +376,12 @@ const CLI_PREFIX_COLORS: Record<CliLine["level"], string> = {
 function useGithubAutoPoll(
   orgId: string | undefined,
   pushActivityEvent: (e: Omit<TimelineEvent, "id">) => void,
-  intervalMs = 5 * 60 * 1000
+  intervalMs = 15 * 60 * 1000
 ) {
   const trigger = useCallback(async () => {
     if (!orgId) return;
     const ts = new Date().toISOString();
-    pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan initiated", detail: "Scheduled 5-min poll", timestamp: ts });
+    pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan initiated", detail: "Scheduled 15-min poll", timestamp: ts });
     try {
       const res = await fetch("/api/scan/trigger", {
         method: "POST",
@@ -405,15 +405,9 @@ function useGithubAutoPoll(
 
 function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgId?: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [blink, setBlink] = useState(true);
   const { pushActivityEvent } = useOrg();
 
   useGithubAutoPoll(orgId, pushActivityEvent);
-
-  useEffect(() => {
-    const id = setInterval(() => setBlink(b => !b), 530);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -433,7 +427,7 @@ function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgI
           <span className="flex items-center gap-1 text-xs text-green-500 font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> LIVE
           </span>
-          <span className="text-xs text-gray-600 font-mono">gh↓ 5m</span>
+          <span className="text-xs text-gray-600 font-mono">gh↓ 15m</span>
         </div>
       </div>
 
@@ -449,10 +443,6 @@ function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgI
             <span className={CLI_COLORS[line.level]}>{line.msg}</span>
           </div>
         ))}
-        <div className="flex items-center gap-1.5 mt-1">
-          <span className="text-green-600 font-bold">$</span>
-          <span className={`inline-block w-2 h-3.5 bg-green-500 ${blink ? "opacity-100" : "opacity-0"} transition-opacity duration-100`} />
-        </div>
       </div>
     </div>
   );
