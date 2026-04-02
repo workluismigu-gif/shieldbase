@@ -142,11 +142,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       const s = scan.summary ?? {};
       const scanProvider = scan.scan_type || "aws";
       const providerLabel = providerLabels[scanProvider] ?? scanProvider.toUpperCase();
+      const scanScore = s.total && s.compliant != null ? Math.round((s.compliant / s.total) * 100) : null;
       events.push({
         id: scan.id,
         type: "scan",
         title: `${providerLabel} scan completed`,
-        detail: s.total ? `${s.total} controls assessed${s.score != null ? ` • ${s.score}% score` : ""}${s.nonCompliant ? ` • ${s.nonCompliant} failing` : ""}` : undefined,
+        detail: s.total ? `${s.total} controls assessed${scanScore != null ? ` • ${scanScore}% score` : ""}${s.nonCompliant ? ` • ${s.nonCompliant} failing` : ""}` : undefined,
         timestamp: scan.created_at,
       });
     }

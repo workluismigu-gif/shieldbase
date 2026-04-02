@@ -143,11 +143,9 @@ export function parseProwlerOutput(raw: unknown): MappedControl[] {
 }
 
 export function calculateScore(controls: MappedControl[]): number {
-  const assessed = controls.filter(c => c.status !== "not_assessed");
-  if (assessed.length === 0) return 0;
-  const compliant = assessed.filter(c => c.status === "compliant").length;
-  const partial = assessed.filter(c => c.status === "partial").length;
-  return Math.round(((compliant + partial * 0.5) / assessed.length) * 100);
+  if (controls.length === 0) return 0;
+  const compliant = controls.filter(c => c.status === "compliant").length;
+  return Math.round((compliant / controls.length) * 100);
 }
 
 export function generateSummary(controls: MappedControl[]) {
