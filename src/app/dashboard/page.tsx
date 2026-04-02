@@ -345,9 +345,14 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
     const date = new Date(e.timestamp).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" });
     let level: CliLine["level"] = "info";
     let prefix = "[SYS]";
-    if (e.type === "scan") { level = "success"; prefix = e.title.includes("GitHub") ? "[GH] " : "[AWS]"; }
+    if (e.type === "scan") {
+      const isGh = e.title.includes("GitHub") || e.title.includes("🐙");
+      prefix = isGh ? "[GH] " : "[AWS]";
+      if (e.title.toLowerCase().includes("initiated") || e.title.toLowerCase().includes("auto-scan")) level = "warn";
+      else level = "success";
+    }
     if (e.type === "integration") { level = "system"; prefix = "[INT]"; }
-    if (e.detail?.toLowerCase().includes("fail") || e.detail?.toLowerCase().includes("error")) level = "error";
+    if (e.detail?.toLowerCase().includes("fail") || e.detail?.toLowerCase().includes("error") || e.title.toLowerCase().includes("error")) level = "error";
     return { id: e.id, ts: `${date} ${ts}`, level, prefix, msg: `${e.title}${e.detail ? ` — ${e.detail}` : ""}` };
   });
 }
@@ -368,17 +373,28 @@ const CLI_PREFIX_COLORS: Record<CliLine["level"], string> = {
   system:  "text-blue-500",
 };
 
-function useGithubAutoPoll(orgId: string | undefined, intervalMs = 5 * 60 * 1000) {
+function useGithubAutoPoll(
+  orgId: string | undefined,
+  pushActivityEvent: (e: Omit<TimelineEvent, "id">) => void,
+  intervalMs = 5 * 60 * 1000
+) {
   const trigger = useCallback(async () => {
     if (!orgId) return;
+    const ts = new Date().toISOString();
+    pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan initiated", detail: "Scheduled 5-min poll", timestamp: ts });
     try {
-      await fetch("/api/scan/trigger", {
+      const res = await fetch("/api/scan/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer shieldbase-internal-2026" },
         body: JSON.stringify({ org_id: orgId, provider: "github" }),
       });
-    } catch { /* silent */ }
-  }, [orgId]);
+      if (!res.ok) {
+        pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan error", detail: "Trigger failed", timestamp: new Date().toISOString() });
+      }
+    } catch {
+      pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan error", detail: "Network error", timestamp: new Date().toISOString() });
+    }
+  }, [orgId, pushActivityEvent]);
 
   useEffect(() => {
     if (!orgId) return;
@@ -390,8 +406,9 @@ function useGithubAutoPoll(orgId: string | undefined, intervalMs = 5 * 60 * 1000
 function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgId?: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [blink, setBlink] = useState(true);
+  const { pushActivityEvent } = useOrg();
 
-  useGithubAutoPoll(orgId);
+  useGithubAutoPoll(orgId, pushActivityEvent);
 
   useEffect(() => {
     const id = setInterval(() => setBlink(b => !b), 530);
