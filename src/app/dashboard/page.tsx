@@ -192,7 +192,7 @@ export default function DashboardPage() {
         {awsConnected ? (
           <span className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full font-medium">
             ☁️ AWS
-            {realtimeConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block ml-1" />}
+            <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} title={hasRealData ? "Scan data live" : "Awaiting scan"} />
           </span>
         ) : (
           <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-orange-600 hover:border-orange-300 transition">
@@ -202,6 +202,7 @@ export default function DashboardPage() {
         {githubConnected ? (
           <span className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-full font-medium">
             🐙 GitHub
+            <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} title={hasGithubData ? "Scan data live" : "Scan pending"} />
           </span>
         ) : (
           <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-gray-700 hover:border-gray-400 transition">
