@@ -38,7 +38,7 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
 
 export default function DashboardPage() {
-  const { org, loading, controls, lastScan, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected } = useOrg();
+  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected } = useOrg();
 
   // Use real data if available, fall back to mock
   const activeTasks = realTasks.length > 0
