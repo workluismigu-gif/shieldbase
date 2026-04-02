@@ -8,9 +8,8 @@ import { useEffect, useMemo } from "react";
 
 const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
   { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/dashboard/connect", label: "Connect Tools", icon: "🔌" },
+  { href: "/dashboard/connect", label: "Integrations", icon: "🔌" },
   { href: "/dashboard/monitoring", label: "Monitoring", icon: "📡" },
-  { href: "/dashboard/scan", label: "Run Scan", icon: "🔍" },
   { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "📄" },
   { href: "/dashboard/policies", label: "Policies", icon: "📋" },
   { href: "/dashboard/evidence", label: "Evidence", icon: "📁" },
