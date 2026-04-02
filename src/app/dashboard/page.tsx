@@ -456,10 +456,15 @@ export default function DashboardPage() {
 
   // Only use real data — no fallback to mock for fresh orgs
   const activeTasks = realTasks.length > 0
-    ? realTasks.filter(t => !t.completed).slice(0, 6).map(t => ({
-        id: t.id, title: t.task, category: t.phase,
-        priority: "medium" as const, status: "todo" as const, due: "",
-      }))
+    ? realTasks.filter(t => !t.completed).slice(0, 6).map(t => {
+        let priority: "critical" | "high" | "medium" = "medium";
+        if (t.description?.toLowerCase().includes("critical")) priority = "critical";
+        else if (t.description?.toLowerCase().includes("high")) priority = "high";
+        return {
+          id: t.id, title: t.task, category: t.phase,
+          priority, status: "todo" as const, due: "",
+        };
+      })
     : []; // Empty for fresh orgs
 
   const displayPolicies = realPolicies.length > 0
