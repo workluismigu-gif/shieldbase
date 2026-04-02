@@ -162,13 +162,22 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-black text-gray-900">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
-            <span className="text-xs text-gray-400">{hasRealData ? `${realCompliant}/${realTotal} passing` : "No scan yet"}</span>
-          </div>
-          {realNonCompliant > 0 && (
-            <div className="mt-1 text-xs text-red-600 font-medium">{realNonCompliant} failing — needs attention</div>
-          )}
+          {(() => {
+            const autoScores = [awsScore, githubScore].filter(s => s !== null) as number[];
+            const autoAvg = autoScores.length > 0 ? Math.round(autoScores.reduce((a,b)=>a+b,0)/autoScores.length) : 0;
+            const totalChecks = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0);
+            const totalPass = (hasRealData ? realCompliant : 0) + (hasGithubData ? githubCompliant : 0);
+            const totalFail = (hasRealData ? realNonCompliant : 0) + (hasGithubData ? githubTotal - githubCompliant : 0);
+            return (
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-black text-gray-900">{autoAvg}%</span>
+                  <span className="text-xs text-gray-400">{totalChecks > 0 ? `${totalPass}/${totalChecks} passing` : "No scan yet"}</span>
+                </div>
+                {totalFail > 0 && <div className="mt-1 text-xs text-red-600 font-medium">{totalFail} failing — needs attention</div>}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Track 2: Manual Evidence */}
