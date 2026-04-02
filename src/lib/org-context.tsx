@@ -11,12 +11,24 @@ export interface ControlRow {
   updated_at?: string;
 }
 
+export interface ScanEvent {
+  id: string;
+  created_at: string;
+  summary: {
+    score?: number;
+    compliant?: number;
+    nonCompliant?: number;
+    total?: number;
+  };
+}
+
 interface OrgContextValue {
   org: OrgRow | null;
   userEmail: string | null;
   loading: boolean;
   controls: ControlRow[];
   lastScan: string | null;
+  scanHistory: ScanEvent[];
   realtimeConnected: boolean;
 }
 
@@ -26,6 +38,7 @@ const OrgContext = createContext<OrgContextValue>({
   loading: true,
   controls: [],
   lastScan: null,
+  scanHistory: [],
   realtimeConnected: false,
 });
 
@@ -35,6 +48,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [controls, setControls] = useState<ControlRow[]>([]);
   const [lastScan, setLastScan] = useState<string | null>(null);
+  const [scanHistory, setScanHistory] = useState<ScanEvent[]>([]);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   useEffect(() => {
@@ -59,12 +73,14 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
           const { data: scanData } = await supabase
             .from("scan_results")
-            .select("created_at")
+            .select("id, created_at, summary")
             .eq("org_id", orgId)
             .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-          if (scanData) setLastScan(new Date(scanData.created_at).toLocaleString());
+            .limit(10);
+          if (scanData && scanData.length > 0) {
+            setLastScan(new Date(scanData[0].created_at).toLocaleString());
+            setScanHistory(scanData as ScanEvent[]);
+          }
         }
       } catch (e) {
         console.error("Failed to load org context:", e);
@@ -89,8 +105,17 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           }
         )
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "scan_results", filter: `org_id=eq.${orgId}` },
-          (payload) => {
-            setLastScan(new Date(payload.new.created_at).toLocaleString());
+          async () => {
+            const { data } = await supabase
+              .from("scan_results")
+              .select("id, created_at, summary")
+              .eq("org_id", orgId)
+              .order("created_at", { ascending: false })
+              .limit(10);
+            if (data && data.length > 0) {
+              setLastScan(new Date(data[0].created_at).toLocaleString());
+              setScanHistory(data as ScanEvent[]);
+            }
           }
         )
         .subscribe((status) => {
@@ -102,7 +127,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, realtimeConnected }}>
+    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, realtimeConnected }}>
       {children}
     </OrgContext.Provider>
   );
