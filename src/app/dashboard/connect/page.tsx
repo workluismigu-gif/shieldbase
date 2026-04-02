@@ -5,6 +5,7 @@ import { useOrg } from "@/lib/org-context";
 
 const SHIELDBASE_AWS_ACCOUNT_ID = "886821787192";
 const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase-public-cfn.s3.amazonaws.com/cfn-shieldbase-readonly.json`;
+const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ?? "Ov23lihUSDcOADRW0Kkw";
 
 type Step = "choose" | "aws" | "github" | "google" | "slack" | "done";
 
@@ -12,6 +13,7 @@ export default function ConnectPage() {
   const { org } = useOrg();
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
   const awsConnected = !!techStack.aws_role_arn;
+  const githubConnected = !!techStack.github_token;
 
   const [step, setStep] = useState<Step>("choose");
   const [arnInput, setArnInput] = useState("");
@@ -60,25 +62,47 @@ export default function ConnectPage() {
         </div>
 
         {/* Already connected */}
-        {awsConnected && (
+        {(awsConnected || githubConnected) && (
           <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">✅ Connected (1)</h2>
-            <div className="flex items-center justify-between py-2">
+            <h2 className="font-semibold text-gray-800 mb-4">✅ Connected ({[awsConnected, githubConnected].filter(Boolean).length})</h2>
+            {awsConnected && (
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">☁️</span>
+                  <div>
+                    <div className="text-sm font-medium text-gray-800">Amazon Web Services</div>
+                    <div className="text-xs text-gray-400 font-mono truncate max-w-xs">{techStack.aws_role_arn}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">● Active</span>
+                  <button onClick={async () => {
+                    const t = {...techStack}; delete t.aws_role_arn; delete t.aws_connected_at;
+                    await supabase.from("organizations").update({ tech_stack: t }).eq("id", org!.id);
+                    window.location.reload();
+                  }} className="text-xs text-gray-400 hover:text-red-500 transition">Disconnect</button>
+                </div>
+              </div>
+            )}
+            {githubConnected && (
+            <div key="github" className="flex items-center justify-between py-2">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">☁️</span>
+                <span className="text-2xl">🐙</span>
                 <div>
-                  <div className="text-sm font-medium text-gray-800">Amazon Web Services</div>
-                  <div className="text-xs text-gray-400 font-mono truncate max-w-xs">{techStack.aws_role_arn}</div>
+                  <div className="text-sm font-medium text-gray-800">GitHub</div>
+                  <div className="text-xs text-gray-400">{techStack.github_login}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">● Active</span>
                 <button onClick={async () => {
-                  await supabase.from("organizations").update({ tech_stack: {} }).eq("id", org!.id);
+                  const t = {...techStack}; delete t.github_token; delete t.github_login; delete t.github_connected_at;
+                  await supabase.from("organizations").update({ tech_stack: t }).eq("id", org!.id);
                   window.location.reload();
                 }} className="text-xs text-gray-400 hover:text-red-500 transition">Disconnect</button>
               </div>
             </div>
+          )}
           </div>
         )}
 
@@ -230,7 +254,7 @@ export default function ConnectPage() {
 
   // GitHub OAuth flow
   if (step === "github") {
-    const githubOAuthUrl = `https://github.com/apps/shieldbase-compliance/installations/new`;
+    const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=read:org,read:user,repo&state=${org?.id ?? ""}`;
     return (
       <div className="max-w-2xl space-y-6">
         <div className="flex items-center gap-3">

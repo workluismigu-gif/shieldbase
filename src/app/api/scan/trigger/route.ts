@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { org_id } = body; // optional — if omitted, scan all orgs
+    const { org_id, provider = "aws" } = body; // optional — if omitted, scan all orgs
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,10 +21,11 @@ export async function POST(req: NextRequest) {
     );
 
     // Fetch orgs to scan
+    const filterKey = provider === "github" ? "tech_stack->github_token" : "tech_stack->aws_role_arn";
     let query = supabase
       .from("organizations")
       .select("id, name, tech_stack")
-      .not("tech_stack->aws_role_arn", "is", null);
+      .not(filterKey, "is", null);
     if (org_id) query = query.eq("id", org_id);
 
     const { data: orgs, error } = await query;
@@ -40,14 +41,24 @@ export async function POST(req: NextRequest) {
     for (const org of orgs) {
       const techStack = (org.tech_stack ?? {}) as Record<string, string>;
       const roleArn = techStack.aws_role_arn;
-      if (!roleArn) continue;
+      const payload: Record<string, string> = { org_id: org.id, provider };
 
-      console.log(`Triggering scan for org ${org.id} (${org.name}) with role ${roleArn}`);
+      if (provider === "github") {
+        const githubToken = techStack.github_token;
+        if (!githubToken) continue;
+        payload.github_token = githubToken;
+        payload.github_login = techStack.github_login ?? "";
+      } else {
+        if (!roleArn) continue;
+        payload.role_arn = roleArn;
+      }
+
+      console.log(`Triggering ${provider} scan for org ${org.id} (${org.name})`);
 
       const command = new InvokeCommand({
         FunctionName: "shieldbase-prowler-scanner",
-        InvocationType: "Event", // async — don't wait for result
-        Payload: Buffer.from(JSON.stringify({ org_id: org.id, role_arn: roleArn })),
+        InvocationType: "Event",
+        Payload: Buffer.from(JSON.stringify(payload)),
       });
 
       const response = await lambda.send(command);
