@@ -2,21 +2,24 @@
 // Prowler outputs checks with check_id, status (PASS/FAIL/WARN), service, etc.
 
 export interface ProwlerFinding {
-  check_id: string;
-  check_title: string;
-  status: "PASS" | "FAIL" | "WARN" | "INFO" | "MUTED";
+  // Legacy v3/v4 format
+  check_id?: string;
+  check_title?: string;
+  status?: "PASS" | "FAIL" | "WARN" | "INFO" | "MUTED";
   status_extended?: string;
   service_name?: string;
   resource_id?: string;
   region?: string;
   severity?: string;
   resource_type?: string;
-  // v3 format
-  finding_info?: {
-    check_id: string;
-    title: string;
-  };
+  finding_info?: { check_id: string; title: string };
   compliance?: Record<string, string[]>;
+  // v5 OCSF format
+  metadata?: { event_code?: string; product?: { name?: string } };
+  finding?: { title?: string; uid?: string };
+  status_code?: string; // "PASS" | "FAIL"
+  severity_id?: number;
+  resources?: Array<{ uid?: string; region?: string; type?: string }>;
 }
 
 export interface MappedControl {
@@ -118,7 +121,8 @@ export function parseProwlerOutput(raw: unknown): MappedControl[] {
 
   // Map findings to controls
   for (const finding of findings) {
-    const checkId = finding.check_id || finding.finding_info?.check_id || "";
+    // Support both v4 (check_id) and v5 OCSF (metadata.event_code) formats
+    const checkId = finding.check_id || finding.finding_info?.check_id || finding.metadata?.event_code || "";
     const mapping = PROWLER_TO_SOC2[checkId];
     if (!mapping) continue;
 
@@ -135,8 +139,10 @@ export function parseProwlerOutput(raw: unknown): MappedControl[] {
       control.status = "not_assessed";
       continue;
     }
-    const passes = control.findings.filter(f => f.status === "PASS").length;
-    const fails = control.findings.filter(f => f.status === "FAIL").length;
+    // Support both v4 status field and v5 OCSF status_code field
+    const getStatus = (f: ProwlerFinding) => f.status || f.status_code || "";
+    const passes = control.findings.filter(f => getStatus(f) === "PASS").length;
+    const fails = control.findings.filter(f => getStatus(f) === "FAIL").length;
     if (fails === 0) control.status = "compliant";
     else if (passes > 0) control.status = "partial";
     else control.status = "non_compliant";
