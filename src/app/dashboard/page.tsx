@@ -129,20 +129,30 @@ export default function DashboardPage() {
                 <span className="text-xs font-bold text-gray-700 w-8 text-right">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
               </div>
             )}
-            {techStack.github_token && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm">🐙</span>
-                <div className="flex-1">
-                  <div className="flex justify-between text-xs mb-0.5">
-                    <span className="text-gray-600">GitHub</span>
-                    <span className="text-gray-400 italic">scanning...</span>
+            {techStack.github_token && (() => {
+              const githubScans = scanHistory.filter(s => s.scan_type === "github");
+              const latestGithubScan = githubScans[0];
+              const githubCompliant = githubScans.length > 0 ? (latestGithubScan.summary?.compliant ?? 0) : 0;
+              const githubTotal = githubScans.length > 0 ? (latestGithubScan.summary?.total ?? 0) : 0;
+              const githubPct = githubTotal > 0 ? Math.round((githubCompliant / githubTotal) * 100) : 0;
+              const hasGithubData = githubTotal > 0;
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">🐙</span>
+                  <div className="flex-1">
+                    <div className="flex justify-between text-xs mb-0.5">
+                      <span className="text-gray-600">GitHub</span>
+                      <span className="text-gray-400">{hasGithubData ? `${githubCompliant}/${githubTotal}` : "pending..."}</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-1.5">
+                      <div className={`h-full rounded-full transition-all duration-700 ${hasGithubData ? "bg-purple-500" : "bg-purple-300 animate-pulse"}`}
+                        style={{ width: hasGithubData ? `${githubPct}%` : "30%" }} />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="h-full bg-purple-400 rounded-full animate-pulse" style={{ width: "40%" }} />
-                  </div>
+                  {hasGithubData && <span className="text-xs font-bold text-gray-700 w-8 text-right">{githubPct}%</span>}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           <div className="flex items-center justify-between">
