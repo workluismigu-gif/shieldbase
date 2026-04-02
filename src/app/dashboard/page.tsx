@@ -95,6 +95,57 @@ export default function DashboardPage() {
         )}
       </div>
 
+      {/* Two-track progress */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Track 1: Automated */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">☁️</span>
+              <div>
+                <div className="text-sm font-semibold text-gray-800">Automated Checks</div>
+                <div className="text-xs text-gray-400">Prowler AWS scan</div>
+              </div>
+            </div>
+            {realtimeConnected && (
+              <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+                Live
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl font-black text-gray-900">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
+            <span className="text-xs text-gray-400">{hasRealData ? `${realCompliant}/${realTotal} passing` : "No scan yet"}</span>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-green-500 transition-all duration-700 rounded-full" style={{ width: `${hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%` }} />
+          </div>
+          {realNonCompliant > 0 && (
+            <div className="mt-2 text-xs text-red-600 font-medium">{realNonCompliant} failing — needs attention</div>
+          )}
+        </div>
+
+        {/* Track 2: Manual Evidence */}
+        <a href="/dashboard/checklist" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 transition block">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">📋</span>
+            <div>
+              <div className="text-sm font-semibold text-gray-800">Manual Evidence</div>
+              <div className="text-xs text-gray-400">Policies, training, procedures</div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl font-black text-gray-900">{totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0}%</span>
+            <span className="text-xs text-gray-400">{doneTasks}/{totalTaskCount} complete</span>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all duration-700 rounded-full" style={{ width: `${totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0}%` }} />
+          </div>
+          <div className="mt-2 text-xs text-blue-600 font-medium">View roadmap →</div>
+        </a>
+      </div>
+
       {/* Integrations bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs text-gray-500 font-medium">Connected:</span>

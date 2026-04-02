@@ -1,32 +1,60 @@
 "use client";
 import { useState } from "react";
-import { mockTasks } from "@/lib/mock-data";
+import { useOrg, type TaskRow } from "@/lib/org-context";
+import { supabase } from "@/lib/supabase";
 
-type Status = "todo" | "in_progress" | "done";
-type Priority = "critical" | "high" | "medium" | "low";
-
-const priorityConfig = {
-  critical: { color: "text-red-700 bg-red-100",    dot: "bg-red-500",    border: "border-l-red-500" },
-  high:     { color: "text-orange-700 bg-orange-100", dot: "bg-orange-500", border: "border-l-orange-500" },
-  medium:   { color: "text-yellow-700 bg-yellow-100", dot: "bg-yellow-400", border: "border-l-yellow-400" },
-  low:      { color: "text-blue-700 bg-blue-100",   dot: "bg-blue-400",   border: "border-l-blue-400" },
+const PHASE_COLORS: Record<string, string> = {
+  Foundation: "bg-orange-100 text-orange-700",
+  Policies: "bg-purple-100 text-purple-700",
+  Remediation: "bg-red-100 text-red-700",
+  "Audit Prep": "bg-blue-100 text-blue-700",
 };
 
-const columns: { id: Status; label: string; icon: string; color: string }[] = [
-  { id: "todo",        label: "To Do",      icon: "⭕", color: "bg-gray-100" },
-  { id: "in_progress", label: "In Progress", icon: "🔄", color: "bg-blue-50" },
-  { id: "done",        label: "Done",       icon: "✅", color: "bg-green-50" },
-];
+const PHASE_ICONS: Record<string, string> = {
+  Foundation: "🏗️",
+  Policies: "📋",
+  Remediation: "🔧",
+  "Audit Prep": "🎯",
+};
 
 export default function RemediationPage() {
-  const [tasks, setTasks] = useState(mockTasks.map(t => ({ ...t, status: t.status as Status, priority: t.priority as Priority })));
-  const [dragId, setDragId] = useState<string | null>(null);
+  const { tasks, loading } = useOrg();
+  const [localTasks, setLocalTasks] = useState<TaskRow[] | null>(null);
+  const [filter, setFilter] = useState<"all" | "todo" | "done">("all");
 
-  const moveTask = (id: string, newStatus: Status) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
+  const displayTasks = localTasks ?? tasks;
+
+  const handleToggle = async (id: string, completed: boolean) => {
+    const updated = (localTasks ?? tasks).map(t =>
+      t.id === id ? { ...t, completed, completed_at: completed ? new Date().toISOString() : undefined } : t
+    );
+    setLocalTasks(updated);
+    await supabase
+      .from("checklist_items")
+      .update({ completed, completed_at: completed ? new Date().toISOString() : null })
+      .eq("id", id);
   };
 
-  const criticalTodo = tasks.filter(t => t.status !== "done" && t.priority === "critical").length;
+  const filtered = displayTasks.filter(t =>
+    filter === "all" ? true : filter === "done" ? t.completed : !t.completed
+  );
+
+  const done = displayTasks.filter(t => t.completed).length;
+  const total = displayTasks.length;
+
+  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Loading tasks...</div>;
+
+  if (displayTasks.length === 0) {
+    return (
+      <div className="text-center py-16 text-gray-400">
+        <div className="text-4xl mb-3">🔧</div>
+        <p className="text-sm">No tasks yet. Connect AWS to get your remediation list.</p>
+      </div>
+    );
+  }
+
+  // Group by phase
+  const phases = [...new Set(filtered.map(t => t.phase))];
 
   return (
     <div className="space-y-6">
@@ -34,111 +62,67 @@ export default function RemediationPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Remediation Board</h1>
-          <p className="text-sm text-gray-500 mt-1">Drag tasks across columns to track your compliance progress</p>
+          <p className="text-sm text-gray-500 mt-1">{done}/{total} tasks complete</p>
         </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-medium">
-            {tasks.filter(t => t.status === "done").length}/{tasks.length} complete
-          </span>
-          <span className={`px-3 py-1.5 rounded-lg font-medium ${criticalTodo > 0 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-            {criticalTodo > 0 ? `${criticalTodo} critical remaining` : "No critical gaps 🎉"}
-          </span>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex justify-between text-sm text-gray-500 mb-2">
-          <span>Overall progress</span>
-          <span className="font-semibold text-gray-800">{Math.round(tasks.filter(t => t.status === "done").length / tasks.length * 100)}%</span>
-        </div>
-        <div className="w-full bg-gray-100 rounded-full h-3 flex overflow-hidden">
-          <div className="bg-green-500 h-full transition-all duration-500 rounded-full"
-            style={{ width: `${tasks.filter(t => t.status === "done").length / tasks.length * 100}%` }} />
+        <div className="flex gap-2">
+          {(["all", "todo", "done"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`text-xs px-3 py-1.5 rounded-full font-medium transition capitalize ${filter === f ? "bg-navy text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
+              {f === "all" ? `All (${total})` : f === "done" ? `Done (${done})` : `Todo (${total - done})`}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Kanban board */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {columns.map(col => {
-          const colTasks = tasks.filter(t => t.status === col.id);
+      {/* Progress */}
+      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-700"
+          style={{ width: `${total > 0 ? Math.round((done / total) * 100) : 0}%` }} />
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 text-gray-400 text-sm">No tasks in this filter.</div>
+      ) : (
+        phases.map(phase => {
+          const phaseTasks = filtered.filter(t => t.phase === phase);
+          if (phaseTasks.length === 0) return null;
           return (
-            <div key={col.id}
-              className={`${col.color} rounded-2xl p-4 min-h-[400px]`}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => { e.preventDefault(); if (dragId) moveTask(dragId, col.id); setDragId(null); }}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span>{col.icon}</span>
-                  <span className="font-semibold text-gray-700 text-sm">{col.label}</span>
-                </div>
-                <span className="bg-white text-gray-600 text-xs font-bold px-2 py-0.5 rounded-full">{colTasks.length}</span>
+            <div key={phase}>
+              <div className="flex items-center gap-2 mb-3">
+                <span>{PHASE_ICONS[phase] ?? "📌"}</span>
+                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">{phase}</h2>
+                <span className="text-xs text-gray-400">{phaseTasks.filter(t => t.completed).length}/{phaseTasks.length}</span>
               </div>
-
-              <div className="space-y-3">
-                {colTasks.map(task => {
-                  const p = priorityConfig[task.priority];
-                  return (
-                    <div key={task.id}
-                      draggable
-                      onDragStart={() => setDragId(task.id)}
-                      onDragEnd={() => setDragId(null)}
-                      className={`bg-white rounded-xl border-l-4 ${p.border} shadow-sm p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow`}>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <p className="text-sm font-medium text-gray-800 leading-snug">{task.title}</p>
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${p.color} capitalize`}>
-                          {task.priority}
-                        </span>
+              <div className="space-y-2">
+                {phaseTasks.sort((a, b) => a.order - b.order).map(task => (
+                  <div key={task.id}
+                    className={`bg-white rounded-xl border p-4 flex items-start gap-4 transition ${task.completed ? "border-green-200 bg-green-50/30" : "border-gray-200 hover:border-gray-300"}`}>
+                    <button
+                      onClick={() => handleToggle(task.id, !task.completed)}
+                      className={`w-6 h-6 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition ${
+                        task.completed ? "bg-green-500 border-green-500 text-white" : "border-gray-300 hover:border-blue-400"
+                      }`}>
+                      {task.completed && <span className="text-xs">✓</span>}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-medium ${task.completed ? "line-through text-gray-400" : "text-gray-800"}`}>
+                        {task.task}
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{task.category}</span>
-                        <span className="text-xs text-gray-400">Due {task.due}</span>
-                      </div>
-                      {/* Quick move buttons */}
-                      <div className="flex gap-1 mt-2">
-                        {columns.filter(c => c.id !== col.id).map(c => (
-                          <button key={c.id} onClick={() => moveTask(task.id, c.id)}
-                            className="text-xs text-gray-400 hover:text-gray-700 hover:bg-gray-100 px-2 py-0.5 rounded transition">
-                            → {c.label}
-                          </button>
-                        ))}
-                      </div>
+                      {task.description && <div className="text-xs text-gray-400 mt-0.5">{task.description}</div>}
+                      {task.completed && task.completed_at && (
+                        <div className="text-xs text-green-600 mt-1">Completed {new Date(task.completed_at).toLocaleDateString()}</div>
+                      )}
                     </div>
-                  );
-                })}
-
-                {colTasks.length === 0 && (
-                  <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
-                    Drop tasks here
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${PHASE_COLORS[phase] ?? "bg-gray-100 text-gray-600"}`}>
+                      {phase}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
             </div>
           );
-        })}
-      </div>
-
-      {/* Priority breakdown */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h2 className="font-semibold text-gray-800 mb-4">Priority Breakdown</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {(["critical","high","medium","low"] as Priority[]).map(p => {
-            const total = tasks.filter(t => t.priority === p).length;
-            const done = tasks.filter(t => t.priority === p && t.status === "done").length;
-            const cfg = priorityConfig[p];
-            return (
-              <div key={p} className="text-center">
-                <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium capitalize mb-2 ${cfg.color}`}>
-                  <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-                  {p}
-                </div>
-                <div className="text-2xl font-bold text-gray-800">{done}/{total}</div>
-                <div className="text-xs text-gray-400 mt-0.5">complete</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+        })
+      )}
     </div>
   );
 }
