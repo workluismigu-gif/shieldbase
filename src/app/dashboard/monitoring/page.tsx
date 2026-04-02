@@ -103,11 +103,12 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
 
 // ─── GITHUB ───────────────────────────────────────────────────────────────────
 
-const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: string; checks: string[] }> = {
+const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: string; checks: string[]; howToFix: string }> = {
   branch_protection: {
     label: "Branch Protection",
     icon: "🌿",
     soc2: "CC8.1 — Change Management",
+    howToFix: "Go to each repo → Settings → Branches → Add branch protection rule for 'main'. Enable: Require PR reviews, Restrict force pushes, Restrict deletions, Apply to admins, Require status checks, Require linear history, Require conversation resolution.",
     checks: [
       "repository_default_branch_protection_enabled",
       "repository_default_branch_disallows_force_push",
@@ -122,6 +123,7 @@ const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: str
     label: "Code Review",
     icon: "👀",
     soc2: "CC8.1 — Change Management",
+    howToFix: "In branch protection rules, enable 'Require approvals' and set minimum to 2. Enable 'Require review from Code Owners'. Create a CODEOWNERS file in the root of each repo listing owners per path.",
     checks: [
       "repository_default_branch_requires_multiple_approvals",
       "repository_default_branch_requires_codeowners_review",
@@ -132,6 +134,7 @@ const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: str
     label: "Secret & Vulnerability Scanning",
     icon: "🔍",
     soc2: "CC7.1 — System Monitoring",
+    howToFix: "Go to each repo → Settings → Code security and analysis. Enable 'Secret scanning' and 'Dependabot alerts'. For org-wide, go to Org Settings → Code security → enable for all repos.",
     checks: [
       "repository_secret_scanning_enabled",
       "repository_dependency_scanning_enabled",
@@ -141,6 +144,7 @@ const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: str
     label: "Repository Hygiene",
     icon: "🗂️",
     soc2: "CC6.1 — Access Control",
+    howToFix: "Enable 'Automatically delete head branches' in repo Settings → General. Enable 'Require signed commits' in branch protection. Add a SECURITY.md file with your vulnerability disclosure policy. For immutable releases, use the Releases API with 'make_latest: true'.",
     checks: [
       "repository_branch_delete_on_merge_enabled",
       "repository_default_branch_requires_signed_commits",
@@ -153,6 +157,7 @@ const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: str
     label: "Organization Security",
     icon: "🏢",
     soc2: "CC1.2 — Organization",
+    howToFix: "Apply for a GitHub Verified badge via your org settings. Requires a verified domain. Go to Org Settings → Profile → Verified domains.",
     checks: ["organization_verified_badge"],
   },
 };
@@ -161,7 +166,7 @@ function GithubCategoryCard({
   category,
   findings,
 }: {
-  category: { label: string; icon: string; soc2: string; checks: string[] };
+  category: { label: string; icon: string; soc2: string; checks: string[]; howToFix: string };
   findings: RawFinding[];
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -200,7 +205,14 @@ function GithubCategoryCard({
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-100 divide-y divide-gray-50">
+        <div className="border-t border-gray-100">
+          {failing > 0 && (
+            <div className="mx-4 my-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
+              <p className="text-xs font-semibold text-blue-800 mb-1">🛠️ How to fix</p>
+              <p className="text-xs text-blue-700">{category.howToFix}</p>
+            </div>
+          )}
+          <div className="divide-y divide-gray-50">
           {catFindings.map((f, i) => {
             const sCode = f.status_code || f.status || "PASS";
             const pass = sCode === "PASS";
@@ -219,6 +231,7 @@ function GithubCategoryCard({
               </div>
             );
           })}
+          </div>
         </div>
       )}
     </div>

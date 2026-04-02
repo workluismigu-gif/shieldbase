@@ -55,17 +55,10 @@ export default function DashboardPage() {
       }))
     : mockPolicies.slice(0, 6).map(p => ({ id: p.id, title: p.title, status: p.status, updated: p.updated }));
 
-  // Use real data if available, fallback to mock
-  const score = org?.readiness_score ?? mockControls.compliant;
   const orgName = org?.name ?? "Your Organization";
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
   const awsConnected = !!techStack.aws_role_arn;
   const githubConnected = !!techStack.github_token;
-  const githubScans = scanHistory.filter(s => s.scan_type === "github");
-  const githubCompliant = githubScans.length > 0 ? (githubScans[0].summary?.compliant ?? 0) : 0;
-  const githubTotal = githubScans.length > 0 ? (githubScans[0].summary?.total ?? 0) : 0;
-  const githubPct = githubTotal > 0 ? Math.round((githubCompliant / githubTotal) * 100) : 0;
-  const hasGithubData = githubTotal > 0;
   const hasRealData = controls.length > 0;
 
   const realCompliant = controls.filter(c => c.status === "compliant").length;
@@ -74,6 +67,17 @@ export default function DashboardPage() {
 
   const doneTasks = realTasks.length > 0 ? realTasks.filter(t => t.completed).length : mockTasks.filter(t => t.status === "done").length;
   const totalTaskCount = realTasks.length > 0 ? realTasks.length : mockTasks.length;
+
+  const githubScans = scanHistory.filter(s => s.scan_type === "github");
+  const githubCompliant = githubScans.length > 0 ? (githubScans[0].summary?.compliant ?? 0) : 0;
+  const githubTotal = githubScans.length > 0 ? (githubScans[0].summary?.total ?? 0) : 0;
+  const githubPct = githubTotal > 0 ? Math.round((githubCompliant / githubTotal) * 100) : 0;
+  const hasGithubData = githubTotal > 0;
+
+  // Combined score: avg AWS + manual
+  const awsScore = hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0;
+  const manualScore = totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0;
+  const score = org?.readiness_score ?? (hasRealData || totalTaskCount > 0 ? Math.round((awsScore + manualScore) / 2) : 0);
   const inProgressTasks = realTasks.length > 0 ? 0 : mockTasks.filter(t => t.status === "in_progress").length;
   const totalEvidence = mockEvidenceItems.reduce((a, b) => a + b.items, 0);
   const collectedEvidence = mockEvidenceItems.reduce((a, b) => a + b.collected, 0);
@@ -191,8 +195,17 @@ export default function DashboardPage() {
             {realtimeConnected && <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block ml-1" />}
           </span>
         ) : (
-          <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-blue-600 hover:border-blue-300 transition">
-            + Connect AWS
+          <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-orange-600 hover:border-orange-300 transition">
+            + AWS
+          </a>
+        )}
+        {githubConnected ? (
+          <span className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-full font-medium">
+            🐙 GitHub
+          </span>
+        ) : (
+          <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-gray-700 hover:border-gray-400 transition">
+            + GitHub
           </a>
         )}
       </div>
