@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { getOrg, getSession, supabase, type OrgRow } from "@/lib/supabase";
 
 export interface ControlRow {
@@ -79,6 +79,7 @@ interface OrgContextValue {
   policies: PolicyRow[];
   githubFindings: RawFinding[];
   realtimeConnected: boolean;
+  pushActivityEvent: (event: Omit<TimelineEvent, "id">) => void;
 }
 
 const OrgContext = createContext<OrgContextValue>({
@@ -94,6 +95,7 @@ const OrgContext = createContext<OrgContextValue>({
   policies: [],
   githubFindings: [],
   realtimeConnected: false,
+  pushActivityEvent: () => {},
 });
 
 export function OrgProvider({ children }: { children: ReactNode }) {
@@ -109,6 +111,11 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [policies, setPolicies] = useState<PolicyRow[]>([]);
   const [githubFindings, setGithubFindings] = useState<RawFinding[]>([]);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
+
+  const pushActivityEvent = useCallback((event: Omit<TimelineEvent, "id">) => {
+    const newEvent: TimelineEvent = { ...event, id: `local-${Date.now()}` };
+    setTimeline(prev => [newEvent, ...prev]);
+  }, []);
 
   function buildTimeline(org: OrgRow | null, scans: ScanEvent[]): TimelineEvent[] {
     const events: TimelineEvent[] = [];
@@ -301,7 +308,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, lastGithubScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected }}>
+    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, lastGithubScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected, pushActivityEvent }}>
       {children}
     </OrgContext.Provider>
   );

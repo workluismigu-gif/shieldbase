@@ -371,7 +371,7 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 function MonitoringPage() {
-  const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org } = useOrg();
+  const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org, pushActivityEvent } = useOrg();
   const searchParams = useSearchParams();
   const [provider, setProvider] = useState<"aws" | "github">(searchParams.get("provider") === "github" ? "github" : "aws");
 
@@ -385,6 +385,14 @@ function MonitoringPage() {
   const triggerScan = async () => {
     setScanning(true);
     setScanMsg("");
+    const providerLabel = provider === "github" ? "🐙 GitHub" : "☁️ AWS";
+    // Log initiation immediately to activity center
+    pushActivityEvent({
+      type: "scan",
+      title: `${providerLabel} scan initiated`,
+      detail: `Manual trigger — results in ~${provider === "github" ? "2" : "10-15"} minutes`,
+      timestamp: new Date().toISOString(),
+    });
     try {
       const res = await fetch("/api/scan/trigger", {
         method: "POST",
@@ -395,8 +403,22 @@ function MonitoringPage() {
       setScanMsg(res.ok
         ? `Scan triggered — updates in ~${provider === "github" ? "2" : "10-15"} minutes.`
         : `Error: ${json.error}`);
+      if (!res.ok) {
+        pushActivityEvent({
+          type: "scan",
+          title: `${providerLabel} scan failed to trigger`,
+          detail: json.error || "Unknown error",
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch {
       setScanMsg("Failed to trigger scan.");
+      pushActivityEvent({
+        type: "scan",
+        title: `${providerLabel} scan failed to trigger`,
+        detail: "Network error",
+        timestamp: new Date().toISOString(),
+      });
     } finally {
       setScanning(false);
     }
