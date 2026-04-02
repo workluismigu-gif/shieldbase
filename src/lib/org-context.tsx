@@ -219,14 +219,17 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           // Fetch latest GitHub scan findings
           const { data: githubScan } = await supabase
             .from("scan_results")
-            .select("findings")
+            .select("findings, scan_type")
             .eq("org_id", orgId)
-            .eq("scan_type", "github")
+            // .eq("scan_type", "github")  // TEMP: removed to debug
             .order("created_at", { ascending: false })
             .limit(1)
             .single();
           if (githubScan?.findings && Array.isArray(githubScan.findings) && githubScan.findings.length > 0) {
             setGithubFindings(githubScan.findings as RawFinding[]);
+            console.log("GitHub findings loaded, scan_type:", githubScan.scan_type);
+          } else {
+            console.log("No GitHub findings. Latest scan:", githubScan);
           }
         }
       } catch (e) {
