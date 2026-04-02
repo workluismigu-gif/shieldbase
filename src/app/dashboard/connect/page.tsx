@@ -15,11 +15,46 @@ export default function ConnectPage() {
   const awsConnected = !!techStack.aws_role_arn;
   const githubConnected = !!techStack.github_token;
 
+  const awsAccountId = techStack.aws_role_arn ? (techStack.aws_role_arn.split(":")[4] ?? "") : "";
+  const awsRoleName = techStack.aws_role_arn ? (techStack.aws_role_arn.split("/").pop() ?? "") : "";
+  const githubLogin = techStack.github_login ?? "Connected";
+
   const [step, setStep] = useState<Step>("choose");
   const [arnInput, setArnInput] = useState("");
   const [arnSaved, setArnSaved] = useState(awsConnected);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [disconnectConfirm, setDisconnectConfirm] = useState<string | null>(null);
+
+  const handleDisconnect = async (provider: string) => {
+    if (disconnectConfirm === provider) {
+      const t = { ...techStack };
+      if (provider === "aws") { delete t.aws_role_arn; delete t.aws_connected_at; }
+      if (provider === "github") { delete t.github_token; delete t.github_login; delete t.github_connected_at; }
+      await supabase.from("organizations").update({ tech_stack: t }).eq("id", org!.id);
+      window.location.reload();
+    } else {
+      setDisconnectConfirm(provider);
+      setTimeout(() => setDisconnectConfirm(null), 3000);
+    }
+  };
+
+  const handleScanNow = async (provider: string) => {
+    try {
+      const res = await fetch("/api/scan/trigger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      if (res.ok) {
+        alert(`${provider} scan triggered! Check the monitoring page in a few minutes.`);
+      } else {
+        alert("Scan trigger failed — try again from the monitoring page.");
+      }
+    } catch {
+      alert("Scan trigger failed — try again from the monitoring page.");
+    }
+  };
 
   const saveArn = async () => {
     if (!arnInput.startsWith("arn:aws:iam::")) {
@@ -57,81 +92,155 @@ export default function ConnectPage() {
     return (
       <div className="space-y-8 max-w-3xl">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Connect Your Tools</h1>
-          <p className="text-sm text-gray-500 mt-1">Connect your cloud accounts and services so ShieldBase can automatically collect compliance evidence. No technical setup required.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+          <p className="text-sm text-gray-500 mt-1">Connect your cloud accounts and services so ShieldBase can automatically collect compliance evidence.</p>
         </div>
 
-        {/* Already connected */}
-        {(awsConnected || githubConnected) && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">✅ Connected ({[awsConnected, githubConnected].filter(Boolean).length})</h2>
-            {awsConnected && (
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">☁️</span>
-                  <div>
-                    <div className="text-sm font-medium text-gray-800">Amazon Web Services</div>
-                    <div className="text-xs text-gray-400 font-mono truncate max-w-xs">{techStack.aws_role_arn}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">● Active</span>
-                  <button onClick={async () => {
-                    const t = {...techStack}; delete t.aws_role_arn; delete t.aws_connected_at;
-                    await supabase.from("organizations").update({ tech_stack: t }).eq("id", org!.id);
-                    window.location.reload();
-                  }} className="text-xs text-gray-400 hover:text-red-500 transition">Disconnect</button>
-                </div>
-              </div>
-            )}
-            {githubConnected && (
-            <div key="github" className="flex items-center justify-between py-2">
+        <div className="grid md:grid-cols-2 gap-4">
+
+          {/* AWS */}
+          <div className={`bg-white rounded-2xl border p-6 ${awsConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
+            <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🐙</span>
+                <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl">☁️</div>
                 <div>
-                  <div className="text-sm font-medium text-gray-800">GitHub</div>
-                  <div className="text-xs text-gray-400">{techStack.github_login}</div>
+                  <div className="font-semibold text-gray-900">Amazon Web Services</div>
+                  <div className="text-xs text-gray-400">Cloud provider</div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">● Active</span>
-                <button onClick={async () => {
-                  const t = {...techStack}; delete t.github_token; delete t.github_login; delete t.github_connected_at;
-                  await supabase.from("organizations").update({ tech_stack: t }).eq("id", org!.id);
-                  window.location.reload();
-                }} className="text-xs text-gray-400 hover:text-red-500 transition">Disconnect</button>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${awsConnected ? "bg-green-500" : "bg-gray-300"}`} />
+                <span className={`text-xs font-medium ${awsConnected ? "text-green-600" : "text-gray-400"}`}>
+                  {awsConnected ? "Connected" : "Not connected"}
+                </span>
               </div>
             </div>
-          )}
-          </div>
-        )}
-
-        {/* Available to connect */}
-        <div>
-          <h2 className="font-semibold text-gray-800 mb-4">Add Integration</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {[
-              { id: "aws" as Step, name: "Amazon Web Services", logo: "☁️", desc: "Scan your cloud infrastructure for security gaps", priority: true },
-              { id: "github" as Step, name: "GitHub", logo: "🐙", desc: "Monitor branch protection, access, and code reviews", priority: false },
-              { id: "google" as Step, name: "Google Workspace", logo: "📧", desc: "Monitor users, MFA enforcement, and admin roles", priority: false },
-              { id: "slack" as Step, name: "Slack", logo: "💬", desc: "Monitor workspace settings and data retention", priority: false },
-            ].map(int => (
-              <button key={int.id} onClick={() => setStep(int.id)}
-                className="bg-white rounded-2xl border border-gray-200 p-5 text-left hover:border-blue-300 hover:shadow-sm transition group">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl group-hover:bg-blue-50 transition">{int.logo}</div>
-                    <div>
-                      <div className="font-semibold text-gray-900">{int.name}</div>
-                      {int.priority && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">Recommended first</span>}
-                    </div>
+            {awsConnected ? (
+              <>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Account ID</span>
+                    <span className="font-mono font-medium text-gray-800">{awsAccountId || "—"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Role</span>
+                    <span className="font-mono font-medium text-gray-800 truncate max-w-[160px]">{awsRoleName || "—"}</span>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">{int.desc}</p>
-                <div className="mt-3 text-sm text-blue-600 font-medium group-hover:text-blue-700">Connect →</div>
-              </button>
-            ))}
+                <div className="flex gap-2">
+                  <button onClick={() => handleScanNow("aws")}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm py-2 rounded-lg font-medium transition">
+                    Scan Now
+                  </button>
+                  <button onClick={() => handleDisconnect("aws")}
+                    className={`text-sm px-4 py-2 rounded-lg font-medium transition border ${
+                      disconnectConfirm === "aws"
+                        ? "bg-red-500 text-white border-red-500"
+                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-600"
+                    }`}>
+                    {disconnectConfirm === "aws" ? "Confirm?" : "Disconnect"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">Automatically scan your AWS infrastructure for IAM, S3, CloudTrail, RDS, and 100+ SOC 2 checks.</p>
+                <button onClick={() => setStep("aws")}
+                  className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white text-sm py-2.5 rounded-lg font-medium transition">
+                  Connect AWS →
+                </button>
+              </>
+            )}
           </div>
+
+          {/* GitHub */}
+          <div className={`bg-white rounded-2xl border p-6 ${githubConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-2xl">🐙</div>
+                <div>
+                  <div className="font-semibold text-gray-900">GitHub</div>
+                  <div className="text-xs text-gray-400">Source control</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${githubConnected ? "bg-green-500" : "bg-gray-300"}`} />
+                <span className={`text-xs font-medium ${githubConnected ? "text-green-600" : "text-gray-400"}`}>
+                  {githubConnected ? "Connected" : "Not connected"}
+                </span>
+              </div>
+            </div>
+            {githubConnected ? (
+              <>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Account</span>
+                    <span className="font-medium text-gray-800">@{githubLogin}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleScanNow("github")}
+                    className="flex-1 bg-gray-900 hover:bg-gray-700 text-white text-sm py-2 rounded-lg font-medium transition">
+                    Scan Now
+                  </button>
+                  <button onClick={() => handleDisconnect("github")}
+                    className={`text-sm px-4 py-2 rounded-lg font-medium transition border ${
+                      disconnectConfirm === "github"
+                        ? "bg-red-500 text-white border-red-500"
+                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-600"
+                    }`}>
+                    {disconnectConfirm === "github" ? "Confirm?" : "Disconnect"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">Monitor branch protection, code reviews, 2FA enforcement, Dependabot alerts, and secret scanning across your repos.</p>
+                <button onClick={() => setStep("github")}
+                  className="block w-full text-center bg-gray-900 hover:bg-gray-700 text-white text-sm py-2.5 rounded-lg font-medium transition">
+                  Connect GitHub →
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Google Workspace — Coming Soon */}
+          <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-6 opacity-60">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl border border-gray-200">📧</div>
+                <div>
+                  <div className="font-semibold text-gray-600">Google Workspace</div>
+                  <div className="text-xs text-gray-400">Identity provider</div>
+                </div>
+              </div>
+              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
+            </div>
+            <p className="text-sm text-gray-400">Monitor user accounts, MFA enforcement, admin roles, and login activity across your Google Workspace org.</p>
+          </div>
+
+          {/* Slack — Coming Soon */}
+          <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-6 opacity-60">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl border border-gray-200">💬</div>
+                <div>
+                  <div className="font-semibold text-gray-600">Slack</div>
+                  <div className="text-xs text-gray-400">Communication</div>
+                </div>
+              </div>
+              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
+            </div>
+            <p className="text-sm text-gray-400">Monitor workspace settings, SSO enforcement, data retention policies, and admin roles.</p>
+          </div>
+
+        </div>
+
+        <div className="text-center pt-2">
+          <a href="mailto:hello@shieldbase.io?subject=Integration request"
+            className="text-sm text-blue-600 hover:underline font-medium">
+            Missing an integration? Let us know →
+          </a>
         </div>
       </div>
     );
