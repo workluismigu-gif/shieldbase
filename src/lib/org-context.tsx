@@ -129,9 +129,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     for (const int of integrations) {
       if (int.connectedAt) {
         events.push({ id: `${int.key}-connected`, type: "integration", title: `${int.label} connected`, detail: int.detail, timestamp: int.connectedAt });
-      } else if (int.key === "aws" && tech.aws_role_arn) {
-        events.push({ id: "aws-connected", type: "integration", title: "AWS connected", detail: tech.aws_role_arn, timestamp: new Date().toISOString() });
       }
+      // Don't show integration events without a real timestamp
     }
 
     // Scans — label by provider
