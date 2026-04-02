@@ -345,7 +345,9 @@ export default function DashboardPage() {
           <div className="space-y-4">
             {timeline.map((event, i) => {
               const dotColor = event.type === "scan" ? "bg-orange-500" : event.type === "integration" ? "bg-blue-500" : "bg-gray-400";
-              const icon = event.type === "scan" ? "🔍" : event.type === "integration" ? "🔌" : "🏢";
+              const providerIcons: Record<string, string> = { AWS: "☁️", GitHub: "🐙", "Google Workspace": "📧", Azure: "🔷" };
+              const integrationIcon = event.type === "integration" ? (Object.entries(providerIcons).find(([k]) => event.title.includes(k))?.[1] ?? "🔌") : "";
+              const icon = event.type === "scan" ? "🔍" : event.type === "integration" ? integrationIcon : "🏢";
               return (
                 <div key={event.id} className="flex gap-4">
                   <div className="flex flex-col items-center">

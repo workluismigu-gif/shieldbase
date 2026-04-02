@@ -50,6 +50,22 @@ export interface ScanEvent {
   };
 }
 
+export interface RawFinding {
+  check_id?: string;
+  metadata?: { event_code?: string };
+  finding_info?: { title?: string; desc?: string };
+  status_code?: string;
+  status?: string;
+  severity?: string;
+  message?: string;
+  status_detail?: string;
+  remediation?: { desc?: string };
+  unmapped?: { compliance?: Record<string, string[]>; categories?: string[] };
+  cloud?: { region?: string };
+  resources?: Array<{ group?: { name?: string }; type?: string }>;
+  provider?: string;
+}
+
 interface OrgContextValue {
   org: OrgRow | null;
   userEmail: string | null;
@@ -60,6 +76,7 @@ interface OrgContextValue {
   timeline: TimelineEvent[];
   tasks: TaskRow[];
   policies: PolicyRow[];
+  githubFindings: RawFinding[];
   realtimeConnected: boolean;
 }
 
@@ -73,6 +90,7 @@ const OrgContext = createContext<OrgContextValue>({
   timeline: [],
   tasks: [],
   policies: [],
+  githubFindings: [],
   realtimeConnected: false,
 });
 
@@ -86,6 +104,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [policies, setPolicies] = useState<PolicyRow[]>([]);
+  const [githubFindings, setGithubFindings] = useState<RawFinding[]>([]);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   function buildTimeline(org: OrgRow | null, scans: ScanEvent[]): TimelineEvent[] {
@@ -109,9 +128,9 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
     for (const int of integrations) {
       if (int.connectedAt) {
-        events.push({ id: `${int.key}-connected`, type: "integration", title: `${int.icon} ${int.label} connected`, detail: int.detail, timestamp: int.connectedAt });
+        events.push({ id: `${int.key}-connected`, type: "integration", title: `${int.label} connected`, detail: int.detail, timestamp: int.connectedAt });
       } else if (int.key === "aws" && tech.aws_role_arn) {
-        events.push({ id: "aws-connected", type: "integration", title: `☁️ AWS connected`, detail: tech.aws_role_arn, timestamp: new Date().toISOString() });
+        events.push({ id: "aws-connected", type: "integration", title: "AWS connected", detail: tech.aws_role_arn, timestamp: new Date().toISOString() });
       }
     }
 
@@ -181,6 +200,19 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             .eq("org_id", orgId)
             .order("updated_at", { ascending: false });
           if (policyData) setPolicies(policyData as PolicyRow[]);
+
+          // Fetch latest GitHub scan findings
+          const { data: githubScan } = await supabase
+            .from("scan_results")
+            .select("findings")
+            .eq("org_id", orgId)
+            .eq("scan_type", "github")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+          if (githubScan?.findings && Array.isArray(githubScan.findings)) {
+            setGithubFindings(githubScan.findings as RawFinding[]);
+          }
         }
       } catch (e) {
         console.error("Failed to load org context:", e);
@@ -242,7 +274,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, timeline, tasks, policies, realtimeConnected }}>
+    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected }}>
       {children}
     </OrgContext.Provider>
   );
