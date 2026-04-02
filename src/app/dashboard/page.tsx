@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { mockTasks, mockPolicies } from "@/lib/mock-data";
-import { useOrg, type ControlRow, type RawFinding } from "@/lib/org-context";
+import { useOrg, type ControlRow, type RawFinding, type TimelineEvent } from "@/lib/org-context";
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 54;
@@ -329,6 +329,165 @@ function ScanResultsTabs({
   );
 }
 
+// ─── CLI ACTIVITY TERMINAL ─────────────────────────────────────────────────────────
+
+interface CliLine {
+  id: string;
+  ts: string;
+  level: "info" | "success" | "warn" | "error" | "system";
+  prefix: string;
+  msg: string;
+}
+
+function toCliLines(events: TimelineEvent[]): CliLine[] {
+  return events.map(e => {
+    const ts = new Date(e.timestamp).toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const date = new Date(e.timestamp).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" });
+    let level: CliLine["level"] = "info";
+    let prefix = "[SYS]";
+    if (e.type === "scan") { level = "success"; prefix = e.title.includes("GitHub") ? "[GH] " : "[AWS]"; }
+    if (e.type === "integration") { level = "system"; prefix = "[INT]"; }
+    if (e.detail?.toLowerCase().includes("fail") || e.detail?.toLowerCase().includes("error")) level = "error";
+    return { id: e.id, ts: `${date} ${ts}`, level, prefix, msg: `${e.title}${e.detail ? ` — ${e.detail}` : ""}` };
+  });
+}
+
+const CLI_COLORS: Record<CliLine["level"], string> = {
+  info:    "text-gray-400",
+  success: "text-green-400",
+  warn:    "text-yellow-400",
+  error:   "text-red-400",
+  system:  "text-blue-400",
+};
+
+const CLI_PREFIX_COLORS: Record<CliLine["level"], string> = {
+  info:    "text-gray-500",
+  success: "text-green-500",
+  warn:    "text-yellow-500",
+  error:   "text-red-500",
+  system:  "text-blue-500",
+};
+
+function useGithubAutoPoll(orgId: string | undefined, intervalMs = 5 * 60 * 1000) {
+  const trigger = useCallback(async () => {
+    if (!orgId) return;
+    try {
+      await fetch("/api/scan/trigger", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer shieldbase-internal-2026" },
+        body: JSON.stringify({ org_id: orgId, provider: "github" }),
+      });
+    } catch { /* silent */ }
+  }, [orgId]);
+
+  useEffect(() => {
+    if (!orgId) return;
+    const id = setInterval(trigger, intervalMs);
+    return () => clearInterval(id);
+  }, [orgId, intervalMs, trigger]);
+}
+
+function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgId?: string }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [blink, setBlink] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
+  const [minimized, setMinimized] = useState(false);
+
+  useGithubAutoPoll(orgId);
+
+  useEffect(() => {
+    const id = setInterval(() => setBlink(b => !b), 530);
+    return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    if (!collapsed && !minimized && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [timeline, collapsed, minimized]);
+
+  const lines = toCliLines([...timeline].reverse().slice(0, 50));
+  const unreadCount = lines.filter(l => l.level === "error" || l.level === "warn").length;
+
+  // Minimized dock pill
+  if (minimized) {
+    return (
+      <button onClick={() => setMinimized(false)}
+        className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 font-mono text-xs text-gray-400 hover:text-white hover:border-gray-500 transition shadow-lg w-fit">
+        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+        <span>activity-monitor</span>
+        {unreadCount > 0 && <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">{unreadCount}</span>}
+        <span className="text-gray-600 ml-1">[expand]</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-gray-800 shadow-xl">
+      {/* Title bar — IRC style */}
+      <div className="bg-gray-900 px-3 py-2 flex items-center gap-2 border-b border-gray-800 select-none">
+        {/* Window controls */}
+        <div className="flex gap-1.5">
+          <button onClick={() => setMinimized(true)}
+            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-400 transition flex items-center justify-center"
+            title="Minimize">
+            <span className="text-red-900 text-[8px] font-bold leading-none opacity-0 hover:opacity-100">−</span>
+          </button>
+          <button onClick={() => setCollapsed(c => !c)}
+            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-400 transition"
+            title={collapsed ? "Expand" : "Collapse"} />
+          <div className="w-3 h-3 rounded-full bg-green-500 opacity-40 cursor-default" />
+        </div>
+
+        {/* Channel name */}
+        <div className="flex-1 flex items-center justify-center gap-2">
+          <span className="text-gray-600 font-mono text-xs">#</span>
+          <span className="text-gray-400 font-mono text-xs">activity-monitor</span>
+          {!collapsed && (
+            <span className="flex items-center gap-1 text-xs text-green-500 font-mono ml-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> LIVE
+            </span>
+          )}
+        </div>
+
+        {/* Right side controls */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-600 font-mono">gh↓ 5m</span>
+          <button onClick={() => setCollapsed(c => !c)}
+            className="text-gray-600 hover:text-gray-300 transition font-mono text-xs px-1">
+            {collapsed ? "▲ expand" : "▼ collapse"}
+          </button>
+        </div>
+      </div>
+
+      {/* Terminal body */}
+      {!collapsed && (
+        <div ref={scrollRef} className="bg-gray-950 p-4 h-64 overflow-y-auto font-mono text-xs space-y-1 scroll-smooth">
+          {/* Channel join message */}
+          <div className="text-gray-600 mb-2">--- Joined #activity-monitor | read-only feed | {lines.length} events ---</div>
+
+          {lines.length === 0 ? (
+            <div className="text-gray-600">No activity yet. Connect an integration to start scanning.</div>
+          ) : lines.map(line => (
+            <div key={line.id} className="flex items-start gap-2 leading-relaxed">
+              <span className="text-gray-600 flex-shrink-0 tabular-nums">{line.ts}</span>
+              <span className={`flex-shrink-0 font-bold ${CLI_PREFIX_COLORS[line.level]}`}>{line.prefix}</span>
+              <span className={CLI_COLORS[line.level]}>{line.msg}</span>
+            </div>
+          ))}
+
+          {/* Blinking cursor — no input */}
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-green-600 font-bold">$</span>
+            <span className={`inline-block w-2 h-3.5 bg-green-500 ${blink ? "opacity-100" : "opacity-0"} transition-opacity duration-100`} />
+            <span className="text-gray-700 text-xs italic">read-only</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const priorityColor = { critical: "bg-red-100 text-red-700", high: "bg-orange-100 text-orange-700", medium: "bg-yellow-100 text-yellow-700", low: "bg-blue-100 text-blue-700" };
 const statusColor = { todo: "bg-gray-100 text-gray-600", in_progress: "bg-blue-100 text-blue-700", done: "bg-green-100 text-green-700" };
 const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
@@ -611,38 +770,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Timeline */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Activity Timeline</h2>
-        {timeline.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <div className="text-3xl mb-2">📡</div>
-            <p className="text-sm">No activity yet. Connect AWS to get started.</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {timeline.map((event, i) => {
-              const dotColor = event.type === "scan" ? "bg-orange-500" : event.type === "integration" ? "bg-blue-500" : "bg-gray-400";
-              const providerIcons: Record<string, string> = { AWS: "☁️", GitHub: "🐙", "Google Workspace": "📧", Azure: "🔷" };
-              const integrationIcon = event.type === "integration" ? (Object.entries(providerIcons).find(([k]) => event.title.includes(k))?.[1] ?? "🔌") : "";
-              const icon = event.type === "scan" ? "🔍" : event.type === "integration" ? integrationIcon : "🏢";
-              return (
-                <div key={event.id} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${dotColor}`} />
-                    {i < timeline.length - 1 && <div className="w-px flex-1 bg-gray-200 mt-1" />}
-                  </div>
-                  <div className="pb-4">
-                    <div className="text-sm text-gray-800">{icon} {event.title}</div>
-                    {event.detail && <div className="text-xs text-gray-500 mt-0.5 truncate max-w-md">{event.detail}</div>}
-                    <div className="text-xs text-gray-400 mt-0.5">{new Date(event.timestamp).toLocaleString()}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      {/* CLI Activity Center */}
+      <ActivityTerminal timeline={timeline} orgId={org?.id} />
     </div>
   );
 }
