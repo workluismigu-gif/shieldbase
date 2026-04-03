@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         timestamp: now,
       });
     } catch {
-      // silent if table doesn't exist
+      // silent if table doesn't exist yet
     }
   }
 

@@ -114,7 +114,8 @@ export async function POST(req: NextRequest) {
     });
     if (scanError) throw scanError;
 
-    // Upsert controls
+    // Upsert controls with change detection
+    const now = new Date().toISOString();
     const controlRows = controls.map(c => ({
       org_id,
       category: c.category,
@@ -123,14 +124,58 @@ export async function POST(req: NextRequest) {
       description: c.description,
       status: c.status,
       severity: c.severity,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     }));
 
     if (controlRows.length > 0) {
+      // Fetch existing controls to detect changes
+      const { data: existingControls } = await supabase
+        .from("controls")
+        .select("control_id, status")
+        .eq("org_id", org_id);
+
+      const existingMap = new Map((existingControls ?? []).map(c => [c.control_id, c.status]));
+      const changes: { control_id: string; oldStatus: string; newStatus: string; title: string }[] = [];
+
+      for (const ctrl of controls) {
+        const oldStatus = existingMap.get(ctrl.control_id);
+        if (oldStatus && oldStatus !== ctrl.status) {
+          changes.push({ control_id: ctrl.control_id, oldStatus, newStatus: ctrl.status, title: ctrl.title });
+        }
+      }
+
+      // Upsert controls with previous_status tracking
       const { error: controlError } = await supabase
         .from("controls")
         .upsert(controlRows, { onConflict: "org_id,control_id" });
       if (controlError) console.warn("Control upsert warning:", controlError.message);
+
+      // Update previous_status to match current status (for next comparison)
+      for (const ctrl of controls) {
+        await supabase
+          .from("controls")
+          .update({ previous_status: ctrl.status })
+          .eq("org_id", org_id)
+          .eq("control_id", ctrl.control_id);
+      }
+
+      // Log control changes to activity_events
+      for (const change of changes) {
+        const icon = change.newStatus === "compliant" ? "✅" : change.newStatus === "non_compliant" ? "❌" : "⚠️";
+        const oldLabel = change.oldStatus === "compliant" ? "passing" : change.oldStatus === "non_compliant" ? "failing" : change.oldStatus;
+        const newLabel = change.newStatus === "compliant" ? "passing" : change.newStatus === "non_compliant" ? "failing" : change.newStatus;
+        try {
+          await supabase.from("activity_events").insert({
+            org_id,
+            type: "control_change",
+            title: `${icon} ${change.control_id}: ${change.title}`,
+            detail: `${oldLabel} → ${newLabel}`,
+            timestamp: now,
+          });
+        } catch {
+          // silent if table doesn't exist yet
+        }
+      }
     }
 
     // Update org readiness score

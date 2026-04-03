@@ -351,6 +351,12 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
       else level = "success";
     }
     if (e.type === "integration") { level = "system"; prefix = "[INT]"; }
+    if (e.type === "control_change") {
+      prefix = "[CTL]";
+      if (e.title.includes("?")) level = "success";
+      else if (e.title.includes("?")) level = "error";
+      else level = "warn";
+    }
     if (e.detail?.toLowerCase().includes("fail") || e.detail?.toLowerCase().includes("error") || e.title.toLowerCase().includes("error")) level = "error";
     return { id: e.id, ts: `${date} ${ts}`, level, prefix, msg: `${e.title}${e.detail ? ` — ${e.detail}` : ""}` };
   });

@@ -31,7 +31,7 @@ export interface PolicyRow {
 
 export interface TimelineEvent {
   id: string;
-  type: "scan" | "integration" | "org_created";
+  type: "scan" | "integration" | "org_created" | "control_change";
   title: string;
   detail?: string;
   timestamp: string;
@@ -200,6 +200,25 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           }
           setTimeline(buildTimeline(orgData, scans));
 
+          // Fetch activity events (control changes, scan initiations)
+          const { data: activityData } = await supabase
+            .from("activity_events")
+            .select("id, type, title, detail, timestamp")
+            .eq("org_id", orgId)
+            .order("timestamp", { ascending: false })
+            .limit(50);
+          if (activityData && activityData.length > 0) {
+            const activityEvents = activityData as TimelineEvent[];
+            setTimeline(prev => {
+              const existingIds = new Set(prev.map(e => e.id));
+              const newEvents = activityEvents.filter(e => !existingIds.has(e.id));
+              const merged = [...newEvents, ...prev].sort((a, b) =>
+                new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+              ).slice(0, 50);
+              return merged;
+            });
+          }
+
           // Fetch tasks
           const { data: taskData } = await supabase
             .from("checklist_items")
@@ -311,6 +330,17 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             if (ghScan?.findings && Array.isArray(ghScan.findings) && (ghScan.findings as unknown[]).length > 0) {
               setGithubFindings(ghScan.findings as RawFinding[]);
             }
+          }
+        )
+        // Realtime activity events (control changes, scan initiations)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "activity_events", filter: `org_id=eq.${orgId}` },
+          async (payload) => {
+            const newEvent = payload.new as TimelineEvent;
+            setTimeline(prev => {
+              const exists = prev.some(e => e.id === newEvent.id);
+              if (exists) return prev;
+              return [newEvent, ...prev].slice(0, 50);
+            });
           }
         )
         .subscribe((status) => {
