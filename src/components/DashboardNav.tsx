@@ -7,7 +7,7 @@ const navItems = [
   { label: "Documents", href: "/dashboard/documents", icon: "📄" },
   { label: "Checklist", href: "/dashboard/checklist", icon: "✅" },
   { label: "Monitoring", href: "/dashboard/monitoring", icon: "🔍" },
-  { label: "Settings", href: "/settings", icon: "⚙️" },
+  { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
 ];
 
 export default function DashboardNav() {
