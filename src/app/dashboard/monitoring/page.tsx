@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useOrg, type ControlRow, type RawFinding } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
+import { generateEvidencePackage, downloadEvidencePackage, generateBulkEvidencePackage } from "@/lib/evidence-package";
 
 // ─── AWS CATEGORIES ───────────────────────────────────────────────────────────
 
@@ -384,6 +385,28 @@ function MonitoringPage() {
   }, [searchParams]);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportEvidence = async () => {
+    setExporting(true);
+    try {
+      if (!org?.id) return;
+      const bulk = await generateBulkEvidencePackage(supabase as unknown as ReturnType<typeof import("@supabase/supabase-js").createClient>, org.id);
+      const blob = new Blob([JSON.stringify(bulk, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SOC2-evidence-package-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Evidence export error:", err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const triggerScan = async () => {
     setScanning(true);
@@ -442,6 +465,10 @@ function MonitoringPage() {
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live
             </span>
           )}
+          <button onClick={handleExportEvidence} disabled={exporting || !org?.id}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
+            📦 {exporting ? "Exporting..." : "Export Evidence"}
+          </button>
           <button onClick={triggerScan} disabled={scanning || !org?.id}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
             <span className={scanning ? "animate-spin" : ""}>🔍</span>
