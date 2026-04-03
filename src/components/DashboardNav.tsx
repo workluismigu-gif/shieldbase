@@ -6,7 +6,8 @@ const navItems = [
   { label: "Overview", href: "/dashboard", icon: "📊" },
   { label: "Documents", href: "/dashboard/documents", icon: "📄" },
   { label: "Checklist", href: "/dashboard/checklist", icon: "✅" },
-  { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
+  { label: "Monitoring", href: "/dashboard/monitoring", icon: "🔍" },
+  { label: "Integrations", href: "/dashboard/connect", icon: "🔌" },
 ];
 
 export default function DashboardNav() {
