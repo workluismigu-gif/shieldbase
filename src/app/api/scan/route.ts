@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { parseProwlerOutput, generateSummary, type MappedControl } from "@/lib/prowler-mapper";
+import { collectControlEvidence, type EvidenceRecord } from "@/lib/evidence-collector";
 
 // Keywords that map Prowler check titles to checklist task names
 const TASK_AUTO_COMPLETE: Array<{ keywords: string[]; taskMatch: string }> = [
@@ -186,6 +187,39 @@ export async function POST(req: NextRequest) {
 
     // Auto-complete checklist tasks based on passing controls
     await autoCompleteChecklistTasks(supabase, org_id, controls);
+
+    // Phase 2: Collect evidence for passing controls
+    const { data: scanResultRow } = await supabase
+      .from("scan_results")
+      .select("id")
+      .eq("org_id", org_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single() as { data: { id: string } | null; error: unknown };
+    const scanResultId = scanResultRow?.id;
+
+    for (const ctrl of controls) {
+      if (ctrl.status === "compliant") {
+        // Find the raw finding for this control
+        const rawFinding = (scan_data as Array<Record<string, unknown>>).find(
+          (f) => {
+            const checkId = f.check_id as string | undefined;
+            const compliance = f.compliance as Record<string, string[]> | undefined;
+            return checkId === ctrl.control_id || compliance?.soc2_aws?.includes(ctrl.control_id);
+          }
+        );
+        if (rawFinding) {
+          await collectControlEvidence(supabase as unknown as ReturnType<typeof import("@supabase/supabase-js").createClient>, {
+            org_id,
+            control_id: ctrl.control_id,
+            scan_id: scanResultId,
+            evidence_type: "api_response",
+            evidence_data: rawFinding,
+            collected_at: now,
+          });
+        }
+      }
+    }
 
     return NextResponse.json({ ok: true, summary, controls_mapped: controls.length });
   } catch (err: unknown) {
