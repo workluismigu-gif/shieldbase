@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
     );
 
     // Fetch orgs to scan
-    const filterKey = provider === "github" ? "tech_stack->github_token" : "tech_stack->aws_role_arn";
+    const filterKey = provider === "github" ? "tech_stack->github_token" : 
+                      provider === "azure" ? "tech_stack->azure_subscription_id" :
+                      "tech_stack->aws_role_arn";
     let query = supabase
       .from("organizations")
       .select("id, name, tech_stack")
@@ -31,7 +33,7 @@ export async function POST(req: NextRequest) {
     const { data: orgs, error } = await query;
     if (error) throw error;
     if (!orgs || orgs.length === 0) {
-      return NextResponse.json({ ok: true, message: "No orgs with AWS connected" });
+      return NextResponse.json({ ok: true, message: `No orgs with ${provider} connected` });
     }
 
     // Invoke Lambda for each org
@@ -40,7 +42,6 @@ export async function POST(req: NextRequest) {
 
     for (const org of orgs) {
       const techStack = (org.tech_stack ?? {}) as Record<string, string>;
-      const roleArn = techStack.aws_role_arn;
       const payload: Record<string, string> = { org_id: org.id, provider };
 
       if (provider === "github") {
@@ -48,7 +49,15 @@ export async function POST(req: NextRequest) {
         if (!githubToken) continue;
         payload.github_token = githubToken;
         payload.github_login = techStack.github_login ?? "";
+      } else if (provider === "azure") {
+        const subId = techStack.azure_subscription_id;
+        if (!subId) continue;
+        payload.subscription_id = subId;
+        payload.tenant_id = techStack.azure_tenant_id;
+        payload.client_id = techStack.azure_client_id;
+        payload.client_secret = techStack.azure_client_secret;
       } else {
+        const roleArn = techStack.aws_role_arn;
         if (!roleArn) continue;
         payload.role_arn = roleArn;
       }

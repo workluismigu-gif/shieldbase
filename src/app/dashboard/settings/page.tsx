@@ -7,13 +7,14 @@ const SHIELDBASE_AWS_ACCOUNT_ID = "886821787192";
 const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase-public-cfn.s3.amazonaws.com/cfn-shieldbase-readonly.json`;
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ?? "Ov23lihUSDcOADRW0Kkw";
 
-type Step = "choose" | "aws" | "github" | "google" | "slack" | "done";
+type Step = "choose" | "aws" | "github" | "google" | "slack" | "azure" | "done";
 
 export default function ConnectPage() {
   const { org } = useOrg();
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
   const awsConnected = !!techStack.aws_role_arn;
   const githubConnected = !!techStack.github_token;
+  const azureConnected = !!techStack.azure_subscription_id;
 
   const awsAccountId = techStack.aws_role_arn ? (techStack.aws_role_arn.split(":")[4] ?? "") : "";
   const awsRoleName = techStack.aws_role_arn ? (techStack.aws_role_arn.split("/").pop() ?? "") : "";
@@ -214,7 +215,7 @@ export default function ConnectPage() {
                   <div className="text-xs text-gray-400">Identity provider</div>
                 </div>
               </div>
-              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
+              
             </div>
             <p className="text-sm text-gray-400">Monitor user accounts, MFA enforcement, admin roles, and login activity across your Google Workspace org.</p>
           </div>
@@ -229,7 +230,7 @@ export default function ConnectPage() {
                   <div className="text-xs text-gray-400">Communication</div>
                 </div>
               </div>
-              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
+              
             </div>
             <p className="text-sm text-gray-400">Monitor workspace settings, SSO enforcement, data retention policies, and admin roles.</p>
           </div>
@@ -462,6 +463,72 @@ export default function ConnectPage() {
               <span>ðŸ’¬</span> Add to Slack â†’
             </button>
             <p className="text-xs text-gray-400 text-center">Redirects to Slack OAuth â€” you'll need Workspace Admin or Owner access</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  // Azure
+  if (step === "azure") {
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">? Back</button>
+          <span className="text-gray-300">|</span>
+          <span className="text-sm font-medium text-gray-700">Connect Microsoft Azure</span>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-[#0078D4] px-6 py-5 flex items-center gap-4">
+            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-2xl">??</div>
+            <div>
+              <h2 className="text-lg font-bold text-white">Microsoft Azure</h2>
+              <p className="text-sm text-blue-100">Read-only access · Requires Service Principal</p>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+              <p className="text-sm text-blue-800 font-medium mb-1">How this works</p>
+              <p className="text-xs text-blue-700">
+                We use a <strong>Service Principal</strong> with Reader and Security Reader roles to scan your Azure subscription.
+                Prowler checks for compliance with SOC 2, CIS, and other frameworks.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-gray-700">Required Information:</p>
+              <div className="grid gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Subscription ID</label>
+                  <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Tenant ID</label>
+                  <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Client ID (App ID)</label>
+                  <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Client Secret</label>
+                  <input type="password" placeholder="••••••••••••••••" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                </div>
+              </div>
+              <button className="w-full bg-[#0078D4] hover:bg-[#006cbd] text-white py-3 rounded-xl font-semibold transition">
+                Connect Azure ?
+              </button>
+            </div>
+
+            <div className="bg-gray-50 rounded-xl p-4 mt-2">
+              <p className="text-xs font-semibold text-gray-600 mb-2">?? Security & Privacy</p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>• ShieldBase uses <strong>Reader</strong> and <strong>Security Reader</strong> roles only</li>
+                <li>• We <strong>never</strong> modify, create, or delete any resources in your subscription</li>
+                <li>• Scan results are stored in your private Supabase database</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
