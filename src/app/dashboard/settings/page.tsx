@@ -215,7 +215,7 @@ export default function ConnectPage() {
                   <div className="text-xs text-gray-400">Identity provider</div>
                 </div>
               </div>
-              
+              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
             </div>
             <p className="text-sm text-gray-400">Monitor user accounts, MFA enforcement, admin roles, and login activity across your Google Workspace org.</p>
           </div>
@@ -230,9 +230,60 @@ export default function ConnectPage() {
                   <div className="text-xs text-gray-400">Communication</div>
                 </div>
               </div>
-              
+              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
             </div>
             <p className="text-sm text-gray-400">Monitor workspace settings, SSO enforcement, data retention policies, and admin roles.</p>
+          </div>
+
+          {/* Microsoft Azure */}
+          <div className={`bg-white rounded-2xl border p-6 ${azureConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#0078D4]/10 rounded-xl flex items-center justify-center text-2xl">üî∑</div>
+                <div>
+                  <div className="font-semibold text-gray-900">Microsoft Azure</div>
+                  <div className="text-xs text-gray-400">Cloud provider</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${azureConnected ? "bg-green-500" : "bg-gray-300"}`} />
+                <span className={`text-xs font-medium ${azureConnected ? "text-green-600" : "text-gray-400"}`}>
+                  {azureConnected ? "Connected" : "Not connected"}
+                </span>
+              </div>
+            </div>
+            {azureConnected ? (
+              <>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Subscription</span>
+                    <span className="font-mono font-medium text-gray-800 truncate max-w-[160px]">{techStack.azure_subscription_id || "‚Äî"}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleScanNow("azure")}
+                    className="flex-1 bg-[#0078D4] hover:bg-[#006cbd] text-white text-sm py-2 rounded-lg font-medium transition">
+                    Scan Now
+                  </button>
+                  <button onClick={() => handleDisconnect("azure")}
+                    className={`text-sm px-4 py-2 rounded-lg font-medium transition border ${
+                      disconnectConfirm === "azure"
+                        ? "bg-red-500 text-white border-red-500"
+                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-600"
+                    }`}>
+                    {disconnectConfirm === "azure" ? "Confirm?" : "Disconnect"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">Scan Azure infrastructure for IAM, Defender, Storage, SQL, and key security configurations.</p>
+                <button onClick={() => setStep("azure")}
+                  className="block w-full text-center bg-[#0078D4] hover:bg-[#006cbd] text-white text-sm py-2.5 rounded-lg font-medium transition">
+                  Connect Azure ‚Üí
+                </button>
+              </>
+            )}
           </div>
 
         </div>
@@ -468,22 +519,60 @@ export default function ConnectPage() {
       </div>
     );
   }
+
   // Azure
   if (step === "azure") {
+    const [subId, setSubId] = useState("");
+    const [tenantId, setTenantId] = useState("");
+    const [clientId, setClientId] = useState("");
+    const [clientSecret, setClientSecret] = useState("");
+    const [azureSaving, setAzureSaving] = useState(false);
+    const [azureError, setAzureError] = useState("");
+
+    const handleAzureConnect = async () => {
+      if (!subId || !tenantId || !clientId || !clientSecret) {
+        setAzureError("All fields are required");
+        return;
+      }
+      setAzureSaving(true);
+      setAzureError("");
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData?.session) throw new Error("Not logged in");
+
+        const tech = { ...techStack, azure_subscription_id: subId, azure_tenant_id: tenantId, azure_client_id: clientId, azure_client_secret: clientSecret, azure_connected_at: new Date().toISOString() };
+        const { error } = await supabase.from("organizations").update({ tech_stack: tech }).eq("id", org!.id);
+        if (error) throw error;
+
+        // Trigger scan
+        fetch("/api/scan/trigger", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.INTERNAL_TRIGGER_SECRET || "shieldbase-internal-2026"}` },
+          body: JSON.stringify({ org_id: org!.id, provider: "azure" }),
+        }).catch(console.error);
+
+        setStep("choose");
+      } catch (err: unknown) {
+        setAzureError(err instanceof Error ? err.message : "Failed to connect");
+      } finally {
+        setAzureSaving(false);
+      }
+    };
+
     return (
       <div className="max-w-2xl space-y-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">? Back</button>
+          <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">‚Üê Back</button>
           <span className="text-gray-300">|</span>
           <span className="text-sm font-medium text-gray-700">Connect Microsoft Azure</span>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="bg-[#0078D4] px-6 py-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-2xl">??</div>
+            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-2xl">üî∑</div>
             <div>
               <h2 className="text-lg font-bold text-white">Microsoft Azure</h2>
-              <p className="text-sm text-blue-100">Read-only access ∑ Requires Service Principal</p>
+              <p className="text-sm text-blue-100">Read-only access ¬∑ Requires Service Principal</p>
             </div>
           </div>
 
@@ -501,32 +590,33 @@ export default function ConnectPage() {
               <div className="grid gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Subscription ID</label>
-                  <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                  <input type="text" value={subId} onChange={(e) => setSubId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Tenant ID</label>
-                  <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                  <input type="text" value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Client ID (App ID)</label>
-                  <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                  <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Client Secret</label>
-                  <input type="password" placeholder="ïïïïïïïïïïïïïïïï" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono" />
+                  <input type="password" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢‚Ä¢" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
-              <button className="w-full bg-[#0078D4] hover:bg-[#006cbd] text-white py-3 rounded-xl font-semibold transition">
-                Connect Azure ?
+              {azureError && <p className="text-sm text-red-500">{azureError}</p>}
+              <button onClick={handleAzureConnect} disabled={azureSaving} className="w-full bg-[#0078D4] hover:bg-[#006cbd] disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition">
+                {azureSaving ? "Connecting..." : "Connect Azure ‚Üí"}
               </button>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 mt-2">
-              <p className="text-xs font-semibold text-gray-600 mb-2">?? Security & Privacy</p>
+              <p className="text-xs font-semibold text-gray-600 mb-2">üîí Security & Privacy</p>
               <ul className="text-xs text-gray-500 space-y-1">
-                <li>ï ShieldBase uses <strong>Reader</strong> and <strong>Security Reader</strong> roles only</li>
-                <li>ï We <strong>never</strong> modify, create, or delete any resources in your subscription</li>
-                <li>ï Scan results are stored in your private Supabase database</li>
+                <li>‚Ä¢ ShieldBase uses <strong>Reader</strong> and <strong>Security Reader</strong> roles only</li>
+                <li>‚Ä¢ We <strong>never</strong> modify, create, or delete any resources in your subscription</li>
+                <li>‚Ä¢ Scan results are stored in your private Supabase database</li>
               </ul>
             </div>
           </div>
