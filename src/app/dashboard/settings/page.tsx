@@ -278,10 +278,10 @@ export default function ConnectPage() {
             ) : (
               <>
                 <p className="text-sm text-gray-500 mb-4">Scan Azure infrastructure for IAM, Defender, Storage, SQL, and key security configurations.</p>
-                <button onClick={() => setStep("azure")}
+                <a href="/dashboard/azure-connect"
                   className="block w-full text-center bg-[#0078D4] hover:bg-[#006cbd] text-white text-sm py-2.5 rounded-lg font-medium transition">
                   Connect Azure →
-                </button>
+                </a>
               </>
             )}
           </div>
@@ -514,111 +514,6 @@ export default function ConnectPage() {
               <span>💬</span> Add to Slack →
             </button>
             <p className="text-xs text-gray-400 text-center">Redirects to Slack OAuth — you'll need Workspace Admin or Owner access</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Azure
-  if (step === "azure") {
-    const [subId, setSubId] = useState("");
-    const [tenantId, setTenantId] = useState("");
-    const [clientId, setClientId] = useState("");
-    const [clientSecret, setClientSecret] = useState("");
-    const [azureSaving, setAzureSaving] = useState(false);
-    const [azureError, setAzureError] = useState("");
-
-    const handleAzureConnect = async () => {
-      if (!subId || !tenantId || !clientId || !clientSecret) {
-        setAzureError("All fields are required");
-        return;
-      }
-      setAzureSaving(true);
-      setAzureError("");
-      try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData?.session) throw new Error("Not logged in");
-
-        const tech = { ...techStack, azure_subscription_id: subId, azure_tenant_id: tenantId, azure_client_id: clientId, azure_client_secret: clientSecret, azure_connected_at: new Date().toISOString() };
-        const { error } = await supabase.from("organizations").update({ tech_stack: tech }).eq("id", org!.id);
-        if (error) throw error;
-
-        // Trigger scan
-        fetch("/api/scan/trigger", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.INTERNAL_TRIGGER_SECRET || "shieldbase-internal-2026"}` },
-          body: JSON.stringify({ org_id: org!.id, provider: "azure" }),
-        }).catch(console.error);
-
-        setStep("choose");
-      } catch (err: unknown) {
-        setAzureError(err instanceof Error ? err.message : "Failed to connect");
-      } finally {
-        setAzureSaving(false);
-      }
-    };
-
-    return (
-      <div className="max-w-2xl space-y-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">← Back</button>
-          <span className="text-gray-300">|</span>
-          <span className="text-sm font-medium text-gray-700">Connect Microsoft Azure</span>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="bg-[#0078D4] px-6 py-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-2xl">🔷</div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Microsoft Azure</h2>
-              <p className="text-sm text-blue-100">Read-only access · Requires Service Principal</p>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-6">
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <p className="text-sm text-blue-800 font-medium mb-1">How this works</p>
-              <p className="text-xs text-blue-700">
-                We use a <strong>Service Principal</strong> with Reader and Security Reader roles to scan your Azure subscription.
-                Prowler checks for compliance with SOC 2, CIS, and other frameworks.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <p className="text-sm font-semibold text-gray-700">Required Information:</p>
-              <div className="grid gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Subscription ID</label>
-                  <input type="text" value={subId} onChange={(e) => setSubId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Tenant ID</label>
-                  <input type="text" value={tenantId} onChange={(e) => setTenantId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Client ID (App ID)</label>
-                  <input type="text" value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Client Secret</label>
-                  <input type="password" value={clientSecret} onChange={(e) => setClientSecret(e.target.value)} placeholder="••••••••••••••••" className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                </div>
-              </div>
-              {azureError && <p className="text-sm text-red-500">{azureError}</p>}
-              <button onClick={handleAzureConnect} disabled={azureSaving} className="w-full bg-[#0078D4] hover:bg-[#006cbd] disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition">
-                {azureSaving ? "Connecting..." : "Connect Azure →"}
-              </button>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-4 mt-2">
-              <p className="text-xs font-semibold text-gray-600 mb-2">🔒 Security & Privacy</p>
-              <ul className="text-xs text-gray-500 space-y-1">
-                <li>• ShieldBase uses <strong>Reader</strong> and <strong>Security Reader</strong> roles only</li>
-                <li>• We <strong>never</strong> modify, create, or delete any resources in your subscription</li>
-                <li>• Scan results are stored in your private Supabase database</li>
-              </ul>
-            </div>
           </div>
         </div>
       </div>
