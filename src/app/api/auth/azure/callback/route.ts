@@ -59,15 +59,23 @@ export async function GET(req: NextRequest) {
   // Since we are using OAuth, we will store the tokens and potentially use them to create a temporary SP or use delegated scanning.
   // For now, we'll store the tokens.
   
+  const { data: existingOrg } = await supabase
+    .from("organizations")
+    .select("tech_stack")
+    .eq("id", orgId)
+    .single();
+
+  const existing = (existingOrg?.tech_stack ?? {}) as Record<string, unknown>;
+
   const { error: updateError } = await supabase
     .from("organizations")
     .update({
       tech_stack: {
+        ...existing,
         azure_access_token: tokenData.access_token,
         azure_refresh_token: tokenData.refresh_token,
         azure_token_expiry: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
         azure_connected_at: new Date().toISOString(),
-        // We might need to fetch the tenant_id from the token claims (tid)
       },
     })
     .eq("id", orgId);

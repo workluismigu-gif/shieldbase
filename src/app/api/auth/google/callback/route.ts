@@ -55,14 +55,24 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  const { data: existingOrg } = await supabase
+    .from("organizations")
+    .select("tech_stack")
+    .eq("id", orgId)
+    .single();
+
+  const existing = (existingOrg?.tech_stack ?? {}) as Record<string, unknown>;
+
   const { error: updateError } = await supabase
     .from("organizations")
     .update({
       tech_stack: {
+        ...existing,
         google_access_token: tokenData.access_token,
         google_refresh_token: tokenData.refresh_token,
         google_token_expiry: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
-        google_domain: userInfo.hd, // hosted domain
+        google_domain: userInfo.hd,
+        google_email: userInfo.email,
         google_connected_at: new Date().toISOString(),
       },
     })

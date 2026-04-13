@@ -21,8 +21,10 @@ export async function POST(req: NextRequest) {
     );
 
     // Fetch orgs to scan
-    const filterKey = provider === "github" ? "tech_stack->github_token" : 
-                      provider === "azure" ? "tech_stack->azure_subscription_id" :
+    const filterKey = provider === "github" ? "tech_stack->github_token" :
+                      provider === "azure" ? "tech_stack->azure_access_token" :
+                      provider === "google_workspace" ? "tech_stack->google_access_token" :
+                      provider === "slack" ? "tech_stack->slack_access_token" :
                       "tech_stack->aws_role_arn";
     let query = supabase
       .from("organizations")
@@ -51,11 +53,28 @@ export async function POST(req: NextRequest) {
         payload.github_login = techStack.github_login ?? "";
       } else if (provider === "azure") {
         const subId = techStack.azure_subscription_id;
-        if (!subId) continue;
-        payload.subscription_id = subId;
-        payload.tenant_id = techStack.azure_tenant_id;
-        payload.client_id = techStack.azure_client_id;
-        payload.client_secret = techStack.azure_client_secret;
+        if (subId) {
+          payload.subscription_id = subId;
+          payload.tenant_id = techStack.azure_tenant_id;
+          payload.client_id = techStack.azure_client_id;
+          payload.client_secret = techStack.azure_client_secret;
+        } else if (techStack.azure_access_token) {
+          payload.azure_access_token = techStack.azure_access_token;
+          payload.azure_refresh_token = techStack.azure_refresh_token ?? "";
+        } else {
+          continue;
+        }
+      } else if (provider === "google_workspace") {
+        const token = techStack.google_access_token;
+        if (!token) continue;
+        payload.google_access_token = token;
+        payload.google_refresh_token = techStack.google_refresh_token ?? "";
+        payload.google_domain = techStack.google_domain ?? "";
+      } else if (provider === "slack") {
+        const token = techStack.slack_access_token;
+        if (!token) continue;
+        payload.slack_access_token = token;
+        payload.slack_team_id = techStack.slack_team_id ?? "";
       } else {
         const roleArn = techStack.aws_role_arn;
         if (!roleArn) continue;
