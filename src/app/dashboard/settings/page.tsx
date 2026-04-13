@@ -95,7 +95,6 @@ export default function ConnectPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) throw new Error("Not logged in");
 
-      // Call server-side endpoint — saves ARN + triggers scan (secret stays on server)
       const res = await fetch("/api/connect/aws", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -109,6 +108,7 @@ export default function ConnectPage() {
       if (!res.ok) throw new Error(json.error || "Failed to save");
 
       setArnSaved(true);
+      setTimeout(() => window.location.reload(), 1500);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save. Please try again.");
     } finally {
@@ -407,7 +407,6 @@ export default function ConnectPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          {/* Header */}
           <div className="bg-gray-900 px-6 py-5 flex items-center gap-4">
             <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-2xl">☁️</div>
             <div>
@@ -417,7 +416,6 @@ export default function ConnectPage() {
           </div>
 
           <div className="p-6 space-y-6">
-            {/* How it works */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <p className="text-sm text-blue-800 font-medium mb-1">How this works</p>
               <p className="text-xs text-blue-700">
@@ -427,7 +425,6 @@ export default function ConnectPage() {
               </p>
             </div>
 
-            {/* Step 1 */}
             <div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">1</div>
@@ -446,7 +443,6 @@ export default function ConnectPage() {
 
             <hr className="border-gray-100" />
 
-            {/* Step 2 */}
             <div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">2</div>
@@ -465,7 +461,6 @@ export default function ConnectPage() {
 
             <hr className="border-gray-100" />
 
-            {/* Step 3 */}
             <div>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center">3</div>
@@ -495,7 +490,6 @@ export default function ConnectPage() {
               </div>
             </div>
 
-            {/* Trust section */}
             <div className="bg-gray-50 rounded-xl p-4 mt-2">
               <p className="text-xs font-semibold text-gray-600 mb-2">🔒 Security & Privacy</p>
               <ul className="text-xs text-gray-500 space-y-1">
@@ -512,7 +506,6 @@ export default function ConnectPage() {
     );
   }
 
-  // GitHub OAuth flow
   if (step === "github") {
     const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=read%3Aorg%2Cread%3Auser%2Crepo%3Astatus%2Csecurity_events&redirect_uri=https%3A%2F%2Fshieldbase.vercel.app%2Fapi%2Fauth%2Fgithub%2Fcallback&state=${org?.id ?? ""}`;
     return (
@@ -551,7 +544,6 @@ export default function ConnectPage() {
     );
   }
 
-  // Google Workspace
   if (step === "google") {
     const googleRedirect = `${SITE_ORIGIN}/api/auth/google/callback`;
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(googleRedirect)}&response_type=code&scope=${encodeURIComponent(GOOGLE_SCOPES)}&access_type=offline&prompt=consent&state=${org?.id ?? ""}`;
@@ -591,7 +583,6 @@ export default function ConnectPage() {
     );
   }
 
-  // Slack
   if (step === "slack") {
     const slackRedirect = `${SITE_ORIGIN}/api/auth/slack/callback`;
     const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${encodeURIComponent(SLACK_CLIENT_ID)}&scope=${encodeURIComponent(SLACK_SCOPES)}&redirect_uri=${encodeURIComponent(slackRedirect)}&state=${org?.id ?? ""}`;
