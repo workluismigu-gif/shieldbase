@@ -6,6 +6,28 @@ import { useOrg } from "@/lib/org-context";
 const SHIELDBASE_AWS_ACCOUNT_ID = "886821787192";
 const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase-public-cfn.s3.amazonaws.com/cfn-shieldbase-readonly.json`;
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID ?? "Ov23lihUSDcOADRW0Kkw";
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
+const SLACK_CLIENT_ID = process.env.NEXT_PUBLIC_SLACK_CLIENT_ID ?? "";
+const SITE_ORIGIN = typeof window !== "undefined" ? window.location.origin : "https://shieldbase.vercel.app";
+
+const GOOGLE_SCOPES = [
+  "openid",
+  "email",
+  "profile",
+  "https://www.googleapis.com/auth/admin.directory.user.readonly",
+  "https://www.googleapis.com/auth/admin.directory.domain.readonly",
+  "https://www.googleapis.com/auth/admin.directory.group.readonly",
+  "https://www.googleapis.com/auth/admin.reports.audit.readonly",
+].join(" ");
+
+const SLACK_SCOPES = [
+  "team:read",
+  "users:read",
+  "users:read.email",
+  "admin.users:read",
+  "admin.teams:read",
+  "admin.conversations:read",
+].join(",");
 
 type Step = "choose" | "aws" | "github" | "google" | "slack" | "azure" | "done";
 
@@ -14,7 +36,9 @@ export default function ConnectPage() {
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
   const awsConnected = !!techStack.aws_role_arn;
   const githubConnected = !!techStack.github_token;
-  const azureConnected = !!techStack.azure_subscription_id;
+  const azureConnected = !!techStack.azure_subscription_id || !!techStack.azure_access_token;
+  const googleConnected = !!techStack.google_access_token;
+  const slackConnected = !!techStack.slack_access_token;
 
   const awsAccountId = techStack.aws_role_arn ? (techStack.aws_role_arn.split(":")[4] ?? "") : "";
   const awsRoleName = techStack.aws_role_arn ? (techStack.aws_role_arn.split("/").pop() ?? "") : "";
@@ -32,6 +56,9 @@ export default function ConnectPage() {
       const t = { ...techStack };
       if (provider === "aws") { delete t.aws_role_arn; delete t.aws_connected_at; }
       if (provider === "github") { delete t.github_token; delete t.github_login; delete t.github_connected_at; }
+      if (provider === "azure") { delete t.azure_access_token; delete t.azure_refresh_token; delete t.azure_token_expiry; delete t.azure_subscription_id; delete t.azure_tenant_id; delete t.azure_connected_at; }
+      if (provider === "google") { delete t.google_access_token; delete t.google_refresh_token; delete t.google_token_expiry; delete t.google_domain; delete t.google_email; delete t.google_connected_at; }
+      if (provider === "slack") { delete t.slack_access_token; delete t.slack_team_id; delete t.slack_team_name; delete t.slack_connected_at; }
       await supabase.from("organizations").update({ tech_stack: t }).eq("id", org!.id);
       window.location.reload();
     } else {
@@ -205,34 +232,106 @@ export default function ConnectPage() {
             )}
           </div>
 
-          {/* Google Workspace — Coming Soon */}
-          <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-6 opacity-60">
+          {/* Google Workspace */}
+          <div className={`bg-white rounded-2xl border p-6 ${googleConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl border border-gray-200">📧</div>
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl">📧</div>
                 <div>
-                  <div className="font-semibold text-gray-600">Google Workspace</div>
+                  <div className="font-semibold text-gray-900">Google Workspace</div>
                   <div className="text-xs text-gray-400">Identity provider</div>
                 </div>
               </div>
-              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${googleConnected ? "bg-green-500" : "bg-gray-300"}`} />
+                <span className={`text-xs font-medium ${googleConnected ? "text-green-600" : "text-gray-400"}`}>
+                  {googleConnected ? "Connected" : "Not connected"}
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-gray-400">Monitor user accounts, MFA enforcement, admin roles, and login activity across your Google Workspace org.</p>
+            {googleConnected ? (
+              <>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Domain</span>
+                    <span className="font-medium text-gray-800 truncate max-w-[180px]">{techStack.google_domain || "—"}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleScanNow("google_workspace")}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg font-medium transition">
+                    Scan Now
+                  </button>
+                  <button onClick={() => handleDisconnect("google")}
+                    className={`text-sm px-4 py-2 rounded-lg font-medium transition border ${
+                      disconnectConfirm === "google"
+                        ? "bg-red-500 text-white border-red-500"
+                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-600"
+                    }`}>
+                    {disconnectConfirm === "google" ? "Confirm?" : "Disconnect"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">Monitor user accounts, MFA enforcement, admin roles, and login activity across your Google Workspace org.</p>
+                <button onClick={() => setStep("google")}
+                  className="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg font-medium transition">
+                  Connect Google Workspace →
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Slack — Coming Soon */}
-          <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 p-6 opacity-60">
+          {/* Slack */}
+          <div className={`bg-white rounded-2xl border p-6 ${slackConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-2xl border border-gray-200">💬</div>
+                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl">💬</div>
                 <div>
-                  <div className="font-semibold text-gray-600">Slack</div>
+                  <div className="font-semibold text-gray-900">Slack</div>
                   <div className="text-xs text-gray-400">Communication</div>
                 </div>
               </div>
-              <span className="text-xs bg-purple-100 text-purple-600 px-2.5 py-1 rounded-full font-medium">Coming Soon</span>
+              <div className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${slackConnected ? "bg-green-500" : "bg-gray-300"}`} />
+                <span className={`text-xs font-medium ${slackConnected ? "text-green-600" : "text-gray-400"}`}>
+                  {slackConnected ? "Connected" : "Not connected"}
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-gray-400">Monitor workspace settings, SSO enforcement, data retention policies, and admin roles.</p>
+            {slackConnected ? (
+              <>
+                <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Workspace</span>
+                    <span className="font-medium text-gray-800 truncate max-w-[180px]">{techStack.slack_team_name || "—"}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleScanNow("slack")}
+                    className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 rounded-lg font-medium transition">
+                    Scan Now
+                  </button>
+                  <button onClick={() => handleDisconnect("slack")}
+                    className={`text-sm px-4 py-2 rounded-lg font-medium transition border ${
+                      disconnectConfirm === "slack"
+                        ? "bg-red-500 text-white border-red-500"
+                        : "border-gray-200 text-gray-500 hover:border-red-200 hover:text-red-600"
+                    }`}>
+                    {disconnectConfirm === "slack" ? "Confirm?" : "Disconnect"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-gray-500 mb-4">Monitor workspace settings, SSO enforcement, data retention policies, and admin roles.</p>
+                <button onClick={() => setStep("slack")}
+                  className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white text-sm py-2.5 rounded-lg font-medium transition">
+                  Connect Slack →
+                </button>
+              </>
+            )}
           </div>
 
           {/* Microsoft Azure */}
@@ -454,6 +553,8 @@ export default function ConnectPage() {
 
   // Google Workspace
   if (step === "google") {
+    const googleRedirect = `${SITE_ORIGIN}/api/auth/google/callback`;
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(googleRedirect)}&response_type=code&scope=${encodeURIComponent(GOOGLE_SCOPES)}&access_type=offline&prompt=consent&state=${org?.id ?? ""}`;
     return (
       <div className="max-w-2xl space-y-6">
         <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">← Back</button>
@@ -478,9 +579,11 @@ export default function ConnectPage() {
                 </div>
               ))}
             </div>
-            <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
+            <a href={googleAuthUrl}
+              className={`w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition ${!GOOGLE_CLIENT_ID ? "opacity-50 pointer-events-none" : ""}`}>
               <span>📧</span> Authorize with Google →
-            </button>
+            </a>
+            {!GOOGLE_CLIENT_ID && <p className="text-xs text-red-500 text-center">NEXT_PUBLIC_GOOGLE_CLIENT_ID not configured</p>}
             <p className="text-xs text-gray-400 text-center">Redirects to Google OAuth — sign in with your Workspace Admin account</p>
           </div>
         </div>
@@ -490,6 +593,8 @@ export default function ConnectPage() {
 
   // Slack
   if (step === "slack") {
+    const slackRedirect = `${SITE_ORIGIN}/api/auth/slack/callback`;
+    const slackAuthUrl = `https://slack.com/oauth/v2/authorize?client_id=${encodeURIComponent(SLACK_CLIENT_ID)}&scope=${encodeURIComponent(SLACK_SCOPES)}&redirect_uri=${encodeURIComponent(slackRedirect)}&state=${org?.id ?? ""}`;
     return (
       <div className="max-w-2xl space-y-6">
         <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">← Back</button>
@@ -510,9 +615,11 @@ export default function ConnectPage() {
                 </div>
               ))}
             </div>
-            <button className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition">
+            <a href={slackAuthUrl}
+              className={`w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition ${!SLACK_CLIENT_ID ? "opacity-50 pointer-events-none" : ""}`}>
               <span>💬</span> Add to Slack →
-            </button>
+            </a>
+            {!SLACK_CLIENT_ID && <p className="text-xs text-red-500 text-center">NEXT_PUBLIC_SLACK_CLIENT_ID not configured</p>}
             <p className="text-xs text-gray-400 text-center">Redirects to Slack OAuth — you'll need Workspace Admin or Owner access</p>
           </div>
         </div>
