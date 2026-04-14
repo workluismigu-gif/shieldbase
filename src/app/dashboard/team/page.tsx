@@ -27,6 +27,7 @@ export default function TeamPage() {
   const [inviting, setInviting] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState<string | null>(null);
 
   const loadMembers = useCallback(async () => {
     if (!org?.id) return;
@@ -42,6 +43,19 @@ export default function TeamPage() {
   }, [org?.id]);
 
   useEffect(() => { loadMembers(); }, [loadMembers]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return;
+      const res = await fetch("/api/team/owner", {
+        headers: { Authorization: `Bearer ${session.session.access_token}` },
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      setOwnerEmail(json.email ?? null);
+    })();
+  }, []);
 
   const handleInvite = async () => {
     if (!email || !email.includes("@")) {
@@ -158,12 +172,17 @@ export default function TeamPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              <tr>
-                <td className="px-6 py-4 font-medium text-[var(--color-foreground)]">{userEmail} <span className="text-xs text-[var(--color-muted)]">(you)</span></td>
-                <td className="px-6 py-4"><span className="text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-info)] px-2 py-1 rounded">Owner</span></td>
-                <td className="px-6 py-4"><span className="text-xs font-medium text-[var(--color-success)]">Active</span></td>
-                <td className="px-6 py-4"></td>
-              </tr>
+              {ownerEmail && (
+                <tr>
+                  <td className="px-6 py-4 font-medium text-[var(--color-foreground)]">
+                    {ownerEmail}
+                    {ownerEmail === userEmail && <span className="text-xs text-[var(--color-muted)] ml-1">(you)</span>}
+                  </td>
+                  <td className="px-6 py-4"><span className="text-xs font-medium bg-[var(--color-info-bg)] text-[var(--color-info)] px-2 py-1 rounded">Owner</span></td>
+                  <td className="px-6 py-4"><span className="text-xs font-medium text-[var(--color-success)]">Active</span></td>
+                  <td className="px-6 py-4"></td>
+                </tr>
+              )}
               {members.map((m) => (
                 <tr key={m.id}>
                   <td className="px-6 py-4 font-medium text-[var(--color-foreground)]">{m.email}</td>

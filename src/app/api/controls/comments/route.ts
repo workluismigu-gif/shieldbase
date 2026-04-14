@@ -48,7 +48,13 @@ export async function POST(req: NextRequest) {
     const db = admin();
     const { data, error } = await db
       .from("control_comments")
-      .insert({ org_id: ctx.org_id, control_id, user_id: ctx.user.id, body: body.trim() })
+      .insert({
+        org_id: ctx.org_id,
+        control_id,
+        user_id: ctx.user.id,
+        author_email: ctx.user.email ?? null,
+        body: body.trim(),
+      })
       .select("id")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -16,6 +16,7 @@ interface Comment {
   id: string;
   control_id: string;
   user_id: string;
+  author_email: string | null;
   body: string;
   created_at: string;
 }
@@ -203,7 +204,10 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
               {comments.map(c => (
                 <div key={c.id} className="bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-border)]">
                   <div className="flex items-center justify-between text-xs text-[var(--color-muted)] mb-1.5">
-                    <span className="font-mono">{c.user_id === currentUserId ? `${userEmail ?? "you"} (you)` : c.user_id.slice(0, 8) + "…"}</span>
+                    <span>
+                      {c.author_email ?? c.user_id.slice(0, 8) + "…"}
+                      {c.user_id === currentUserId && <span className="text-[var(--color-muted)] ml-1">(you)</span>}
+                    </span>
                     <div className="flex items-center gap-2">
                       <time dateTime={c.created_at}>{new Date(c.created_at).toLocaleString()}</time>
                       {(c.user_id === currentUserId || role === "owner") && (

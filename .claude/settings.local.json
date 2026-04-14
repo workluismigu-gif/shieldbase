@@ -24,7 +24,16 @@
       "Bash(git commit -m 'fix\\(pbc\\): remove duplicate DashboardLayout wrapper:*)",
       "Bash(git commit -m 'feat\\(pbc\\): strict role separation — auditor creates+reviews, owner/admin responds:*)",
       "Bash(git commit -m 'feat\\(controls\\): per-control comments + read-only modal for auditors:*)",
-      "Bash(git commit -m 'feat\\(audit\\): /dashboard/audit workspace landing for engagement overview:*)"
+      "Bash(git commit -m 'feat\\(audit\\): /dashboard/audit workspace landing for engagement overview:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_close",
+      "Bash(git commit -m 'fix\\(audit-ux\\): four bugs from auditor E2E test:*)"
     ]
   }
 }

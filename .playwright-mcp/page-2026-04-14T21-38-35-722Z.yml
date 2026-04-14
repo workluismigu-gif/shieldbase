@@ -1,0 +1,307 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "ShieldBase" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - generic [ref=e9]: ShieldBase
+      - generic [ref=e11]:
+        - generic [ref=e12]: C
+        - generic [ref=e13]:
+          - generic [ref=e14]: Organization
+          - generic [ref=e15]: cobra t
+      - navigation [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Workspace
+          - generic [ref=e19]:
+            - link "Overview" [ref=e20] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e21]
+              - generic [ref=e26]: Overview
+            - link "Monitoring" [ref=e27] [cursor=pointer]:
+              - /url: /dashboard/monitoring
+              - img [ref=e28]
+              - generic [ref=e30]: Monitoring
+            - link "Gap Analysis" [ref=e31] [cursor=pointer]:
+              - /url: /dashboard/gap-analysis
+              - img [ref=e32]
+              - generic [ref=e35]: Gap Analysis
+        - generic [ref=e36]:
+          - generic [ref=e37]: Compliance
+          - generic [ref=e38]:
+            - link "Audit Workspace New" [ref=e39] [cursor=pointer]:
+              - /url: /dashboard/audit
+              - img [ref=e40]
+              - generic [ref=e46]: Audit Workspace
+              - generic [ref=e47]: New
+            - link "Controls" [ref=e48] [cursor=pointer]:
+              - /url: /dashboard/controls
+              - img [ref=e49]
+              - generic [ref=e53]: Controls
+            - link "PBC Requests" [ref=e54] [cursor=pointer]:
+              - /url: /dashboard/pbc
+              - img [ref=e55]
+              - generic [ref=e58]: PBC Requests
+            - link "Audit Scope" [ref=e59] [cursor=pointer]:
+              - /url: /dashboard/scope
+              - img [ref=e60]
+              - generic [ref=e61]: Audit Scope
+            - link "Policies" [ref=e62] [cursor=pointer]:
+              - /url: /dashboard/policies
+              - img [ref=e63]
+              - generic [ref=e66]: Policies
+            - link "Evidence" [ref=e67] [cursor=pointer]:
+              - /url: /dashboard/evidence
+              - img [ref=e68]
+              - generic [ref=e70]: Evidence
+            - link "Remediation" [ref=e71] [cursor=pointer]:
+              - /url: /dashboard/remediation
+              - img [ref=e72]
+              - generic [ref=e74]: Remediation
+        - generic [ref=e75]:
+          - generic [ref=e76]: Organization
+          - generic [ref=e77]:
+            - link "Team & Auditors" [ref=e78] [cursor=pointer]:
+              - /url: /dashboard/team
+              - img [ref=e79]
+              - generic [ref=e84]: Team & Auditors
+            - link "Settings" [ref=e85] [cursor=pointer]:
+              - /url: /dashboard/settings
+              - img [ref=e86]
+              - generic [ref=e89]: Settings
+      - generic [ref=e91]:
+        - generic [ref=e92]: V
+        - generic [ref=e93]:
+          - generic [ref=e94]: v0sluis
+          - generic [ref=e95]: v0sluis@gmail.com
+        - button "Sign out" [ref=e96]:
+          - img [ref=e97]
+    - generic [ref=e100]:
+      - banner [ref=e101]:
+        - generic [ref=e102]:
+          - generic [ref=e103]: SOC 2 Type I
+          - generic [ref=e128]: Day 12 of 90
+      - main [ref=e105]:
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - heading "Controls" [level=1] [ref=e108]
+            - paragraph [ref=e109]: Test, annotate, and sign off on individual controls for SOC 2 audit.
+          - generic [ref=e110]:
+            - textbox "Search by control ID or title…" [ref=e111]
+            - combobox [ref=e112]:
+              - option "All statuses" [selected]
+              - option "Compliant"
+              - option "Partial"
+              - option "Non-compliant"
+              - option "Not assessed"
+            - combobox [ref=e113]:
+              - option "All categories" [selected]
+              - option "A1 - Availability"
+              - option "C1 - Confidentiality"
+              - option "CC - Security"
+              - option "P - Privacy"
+          - table [ref=e115]:
+            - rowgroup [ref=e116]:
+              - row "ID Category Title Status Severity" [ref=e117]:
+                - columnheader "ID" [ref=e118]
+                - columnheader "Category" [ref=e119]
+                - columnheader "Title" [ref=e120]
+                - columnheader "Status" [ref=e121]
+                - columnheader "Severity" [ref=e122]
+                - columnheader [ref=e123]
+            - rowgroup [ref=e124]:
+              - row "CC.7.2 CC - Security CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours partial high Test & sign off" [ref=e129]:
+                - cell "CC.7.2" [ref=e130]
+                - cell "CC - Security" [ref=e131]
+                - cell "CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours" [ref=e132]
+                - cell "partial" [ref=e133]
+                - cell "high" [ref=e134]
+                - cell "Test & sign off" [ref=e135]:
+                  - button "Test & sign off" [ref=e136]
+              - row "CC.7.3 CC - Security CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours partial medium Test & sign off" [ref=e137]:
+                - cell "CC.7.3" [ref=e138]
+                - cell "CC - Security" [ref=e139]
+                - cell "CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours" [ref=e140]
+                - cell "partial" [ref=e141]
+                - cell "medium" [ref=e142]
+                - cell "Test & sign off" [ref=e143]:
+                  - button "Test & sign off" [ref=e144]
+              - row "PI.1.3 P - Privacy CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours partial high Test & sign off" [ref=e145]:
+                - cell "PI.1.3" [ref=e146]
+                - cell "P - Privacy" [ref=e147]
+                - cell "CloudTrail trail has delivered logs to CloudWatch Logs in the last 24 hours" [ref=e148]
+                - cell "partial" [ref=e149]
+                - cell "high" [ref=e150]
+                - cell "Test & sign off" [ref=e151]:
+                  - button "Test & sign off" [ref=e152]
+              - row "CC.2.1 CC - Security Region has at least one CloudTrail trail logging compliant high Test & sign off" [ref=e153]:
+                - cell "CC.2.1" [ref=e154]
+                - cell "CC - Security" [ref=e155]
+                - cell "Region has at least one CloudTrail trail logging" [ref=e156]
+                - cell "compliant" [ref=e157]
+                - cell "high" [ref=e158]
+                - cell "Test & sign off" [ref=e159]:
+                  - button "Test & sign off" [ref=e160]
+              - row "PI.1.2 P - Privacy CloudTrail trail records all S3 object-level API operations for all buckets compliant low Test & sign off" [ref=e161]:
+                - cell "PI.1.2" [ref=e162]
+                - cell "P - Privacy" [ref=e163]
+                - cell "CloudTrail trail records all S3 object-level API operations for all buckets" [ref=e164]
+                - cell "compliant" [ref=e165]
+                - cell "low" [ref=e166]
+                - cell "Test & sign off" [ref=e167]:
+                  - button "Test & sign off" [ref=e168]
+              - row "CC.5.2 CC - Security CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events non compliant medium Test & sign off" [ref=e169]:
+                - cell "CC.5.2" [ref=e170]
+                - cell "CC - Security" [ref=e171]
+                - cell "CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events" [ref=e172]
+                - cell "non compliant" [ref=e173]
+                - cell "medium" [ref=e174]
+                - cell "Test & sign off" [ref=e175]:
+                  - button "Test & sign off" [ref=e176]
+              - row "CC.7.4 CC - Security CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events non compliant medium Test & sign off" [ref=e177]:
+                - cell "CC.7.4" [ref=e178]
+                - cell "CC - Security" [ref=e179]
+                - cell "CloudWatch log metric filter and alarm exist for Network ACL (NACL) change events" [ref=e180]
+                - cell "non compliant" [ref=e181]
+                - cell "medium" [ref=e182]
+                - cell "Test & sign off" [ref=e183]:
+                  - button "Test & sign off" [ref=e184]
+              - row "PI.1.4 P - Privacy CloudWatch does not allow cross-account sharing partial high Test & sign off" [ref=e185]:
+                - cell "PI.1.4" [ref=e186]
+                - cell "P - Privacy" [ref=e187]
+                - cell "CloudWatch does not allow cross-account sharing" [ref=e188]
+                - cell "partial" [ref=e189]
+                - cell "high" [ref=e190]
+                - cell "Test & sign off" [ref=e191]:
+                  - button "Test & sign off" [ref=e192]
+              - row "CC.C.1.2 C1 - Confidentiality CloudWatch log group has a retention policy of at least the configured minimum days or never expires partial medium Test & sign off" [ref=e193]:
+                - cell "CC.C.1.2" [ref=e194]
+                - cell "C1 - Confidentiality" [ref=e195]
+                - cell "CloudWatch log group has a retention policy of at least the configured minimum days or never expires" [ref=e196]
+                - cell "partial" [ref=e197]
+                - cell "medium" [ref=e198]
+                - cell "Test & sign off" [ref=e199]:
+                  - button "Test & sign off" [ref=e200]
+              - row "CC.A.1.1 A1 - Availability Amazon Bedrock model invocation logging is enabled compliant high Test & sign off" [ref=e201]:
+                - cell "CC.A.1.1" [ref=e202]
+                - cell "A1 - Availability" [ref=e203]
+                - cell "Amazon Bedrock model invocation logging is enabled" [ref=e204]
+                - cell "compliant" [ref=e205]
+                - cell "high" [ref=e206]
+                - cell "Test & sign off" [ref=e207]:
+                  - button "Test & sign off" [ref=e208]
+              - row "PI.1.5 P - Privacy S3 bucket has Object Lock enabled non compliant medium Test & sign off" [ref=e209]:
+                - cell "PI.1.5" [ref=e210]
+                - cell "P - Privacy" [ref=e211]
+                - cell "S3 bucket has Object Lock enabled" [ref=e212]
+                - cell "non compliant" [ref=e213]
+                - cell "medium" [ref=e214]
+                - cell "Test & sign off" [ref=e215]:
+                  - button "Test & sign off" [ref=e216]
+              - row "CC.6.1 CC - Security S3 bucket is not publicly accessible to Everyone or Authenticated Users compliant critical Test & sign off" [ref=e217]:
+                - cell "CC.6.1" [ref=e218]
+                - cell "CC - Security" [ref=e219]
+                - cell "S3 bucket is not publicly accessible to Everyone or Authenticated Users" [ref=e220]
+                - cell "compliant" [ref=e221]
+                - cell "critical" [ref=e222]
+                - cell "Test & sign off" [ref=e223]:
+                  - button "Test & sign off" [ref=e224]
+              - row "CC.3.1 CC - Security AWS Config recorder is enabled and not in failure state or disabled compliant medium Test & sign off" [ref=e225]:
+                - cell "CC.3.1" [ref=e226]
+                - cell "CC - Security" [ref=e227]
+                - cell "AWS Config recorder is enabled and not in failure state or disabled" [ref=e228]
+                - cell "compliant" [ref=e229]
+                - cell "medium" [ref=e230]
+                - cell "Test & sign off" [ref=e231]:
+                  - button "Test & sign off" [ref=e232]
+              - row "CC.3.4 CC - Security AWS Config recorder is enabled and not in failure state or disabled compliant medium Test & sign off" [ref=e233]:
+                - cell "CC.3.4" [ref=e234]
+                - cell "CC - Security" [ref=e235]
+                - cell "AWS Config recorder is enabled and not in failure state or disabled" [ref=e236]
+                - cell "compliant" [ref=e237]
+                - cell "medium" [ref=e238]
+                - cell "Test & sign off" [ref=e239]:
+                  - button "Test & sign off" [ref=e240]
+              - row "CC.8.1 CC - Security AWS Config recorder is enabled and not in failure state or disabled compliant medium Test & sign off" [ref=e241]:
+                - cell "CC.8.1" [ref=e242]
+                - cell "CC - Security" [ref=e243]
+                - cell "AWS Config recorder is enabled and not in failure state or disabled" [ref=e244]
+                - cell "compliant" [ref=e245]
+                - cell "medium" [ref=e246]
+                - cell "Test & sign off" [ref=e247]:
+                  - button "Test & sign off" [ref=e248]
+              - row "CC.1.3 CC - Security Attached AWS-managed IAM policy does not allow '*:*' administrative privileges partial critical Test & sign off" [ref=e249]:
+                - cell "CC.1.3" [ref=e250]
+                - cell "CC - Security" [ref=e251]
+                - cell "Attached AWS-managed IAM policy does not allow '*:*' administrative privileges" [ref=e252]
+                - cell "partial" [ref=e253]
+                - cell "critical" [ref=e254]
+                - cell "Test & sign off" [ref=e255]:
+                  - button "Test & sign off" [ref=e256]
+              - row "CC.6.3 CC - Security Attached AWS-managed IAM policy does not allow '*:*' administrative privileges partial critical Test & sign off" [ref=e257]:
+                - cell "CC.6.3" [ref=e258]
+                - cell "CC - Security" [ref=e259]
+                - cell "Attached AWS-managed IAM policy does not allow '*:*' administrative privileges" [ref=e260]
+                - cell "partial" [ref=e261]
+                - cell "critical" [ref=e262]
+                - cell "Test & sign off" [ref=e263]:
+                  - button "Test & sign off" [ref=e264]
+              - row "CC.3.3 CC - Security IAM inline policy does not allow privilege escalation compliant high Test & sign off" [ref=e265]:
+                - cell "CC.3.3" [ref=e266]
+                - cell "CC - Security" [ref=e267]
+                - cell "IAM inline policy does not allow privilege escalation" [ref=e268]
+                - cell "compliant" [ref=e269]
+                - cell "high" [ref=e270]
+                - cell "Test & sign off" [ref=e271]:
+                  - button "Test & sign off" [ref=e272]
+          - generic [ref=e274]:
+            - generic [ref=e275]:
+              - heading "Test & sign off" [level=2] [ref=e276]
+              - paragraph [ref=e277]: CC.6.1S3 bucket is not publicly accessible to Everyone or Authenticated Users
+              - paragraph [ref=e278]: "Current status: compliant"
+            - generic [ref=e279]:
+              - generic [ref=e280]:
+                - generic [ref=e281]: Test notes (tester, date, method, result)
+                - 'textbox "e.g. Tested 2026-04-14 by Luis. Inspected CloudTrail trail config via AWS Console. Verified log file validation and multi-region capture are enabled. Evidence: CloudTrail-config-screenshot.png uploaded." [ref=e282]'
+              - generic [ref=e283]:
+                - generic [ref=e284]: Override status (optional)
+                - combobox [ref=e285]:
+                  - option "Keep current" [selected]
+                  - option "Compliant"
+                  - option "Partial"
+                  - option "Non-compliant"
+                  - option "Not assessed"
+              - generic [ref=e286]:
+                - checkbox "Sign off — approve this control" [ref=e287]
+                - text: Sign off — approve this control
+              - generic [ref=e288]:
+                - button "Cancel" [ref=e289]
+                - button "Save test record" [ref=e290]
+            - generic [ref=e291]:
+              - generic [ref=e292]:
+                - img [ref=e293]
+                - heading "Comments" [level=3] [ref=e295]
+                - generic [ref=e296]: "2"
+              - generic [ref=e297]:
+                - generic [ref=e298]:
+                  - generic [ref=e299]:
+                    - generic [ref=e300]: 408c5228…
+                    - generic [ref=e301]:
+                      - time [ref=e302]: 4/14/2026, 5:35:23 PM
+                      - button "Delete comment" [ref=e303]:
+                        - img [ref=e304]
+                  - generic [ref=e307]: Public-bucket flag is green but I need to see the bucket policy itself for the public-asset bucket. Send the JSON.
+                - generic [ref=e314]:
+                  - generic [ref=e315]:
+                    - generic [ref=e316]: v0sluis@gmail.com (you)
+                    - generic [ref=e317]:
+                      - time [ref=e318]: 4/14/2026, 5:38:11 PM
+                      - button "Delete comment" [ref=e319]:
+                        - img [ref=e320]
+                  - generic [ref=e323]: "Bucket policy attached: PR #428. Public-asset bucket only serves /static/* with Content-Type validation. JSON pushed to PBC artifact link."
+              - generic [ref=e308]:
+                - textbox "Add a comment…" [ref=e309]
+                - button "Post" [disabled] [ref=e310]:
+                  - img [ref=e311]
+                  - text: Post
+  - alert [ref=e127]

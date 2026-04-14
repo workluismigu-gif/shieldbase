@@ -469,7 +469,15 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-[var(--color-warning)]", review: "bg-[var(--color-info-bg)] text-[var(--color-info)]", approved: "bg-[var(--color-success-bg)] text-[var(--color-success)]", needs_update: "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" };
 
 export default function DashboardPage() {
-  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings } = useOrg();
+  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings, role } = useOrg();
+
+  // Auditors land here by default but the founder dashboard isn't framed
+  // for them — send them to the audit workspace instead.
+  useEffect(() => {
+    if (!loading && role === "auditor_readonly") {
+      window.location.replace("/dashboard/audit");
+    }
+  }, [loading, role]);
 
   // Only use real data — no fallback to mock for fresh orgs
   const activeTasks = realTasks.length > 0

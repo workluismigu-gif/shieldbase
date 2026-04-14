@@ -79,7 +79,7 @@ export default function PbcPage() {
             <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">PBC Requests</h1>
             <p className="text-sm text-[var(--color-muted)] mt-1.5 max-w-2xl">
               {isAuditor
-                ? "Request specific evidence from the client. They&apos;ll respond, you&apos;ll review, and the trail is captured for your workpapers."
+                ? "Request specific evidence from the client. They\u2019ll respond, you\u2019ll review, and the trail is captured for your workpapers."
                 : "The auditor uses this list to ask for evidence. Respond with notes and a link to the artifact, then they accept or send back for more detail."}
             </p>
           </div>
@@ -116,7 +116,7 @@ export default function PbcPage() {
                 ? `No ${filter} requests.`
                 : isAuditor
                   ? "No PBC requests yet — start by asking the client for evidence."
-                  : "No requests from your auditor yet. They&apos;ll show up here as soon as one is sent."}
+                  : "No requests from your auditor yet. They\u2019ll show up here as soon as one is sent."}
             </p>
           </div>
         ) : (

@@ -1,0 +1,141 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - link "ShieldBase" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - img [ref=e7]
+        - generic [ref=e9]: ShieldBase
+      - generic [ref=e11]:
+        - generic [ref=e12]: L
+        - generic [ref=e13]:
+          - generic [ref=e14]: Organization
+          - generic [ref=e15]: Loading...
+      - navigation [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: Workspace
+          - generic [ref=e19]:
+            - link "Overview" [ref=e20] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e21]
+              - generic [ref=e26]: Overview
+            - link "Monitoring" [ref=e27] [cursor=pointer]:
+              - /url: /dashboard/monitoring
+              - img [ref=e28]
+              - generic [ref=e30]: Monitoring
+            - link "Gap Analysis" [ref=e31] [cursor=pointer]:
+              - /url: /dashboard/gap-analysis
+              - img [ref=e32]
+              - generic [ref=e35]: Gap Analysis
+        - generic [ref=e36]:
+          - generic [ref=e37]: Compliance
+          - generic [ref=e38]:
+            - link "Audit Workspace New" [ref=e39] [cursor=pointer]:
+              - /url: /dashboard/audit
+              - img [ref=e40]
+              - generic [ref=e46]: Audit Workspace
+              - generic [ref=e47]: New
+            - link "Controls" [ref=e48] [cursor=pointer]:
+              - /url: /dashboard/controls
+              - img [ref=e49]
+              - generic [ref=e53]: Controls
+            - link "PBC Requests" [ref=e54] [cursor=pointer]:
+              - /url: /dashboard/pbc
+              - img [ref=e55]
+              - generic [ref=e58]: PBC Requests
+            - link "Audit Scope" [ref=e59] [cursor=pointer]:
+              - /url: /dashboard/scope
+              - img [ref=e60]
+              - generic [ref=e61]: Audit Scope
+            - link "Policies" [ref=e62] [cursor=pointer]:
+              - /url: /dashboard/policies
+              - img [ref=e63]
+              - generic [ref=e66]: Policies
+            - link "Evidence" [ref=e67] [cursor=pointer]:
+              - /url: /dashboard/evidence
+              - img [ref=e68]
+              - generic [ref=e70]: Evidence
+            - link "Remediation" [ref=e71] [cursor=pointer]:
+              - /url: /dashboard/remediation
+              - img [ref=e72]
+              - generic [ref=e74]: Remediation
+        - generic [ref=e75]:
+          - generic [ref=e76]: Organization
+          - generic [ref=e77]:
+            - link "Team & Auditors" [ref=e78] [cursor=pointer]:
+              - /url: /dashboard/team
+              - img [ref=e79]
+              - generic [ref=e84]: Team & Auditors
+            - link "Settings" [ref=e85] [cursor=pointer]:
+              - /url: /dashboard/settings
+              - img [ref=e86]
+              - generic [ref=e89]: Settings
+      - generic [ref=e91]:
+        - generic [ref=e92]: W
+        - generic [ref=e93]:
+          - generic [ref=e94]: work.luismigu
+          - generic [ref=e95]: work.luismigu@gmail.com
+        - button "Sign out" [ref=e96]:
+          - img [ref=e97]
+    - generic [ref=e100]:
+      - banner [ref=e101]:
+        - generic [ref=e103]: SOC 2 Type I
+      - main [ref=e105]:
+        - generic [ref=e106]:
+          - generic [ref=e107]:
+            - heading "Integrations" [level=1] [ref=e108]
+            - paragraph [ref=e109]: Connect your cloud accounts and services so ShieldBase can automatically collect compliance evidence.
+          - generic [ref=e110]:
+            - generic [ref=e111]:
+              - generic [ref=e112]:
+                - generic [ref=e113]:
+                  - img [ref=e115]
+                  - generic [ref=e117]:
+                    - generic [ref=e118]: Amazon Web Services
+                    - generic [ref=e119]: Cloud provider
+                - generic [ref=e122]: Not connected
+              - paragraph [ref=e123]: Automatically scan your AWS infrastructure for IAM, S3, CloudTrail, RDS, and 100+ SOC 2 checks.
+              - button "Connect AWS →" [ref=e124]
+            - generic [ref=e125]:
+              - generic [ref=e126]:
+                - generic [ref=e127]:
+                  - img [ref=e129]
+                  - generic [ref=e132]:
+                    - generic [ref=e133]: GitHub
+                    - generic [ref=e134]: Source control
+                - generic [ref=e137]: Not connected
+              - paragraph [ref=e138]: Monitor branch protection, code reviews, 2FA enforcement, Dependabot alerts, and secret scanning across your repos.
+              - button "Connect GitHub →" [ref=e139]
+            - generic [ref=e140]:
+              - generic [ref=e141]:
+                - generic [ref=e142]:
+                  - img [ref=e144]
+                  - generic [ref=e147]:
+                    - generic [ref=e148]: Google Workspace
+                    - generic [ref=e149]: Identity provider
+                - generic [ref=e152]: Not connected
+              - paragraph [ref=e153]: Monitor user accounts, MFA enforcement, admin roles, and login activity across your Google Workspace org.
+              - button "Connect Google Workspace →" [ref=e154]
+            - generic [ref=e155]:
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - img [ref=e159]
+                  - generic [ref=e161]:
+                    - generic [ref=e162]: Slack
+                    - generic [ref=e163]: Communication
+                - generic [ref=e166]: Not connected
+              - paragraph [ref=e167]: Monitor workspace settings, SSO enforcement, data retention policies, and admin roles.
+              - button "Connect Slack →" [ref=e168]
+            - generic [ref=e169]:
+              - generic [ref=e170]:
+                - generic [ref=e171]:
+                  - img [ref=e173]
+                  - generic [ref=e175]:
+                    - generic [ref=e176]: Microsoft Azure
+                    - generic [ref=e177]: Cloud provider
+                - generic [ref=e180]: Not connected
+              - paragraph [ref=e181]: Scan Azure infrastructure for IAM, Defender, Storage, SQL, and key security configurations.
+              - link "Authorize with Microsoft →" [ref=e182] [cursor=pointer]:
+                - /url: https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=10e95a0a-ac49-4a44-9fda-00b0d3b58c24&response_type=code&redirect_uri=https%3A%2F%2Fshieldbase.vercel.app%2Fapi%2Fauth%2Fazure%2Fcallback&scope=Directory.Read.All%20Policy.Read.All%20Reports.Read.All%20SecurityEvents.Read.All%20User.Read%20offline_access&response_mode=query&state=undefined
+          - link "Missing an integration? Let us know →" [ref=e184] [cursor=pointer]:
+            - /url: mailto:hello@shieldbase.io?subject=Integration request
+  - alert [ref=e185]

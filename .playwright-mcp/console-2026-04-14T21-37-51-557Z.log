@@ -1,0 +1,9 @@
+[    1286ms] [LOG] [useOrg] Fetching GitHub findings for org: 5b1d6f90-ab55-4b58-ac6e-55c25de7d175 @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[    1393ms] [LOG] [useOrg] All scans: [Object, Object, Object, Object, Object] error: null @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[    1557ms] [LOG] [useOrg] Latest scan: {findings: Array(33), scan_type: github, created_at: 2026-04-14T21:07:05.905749+00:00} error: null @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[    1558ms] [LOG] [useOrg] GitHub findings loaded: 33 items, scan_type: github @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[   65398ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://shieldbase.vercel.app/auth:0
+[   73634ms] [LOG] [useOrg] Fetching GitHub findings for org: 5b1d6f90-ab55-4b58-ac6e-55c25de7d175 @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[   73764ms] [LOG] [useOrg] All scans: [Object, Object, Object, Object, Object] error: null @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[   73937ms] [LOG] [useOrg] Latest scan: {findings: Array(33), scan_type: github, created_at: 2026-04-14T21:07:05.905749+00:00} error: null @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
+[   73937ms] [LOG] [useOrg] GitHub findings loaded: 33 items, scan_type: github @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
