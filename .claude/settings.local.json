@@ -20,7 +20,8 @@
       "Bash(git commit -m 'feat\\(rbac\\): auditor_readonly sees the org and can'\\\\''t write to it:*)",
       "mcp__supabase__execute_sql",
       "mcp__supabase__apply_migration",
-      "Bash(git commit -m 'feat\\(pbc\\): Provided By Client request workflow + RLS for invited members:*)"
+      "Bash(git commit -m 'feat\\(pbc\\): Provided By Client request workflow + RLS for invited members:*)",
+      "Bash(git commit -m 'fix\\(pbc\\): remove duplicate DashboardLayout wrapper:*)"
     ]
   }
 }

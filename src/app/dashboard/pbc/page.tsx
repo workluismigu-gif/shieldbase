@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import {
@@ -69,7 +68,7 @@ export default function PbcPage() {
   }, [items]);
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-8">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -128,7 +127,7 @@ export default function PbcPage() {
         <CreateModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }}
           controls={controls} />
       )}
-    </DashboardLayout>
+    </>
   );
 }
 
