@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { mockControls } from "@/lib/mock-data";
+import { useOrg } from "@/lib/org-context";
+import { generateGapAnalysisPDF } from "@/lib/pdf";
 
 const criteriaInfo: Record<string, { name: string; description: string; color: string }> = {
   CC1: { name: "Control Environment", description: "Organization structure, oversight, accountability", color: "bg-blue-50 border-blue-200 text-blue-700" },
@@ -99,9 +101,7 @@ export default function GapAnalysisPage() {
           <h1 className="text-2xl font-bold text-gray-900">Gap Analysis Report</h1>
           <p className="text-sm text-gray-500 mt-1">Full assessment of your SOC 2 control posture across all Trust Services Criteria</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
-          <span>⬇</span> Download PDF Report
-        </button>
+        <DownloadPdfButton controls={allControls} />
       </div>
 
       {/* Critical alert */}
@@ -204,5 +204,26 @@ export default function GapAnalysisPage() {
         })}
       </div>
     </div>
+  );
+}
+
+interface PdfCtl { control_id: string; category: string; title: string; status: string; severity?: string; }
+
+function DownloadPdfButton({ controls }: { controls: PdfCtl[] }) {
+  const { org } = useOrg();
+  const [busy, setBusy] = useState(false);
+  const handleDownload = async () => {
+    setBusy(true);
+    try {
+      generateGapAnalysisPDF({ name: org?.name, frameworks: org?.frameworks as string[] | undefined }, controls);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button onClick={handleDownload} disabled={busy}
+      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
+      <span>⬇</span> {busy ? "Generating…" : "Download PDF Report"}
+    </button>
   );
 }

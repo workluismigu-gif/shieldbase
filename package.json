@@ -11,6 +11,8 @@
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.1022.0",
     "@aws-sdk/client-sts": "^3.1022.0",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
     "lucide-react": "^1.7.0",
