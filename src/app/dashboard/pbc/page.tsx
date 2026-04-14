@@ -1,0 +1,401 @@
+"use client";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { useOrg } from "@/lib/org-context";
+import { supabase } from "@/lib/supabase";
+import {
+  ClipboardList, Plus, Check, X, ExternalLink, Filter, Trash2,
+  CheckCircle2, AlertCircle, Clock, FileQuestion
+} from "lucide-react";
+
+type Status = "requested" | "provided" | "accepted" | "rejected";
+
+interface PbcRequest {
+  id: string;
+  org_id: string;
+  control_id: string | null;
+  title: string;
+  description: string | null;
+  status: Status;
+  response_notes: string | null;
+  response_url: string | null;
+  rejection_reason: string | null;
+  requested_by: string;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
+  provided_at: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+}
+
+const statusMeta: Record<Status, { label: string; Icon: typeof Clock; className: string }> = {
+  requested: { label: "Requested", Icon: Clock, className: "text-[var(--color-warning)] bg-[var(--color-warning-bg)]" },
+  provided:  { label: "Provided",  Icon: AlertCircle, className: "text-[var(--color-info)] bg-[var(--color-info-bg)]" },
+  accepted:  { label: "Accepted",  Icon: CheckCircle2, className: "text-[var(--color-success)] bg-[var(--color-success-bg)]" },
+  rejected:  { label: "Rejected",  Icon: X, className: "text-[var(--color-danger)] bg-[var(--color-danger-bg)]" },
+};
+
+export default function PbcPage() {
+  const { org, role, canWrite, controls } = useOrg();
+  const [items, setItems] = useState<PbcRequest[] | null>(null);
+  const [filter, setFilter] = useState<"all" | Status>("all");
+  const [showCreate, setShowCreate] = useState(false);
+
+  const isAuditor = role === "auditor_readonly";
+
+  const load = useCallback(async () => {
+    if (!org?.id) return;
+    const { data } = await supabase
+      .from("pbc_requests")
+      .select("*")
+      .eq("org_id", org.id)
+      .order("created_at", { ascending: false });
+    setItems((data as PbcRequest[]) ?? []);
+  }, [org?.id]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = useMemo(() => {
+    if (!items) return [];
+    if (filter === "all") return items;
+    return items.filter(i => i.status === filter);
+  }, [items, filter]);
+
+  const counts = useMemo(() => {
+    const c = { all: items?.length ?? 0, requested: 0, provided: 0, accepted: 0, rejected: 0 };
+    items?.forEach(i => { c[i.status]++; });
+    return c;
+  }, [items]);
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--color-muted)] bg-[var(--color-surface-2)] px-2.5 py-1 rounded-md mb-3">
+              <ClipboardList className="w-3.5 h-3.5" strokeWidth={1.8} />
+              Provided By Client
+            </div>
+            <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">PBC Requests</h1>
+            <p className="text-sm text-[var(--color-muted)] mt-1.5 max-w-2xl">
+              {isAuditor
+                ? "Request specific evidence from the client. They&apos;ll respond, you&apos;ll review, and the trail is captured for your workpapers."
+                : "The auditor uses this list to ask for evidence. Respond with notes and a link to the artifact, then they accept or send back for more detail."}
+            </p>
+          </div>
+          <button onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 text-sm px-4 py-2 rounded-lg font-medium transition flex-shrink-0">
+            <Plus className="w-4 h-4" strokeWidth={1.8} />
+            New request
+          </button>
+        </div>
+
+        {/* Filter chips */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <Filter className="w-3.5 h-3.5 text-[var(--color-muted)]" strokeWidth={1.8} />
+          {(["all", "requested", "provided", "accepted", "rejected"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`text-xs px-3 py-1.5 rounded-md font-medium transition capitalize ${
+                filter === f ? "bg-[var(--color-foreground)] text-[var(--color-surface)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)] hover:text-[var(--color-foreground)]"
+              }`}>
+              {f === "all" ? "All" : statusMeta[f].label} <span className="opacity-60 ml-0.5">{counts[f]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* List */}
+        {items === null ? (
+          <div className="text-center py-16 text-sm text-[var(--color-muted)]">Loading requests…</div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-12 text-center">
+            <FileQuestion className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3" strokeWidth={1.4} />
+            <p className="text-sm text-[var(--color-muted)]">
+              {filter === "all" ? "No PBC requests yet." : `No ${filter} requests.`}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(item => (
+              <PbcCard key={item.id} item={item} role={role} canWrite={canWrite}
+                controls={controls} onChanged={load} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showCreate && (
+        <CreateModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }}
+          controls={controls} />
+      )}
+    </DashboardLayout>
+  );
+}
+
+function PbcCard({ item, role, canWrite, controls, onChanged }: {
+  item: PbcRequest;
+  role: string | null;
+  canWrite: boolean;
+  controls: { control_id: string; title: string }[];
+  onChanged: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [responseNotes, setResponseNotes] = useState(item.response_notes ?? "");
+  const [responseUrl, setResponseUrl] = useState(item.response_url ?? "");
+  const [rejectReason, setRejectReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const meta = statusMeta[item.status];
+  const isAuditor = role === "auditor_readonly";
+
+  const overdue = item.due_date && item.status === "requested" && new Date(item.due_date) < new Date();
+  const linkedControl = controls.find(c => c.control_id === item.control_id);
+
+  const post = async (body: Record<string, unknown>) => {
+    setBusy(true); setError("");
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error("Not authenticated");
+      const res = await fetch("/api/pbc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...body, auth_token: session.session.access_token }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Action failed");
+      onChanged();
+      setExpanded(false);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-5 text-left hover:bg-[var(--color-surface)] transition">
+        <div className="flex items-start gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded ${meta.className}`}>
+                <meta.Icon className="w-3 h-3" strokeWidth={2} /> {meta.label}
+              </span>
+              {item.control_id && (
+                <span className="text-[10px] font-mono text-[var(--color-muted)] bg-[var(--color-surface-2)] px-1.5 py-0.5 rounded">{item.control_id}</span>
+              )}
+              {overdue && (
+                <span className="text-[10px] text-[var(--color-danger)] font-medium">Overdue</span>
+              )}
+            </div>
+            <div className="text-[15px] font-medium text-[var(--color-foreground)]">{item.title}</div>
+            {item.description && (
+              <div className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{item.description}</div>
+            )}
+            <div className="flex items-center gap-3 text-xs text-[var(--color-muted)] mt-2">
+              <span>Created {new Date(item.created_at).toLocaleDateString()}</span>
+              {item.due_date && <span>Due {new Date(item.due_date).toLocaleDateString()}</span>}
+              {item.provided_at && <span>Provided {new Date(item.provided_at).toLocaleDateString()}</span>}
+              {item.reviewed_at && <span>Reviewed {new Date(item.reviewed_at).toLocaleDateString()}</span>}
+            </div>
+          </div>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-[var(--color-border)] p-5 space-y-4 bg-[var(--color-surface)]">
+          {item.description && (
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-1">Description</div>
+              <div className="text-sm text-[var(--color-foreground-subtle)] whitespace-pre-wrap">{item.description}</div>
+            </div>
+          )}
+
+          {linkedControl && (
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-1">Linked control</div>
+              <div className="text-sm text-[var(--color-foreground-subtle)]">
+                <span className="font-mono text-xs">{linkedControl.control_id}</span> — {linkedControl.title}
+              </div>
+            </div>
+          )}
+
+          {/* Response section */}
+          {item.status === "requested" && !isAuditor && canWrite && (
+            <div className="space-y-2">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">Provide evidence</div>
+              <textarea value={responseNotes} onChange={e => setResponseNotes(e.target.value)} rows={3}
+                placeholder="What you're providing, who pulled it, when, and any caveats."
+                className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-border-strong)]" />
+              <input type="url" value={responseUrl} onChange={e => setResponseUrl(e.target.value)}
+                placeholder="Link to the artifact (S3, Drive, GitHub, etc.) — optional"
+                className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-border-strong)]" />
+              <button onClick={() => post({ action: "respond", request_id: item.id, response_notes: responseNotes, response_url: responseUrl })}
+                disabled={busy || !responseNotes.trim()}
+                className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
+                {busy ? "Submitting…" : "Submit response"}
+              </button>
+            </div>
+          )}
+
+          {item.status !== "requested" && (item.response_notes || item.response_url) && (
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-1">Client response</div>
+              {item.response_notes && (
+                <div className="text-sm text-[var(--color-foreground-subtle)] whitespace-pre-wrap mb-2">{item.response_notes}</div>
+              )}
+              {item.response_url && (
+                <a href={item.response_url} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-[var(--color-info)] hover:underline">
+                  Open artifact <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.8} />
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Review section */}
+          {item.status === "provided" && (isAuditor || role === "owner") && (
+            <div className="space-y-2">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">Auditor review</div>
+              <div className="flex gap-2">
+                <button onClick={() => post({ action: "review", request_id: item.id, decision: "accepted" })}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 bg-[var(--color-success)] text-white hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
+                  <Check className="w-4 h-4" strokeWidth={2} /> Accept
+                </button>
+                <button onClick={() => {
+                  const r = window.prompt("Why is this evidence insufficient? (sent back to the client)");
+                  if (r) post({ action: "review", request_id: item.id, decision: "rejected", rejection_reason: r });
+                }}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 bg-[var(--color-danger)] text-white hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
+                  <X className="w-4 h-4" strokeWidth={2} /> Reject
+                </button>
+              </div>
+            </div>
+          )}
+
+          {item.status === "rejected" && item.rejection_reason && (
+            <div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-1">Rejection reason</div>
+              <div className="text-sm text-[var(--color-danger)]">{item.rejection_reason}</div>
+            </div>
+          )}
+
+          {error && <div className="text-sm text-[var(--color-danger)]">{error}</div>}
+
+          <div className="flex justify-end pt-2">
+            {(role === "owner" || (isAuditor && item.requested_by /* requester only known via id; safe to show */)) && (
+              <button onClick={() => {
+                if (window.confirm("Delete this request? This cannot be undone.")) {
+                  post({ action: "delete", request_id: item.id });
+                }
+              }}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] hover:text-[var(--color-danger)] transition">
+                <Trash2 className="w-3.5 h-3.5" strokeWidth={1.8} /> Delete
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreateModal({ onClose, onCreated, controls }: {
+  onClose: () => void;
+  onCreated: () => void;
+  controls: { control_id: string; title: string }[];
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [controlId, setControlId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true); setError("");
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error("Not authenticated");
+      const res = await fetch("/api/pbc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          auth_token: session.session.access_token,
+          title,
+          description: description || null,
+          control_id: controlId || null,
+          due_date: dueDate || null,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Create failed");
+      onCreated();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Create failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <form onClick={e => e.stopPropagation()} onSubmit={submit}
+        className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl max-w-lg w-full p-6 space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)] tracking-tight">New PBC request</h2>
+          <p className="text-xs text-[var(--color-muted)] mt-1">Ask the client for a specific piece of evidence.</p>
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-[var(--color-muted)] mb-1">Title</label>
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} required
+            placeholder="e.g. Q3 2025 quarterly access review evidence"
+            className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-border-strong)]" />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-[var(--color-muted)] mb-1">Description (optional)</label>
+          <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3}
+            placeholder="What you need, format expected, the audit period it covers."
+            className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-border-strong)]" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-muted)] mb-1">Linked control (optional)</label>
+            <select value={controlId} onChange={e => setControlId(e.target.value)}
+              className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)]">
+              <option value="">None</option>
+              {controls.map(c => <option key={c.control_id} value={c.control_id}>{c.control_id} — {c.title.slice(0, 40)}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-muted)] mb-1">Due date (optional)</label>
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
+              className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)]" />
+          </div>
+        </div>
+
+        {error && <div className="text-sm text-[var(--color-danger)]">{error}</div>}
+
+        <div className="flex gap-2 pt-2">
+          <button type="button" onClick={onClose}
+            className="flex-1 border border-[var(--color-border-strong)] text-[var(--color-foreground-subtle)] py-2.5 rounded-lg font-medium text-sm hover:bg-[var(--color-surface-2)]">
+            Cancel
+          </button>
+          <button type="submit" disabled={busy || !title.trim()}
+            className="flex-1 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 py-2.5 rounded-lg font-semibold text-sm transition">
+            {busy ? "Creating…" : "Create request"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
