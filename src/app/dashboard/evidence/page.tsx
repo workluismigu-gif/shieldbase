@@ -262,7 +262,7 @@ export default function EvidencePage() {
                           disabled={uploadingKey === key}
                           className="text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md font-medium"
                         >
-                          {uploadingKey === key ? "Uploading…" : "📎 Upload file"}
+                          {uploadingKey === key ? "Uploading…" : " Upload file"}
                         </button>
                         <button
                           onClick={() => handleAttest(key)}

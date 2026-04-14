@@ -107,7 +107,7 @@ export default function GapAnalysisPage() {
       {/* Critical alert */}
       {criticalCount > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-red-500 text-lg">🚨</span>
+          <span className="text-red-500 text-lg"></span>
           <div>
             <p className="text-sm font-semibold text-red-800">{criticalCount} critical gaps require immediate attention</p>
             <p className="text-xs text-red-600 mt-0.5">These are audit blockers — address before scheduling your SOC 2 audit.</p>

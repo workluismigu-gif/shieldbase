@@ -3,11 +3,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 const navItems = [
-  { label: "Overview", href: "/dashboard", icon: "📊" },
-  { label: "Documents", href: "/dashboard/documents", icon: "📄" },
-  { label: "Checklist", href: "/dashboard/checklist", icon: "✅" },
-  { label: "Monitoring", href: "/dashboard/monitoring", icon: "🔍" },
-  { label: "Settings", href: "/dashboard/settings", icon: "⚙️" },
+  { label: "Overview", href: "/dashboard", icon: "" },
+  { label: "Documents", href: "/dashboard/documents", icon: "" },
+  { label: "Checklist", href: "/dashboard/checklist", icon: "" },
+  { label: "Monitoring", href: "/dashboard/monitoring", icon: "" },
+  { label: "Settings", href: "/dashboard/settings", icon: "" },
 ];
 
 export default function DashboardNav() {
@@ -23,7 +23,7 @@ export default function DashboardNav() {
     <aside className="w-64 bg-navy min-h-screen flex flex-col border-r border-white/5">
       {/* Logo */}
       <div className="p-6">
-        <a href="/dashboard" className="text-xl font-extrabold text-white">🛡️ ShieldBase</a>
+        <a href="/dashboard" className="text-xl font-extrabold text-white"> ShieldBase</a>
       </div>
 
       {/* Nav links */}
@@ -57,7 +57,7 @@ export default function DashboardNav() {
       {/* User */}
       <div className="p-4 border-t border-white/5">
         <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-slate hover:text-white transition w-full">
-          <span>🚪</span> Log Out
+          <span></span> Log Out
         </button>
       </div>
     </aside>

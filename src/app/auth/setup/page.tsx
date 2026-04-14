@@ -67,7 +67,7 @@ export default function SetupPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="text-3xl mb-3">🛡️</div>
+        <div className="text-3xl mb-3"></div>
         <p className="text-sm text-gray-500">Setting up your workspace...</p>
       </div>
     </div>

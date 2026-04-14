@@ -129,11 +129,11 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
     // All integrations
     const integrations = [
-      { key: "aws", label: "AWS", icon: "☁️", connectedAt: tech.aws_connected_at, detail: tech.aws_role_arn },
-      { key: "github", label: "GitHub", icon: "🐙", connectedAt: tech.github_connected_at, detail: tech.github_login ? `@${tech.github_login}` : undefined },
-      { key: "google", label: "Google Workspace", icon: "📧", connectedAt: tech.google_connected_at, detail: tech.google_domain },
-      { key: "azure", label: "Azure", icon: "🔷", connectedAt: tech.azure_connected_at, detail: undefined },
-      { key: "gcp", label: "GCP", icon: "☁️", connectedAt: tech.gcp_connected_at, detail: undefined },
+      { key: "aws", label: "AWS", icon: "", connectedAt: tech.aws_connected_at, detail: tech.aws_role_arn },
+      { key: "github", label: "GitHub", icon: "", connectedAt: tech.github_connected_at, detail: tech.github_login ? `@${tech.github_login}` : undefined },
+      { key: "google", label: "Google Workspace", icon: "", connectedAt: tech.google_connected_at, detail: tech.google_domain },
+      { key: "azure", label: "Azure", icon: "", connectedAt: tech.azure_connected_at, detail: undefined },
+      { key: "gcp", label: "GCP", icon: "", connectedAt: tech.gcp_connected_at, detail: undefined },
     ];
 
     for (const int of integrations) {
@@ -144,7 +144,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     }
 
     // Scans — label by provider
-    const providerLabels: Record<string, string> = { aws: "☁️ AWS", github: "🐙 GitHub", gcp: "GCP", azure: "Azure", kubernetes: "Kubernetes" };
+    const providerLabels: Record<string, string> = { aws: " AWS", github: " GitHub", gcp: "GCP", azure: "Azure", kubernetes: "Kubernetes" };
     for (const scan of scans) {
       const s = scan.summary ?? {};
       const scanProvider = scan.scan_type || "aws";
@@ -256,10 +256,10 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           console.log("[useOrg] Latest scan:", githubScan, "error:", ghErr);
 
           if (githubScan?.findings && Array.isArray(githubScan.findings) && githubScan.findings.length > 0) {
-            console.log("[useOrg] ✅ GitHub findings loaded:", githubScan.findings.length, "items, scan_type:", githubScan.scan_type);
+            console.log("[useOrg]  GitHub findings loaded:", githubScan.findings.length, "items, scan_type:", githubScan.scan_type);
             setGithubFindings(githubScan.findings as RawFinding[]);
           } else {
-            console.log("[useOrg] ❌ No GitHub findings. scan_type:", githubScan?.scan_type, "has findings:", !!githubScan?.findings);
+            console.log("[useOrg]  No GitHub findings. scan_type:", githubScan?.scan_type, "has findings:", !!githubScan?.findings);
           }
         }
       } catch (e) {

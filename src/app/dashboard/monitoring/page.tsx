@@ -13,70 +13,70 @@ const AWS_CATEGORIES: Record<string, {
 }> = {
   CC6: {
     label: "Logical Access Controls",
-    icon: "🔑",
+    icon: "",
     soc2: "CC6 — Logical & Physical Access",
     howToFix: "Enable MFA for all IAM users, remove unused access keys, restrict public S3 access, close SSH/RDP ports from internet, and enforce least-privilege IAM policies.",
     controls: ["CC6.1", "CC6.2", "CC6.3", "CC6.6", "CC.6.1", "CC.6.3", "CC.6.6"],
   },
   CC7: {
     label: "System Monitoring & Operations",
-    icon: "📡",
+    icon: "",
     soc2: "CC7 — System Operations",
     howToFix: "Enable CloudTrail in all regions with log validation, enable GuardDuty, enable VPC Flow Logs, configure CloudWatch log retention, and enable AWS Security Hub.",
     controls: ["CC7.1", "CC7.2", "CC7.3", "CC7.4", "CC.7.2", "CC.7.3", "CC.7.4"],
   },
   CC8: {
     label: "Change Management",
-    icon: "🔧",
+    icon: "",
     soc2: "CC8 — Change Management",
     howToFix: "Implement change control processes. Ensure all infrastructure changes go through approved pipelines with review and testing before deployment.",
     controls: ["CC8.1", "CC.8.1"],
   },
   C1: {
     label: "Confidentiality & Encryption",
-    icon: "🔒",
+    icon: "",
     soc2: "C1 — Confidentiality",
     howToFix: "Enable encryption at rest for all S3 buckets, RDS instances, and EBS volumes. Enable KMS key rotation. Enforce TLS 1.2+ on all load balancers.",
     controls: ["C1.1", "C1.2", "CC.C.1.2"],
   },
   A1: {
     label: "Availability",
-    icon: "💾",
+    icon: "",
     soc2: "A1 — Availability",
     howToFix: "Enable automated backups for RDS with multi-region retention. Enable DynamoDB point-in-time recovery. Test backup restoration quarterly.",
     controls: ["A1.1", "A1.2", "CC.A.1.1"],
   },
   PI1: {
     label: "Processing Integrity",
-    icon: "⚙️",
+    icon: "",
     soc2: "PI1 — Processing Integrity",
     howToFix: "Enable CloudTrail object-level logging for S3, configure CloudWatch alerts, and ensure data processing pipelines have audit logging.",
     controls: ["PI.1.2", "PI.1.3", "PI.1.4", "PI.1.5"],
   },
   CC3: {
     label: "Risk Assessment",
-    icon: "📊",
+    icon: "",
     soc2: "CC3 — Risk Assessment",
     howToFix: "Enable AWS Config in all regions to track configuration changes and compliance drift. Conduct periodic risk assessments.",
     controls: ["CC.3.1", "CC.3.3", "CC.3.4"],
   },
   CC2: {
     label: "Communication",
-    icon: "📢",
+    icon: "",
     soc2: "CC2 — Communication",
     howToFix: "Ensure CloudTrail is logging across all regions and delivering to a centralized S3 bucket with access controls.",
     controls: ["CC.2.1"],
   },
   CC1: {
     label: "Control Environment",
-    icon: "🏛️",
+    icon: "",
     soc2: "CC1 — Control Environment",
     howToFix: "Remove overly permissive IAM policies. No IAM policy should grant full admin (*:*) access. Use permission boundaries and SCPs.",
     controls: ["CC.1.3"],
   },
   CC5: {
     label: "Control Activities",
-    icon: "📋",
+    icon: "",
     soc2: "CC5 — Control Activities",
     howToFix: "Set up CloudWatch metric filters and alarms for NACL changes, security group changes, and IAM policy changes.",
     controls: ["CC.5.2"],
@@ -109,7 +109,7 @@ const impactConfig: Record<string, string> = {
 
 function AWSCategoryCard({ catKey, controls }: { catKey: string; controls: ControlRow[] }) {
   const [expanded, setExpanded] = useState(false);
-  const cat = AWS_CATEGORIES[catKey] ?? { label: catKey, icon: "🔹", soc2: catKey, howToFix: "", controls: [] };
+  const cat = AWS_CATEGORIES[catKey] ?? { label: catKey, icon: "", soc2: catKey, howToFix: "", controls: [] };
 
   const passing = controls.filter(c => c.status === "compliant").length;
   const failing = controls.filter(c => c.status === "non_compliant").length;
@@ -143,7 +143,7 @@ function AWSCategoryCard({ catKey, controls }: { catKey: string; controls: Contr
         <div className="border-t border-gray-100">
           {(failing > 0 || partial > 0) && cat.howToFix && (
             <div className="mx-4 my-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-blue-800 mb-1">🛠️ How to fix</p>
+              <p className="text-xs font-semibold text-blue-800 mb-1"> How to fix</p>
               <p className="text-xs text-blue-700">{cat.howToFix}</p>
             </div>
           )}
@@ -198,7 +198,7 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
   if (controls.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-        <div className="text-4xl mb-4">☁️</div>
+        <div className="text-4xl mb-4"></div>
         <h2 className="text-lg font-semibold text-gray-800 mb-2">No AWS scan data yet</h2>
         <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition mt-2">Connect AWS →</a>
       </div>
@@ -215,7 +215,7 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
             <div className="text-xs text-gray-400">{passing} passing · {failing} failing · {partial} partial · {controls.length} total</div>
           </div>
           <div className="flex items-center gap-2">
-            {failing > 0 && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium">🚨 {failing} to fix</div>}
+            {failing > 0 && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium"> {failing} to fix</div>}
             {lastScan && <div className="text-xs text-gray-400">Last scan: {lastScan} {realtimeConnected && <span className="text-green-500">● live</span>}</div>}
           </div>
         </div>
@@ -238,35 +238,35 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
 const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: string; checks: string[]; howToFix: string }> = {
   branch_protection: {
     label: "Branch Protection",
-    icon: "🌿",
+    icon: "",
     soc2: "CC8.1 — Change Management",
     howToFix: "Go to each repo → Settings → Branches → Add branch protection rule for 'main'. Enable: Require PR reviews, Restrict force pushes, Restrict deletions, Apply to admins, Require status checks, Require linear history, Require conversation resolution.",
     checks: ["repository_default_branch_protection_enabled","repository_default_branch_disallows_force_push","repository_default_branch_deletion_disabled","repository_default_branch_protection_applies_to_admins","repository_default_branch_status_checks_required","repository_default_branch_requires_linear_history","repository_default_branch_requires_conversation_resolution"],
   },
   code_review: {
     label: "Code Review",
-    icon: "👀",
+    icon: "",
     soc2: "CC8.1 — Change Management",
     howToFix: "In branch protection rules, enable 'Require approvals' (min 2). Enable 'Require review from Code Owners'. Create a CODEOWNERS file in the root of each repo.",
     checks: ["repository_default_branch_requires_multiple_approvals","repository_default_branch_requires_codeowners_review","repository_has_codeowners_file"],
   },
   secret_scanning: {
     label: "Secret & Vulnerability Scanning",
-    icon: "🔍",
+    icon: "",
     soc2: "CC7.1 — System Monitoring",
     howToFix: "Go to each repo → Settings → Code security → Enable 'Secret scanning' and 'Dependabot alerts'. For org-wide: Org Settings → Code security → enable for all repos.",
     checks: ["repository_secret_scanning_enabled","repository_dependency_scanning_enabled"],
   },
   repo_hygiene: {
     label: "Repository Hygiene",
-    icon: "🗂️",
+    icon: "",
     soc2: "CC6.1 — Access Control",
     howToFix: "Enable 'Automatically delete head branches' in repo Settings → General. Enable 'Require signed commits' in branch protection. Add a SECURITY.md with your vulnerability disclosure policy.",
     checks: ["repository_branch_delete_on_merge_enabled","repository_default_branch_requires_signed_commits","repository_immutable_releases_enabled","repository_public_has_securitymd_file","repository_inactive_not_archived"],
   },
   org_security: {
     label: "Organization Security",
-    icon: "🏢",
+    icon: "",
     soc2: "CC1.2 — Organization",
     howToFix: "Apply for a GitHub Verified badge via Org Settings → Profile → Verified domains.",
     checks: ["organization_verified_badge"],
@@ -307,7 +307,7 @@ function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CA
         <div className="border-t border-gray-100">
           {failing > 0 && (
             <div className="mx-4 my-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-blue-800 mb-1">🛠️ How to fix</p>
+              <p className="text-xs font-semibold text-blue-800 mb-1"> How to fix</p>
               <p className="text-xs text-blue-700">{category.howToFix}</p>
             </div>
           )}
@@ -336,7 +336,7 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
   if (findings.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
-        <div className="text-4xl mb-4">🐙</div>
+        <div className="text-4xl mb-4"></div>
         <h2 className="text-lg font-semibold text-gray-800 mb-2">No GitHub scan data yet</h2>
         <p className="text-sm text-gray-500 mb-4">GitHub is connected. A scan will run automatically within 15 minutes, or trigger one manually.</p>
         <button className="inline-block bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition" disabled>
@@ -359,7 +359,7 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
             <div className="text-xs text-gray-400">{passing} passing · {failing} failing · {findings.length} total checks</div>
           </div>
           <div className="flex items-center gap-2">
-            {failing > 0 && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium">🚨 {failing} to fix</div>}
+            {failing > 0 && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium"> {failing} to fix</div>}
             {lastScan && <div className="text-xs text-gray-400 text-right">Last scan: {lastScan}</div>}
           </div>
         </div>
@@ -411,7 +411,7 @@ function MonitoringPage() {
   const triggerScan = async () => {
     setScanning(true);
     setScanMsg("");
-    const providerLabel = provider === "github" ? "🐙 GitHub" : "☁️ AWS";
+    const providerLabel = provider === "github" ? " GitHub" : " AWS";
     // Log initiation immediately to activity center
     pushActivityEvent({
       type: "scan",
@@ -467,11 +467,11 @@ function MonitoringPage() {
           )}
           <button onClick={handleExportEvidence} disabled={exporting || !org?.id}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
-            📦 {exporting ? "Exporting..." : "Export Evidence"}
+             {exporting ? "Exporting..." : "Export Evidence"}
           </button>
           <button onClick={triggerScan} disabled={scanning || !org?.id}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
-            <span className={scanning ? "animate-spin" : ""}>🔍</span>
+            <span className={scanning ? "animate-spin" : ""}></span>
             {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
           </button>
         </div>
@@ -489,7 +489,7 @@ function MonitoringPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
             provider === "aws" ? "border-orange-500 text-orange-700 bg-orange-50" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}>
-          ☁️ AWS
+           AWS
           {scanning && provider === "aws" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
           <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"}`}>{controls.length}</span>
         </button>
@@ -497,7 +497,7 @@ function MonitoringPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
             provider === "github" ? "border-gray-900 text-gray-900 bg-gray-50" : "border-transparent text-gray-500 hover:text-gray-700"
           }`}>
-          🐙 GitHub
+           GitHub
           {scanning && provider === "github" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
           {!scanning && githubFindings.length > 0 && <span className="w-2 h-2 rounded-full bg-green-500" />}
           {githubFindings.length > 0

@@ -74,7 +74,7 @@ function AuthForm() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="text-2xl font-extrabold text-navy">🛡️ ShieldBase</a>
+          <a href="/" className="text-2xl font-extrabold text-navy"> ShieldBase</a>
           <p className="text-slate text-sm mt-2">
             {mode === "login" ? "Welcome back" : "Start your SOC 2 journey"}
           </p>

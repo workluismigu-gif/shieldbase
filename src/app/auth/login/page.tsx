@@ -29,7 +29,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-extrabold text-gray-900">🛡️ ShieldBase</Link>
+          <Link href="/" className="text-2xl font-extrabold text-gray-900"> ShieldBase</Link>
           <p className="text-sm text-gray-500 mt-2">Sign in to your compliance dashboard</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">

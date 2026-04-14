@@ -11,10 +11,10 @@ const PHASE_COLORS: Record<string, string> = {
 };
 
 const PHASE_ICONS: Record<string, string> = {
-  Foundation: "🏗️",
-  Policies: "📋",
-  Remediation: "🔧",
-  "Audit Prep": "🎯",
+  Foundation: "",
+  Policies: "",
+  Remediation: "",
+  "Audit Prep": "",
 };
 
 type Status = "open" | "in_progress" | "done" | "blocked";
@@ -100,7 +100,7 @@ export default function RemediationPage() {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
-        <div className="text-4xl mb-3">🔧</div>
+        <div className="text-4xl mb-3"></div>
         <p className="text-sm">No tasks yet. Connect AWS to get your remediation list.</p>
       </div>
     );
@@ -139,7 +139,7 @@ export default function RemediationPage() {
           return (
             <div key={phase}>
               <div className="flex items-center gap-2 mb-3">
-                <span>{PHASE_ICONS[phase] ?? "📌"}</span>
+                <span>{PHASE_ICONS[phase] ?? ""}</span>
                 <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">{phase}</h2>
                 <span className="text-xs text-gray-400">{phaseTasks.filter(t => t.completed).length}/{phaseTasks.length}</span>
               </div>
@@ -168,11 +168,11 @@ export default function RemediationPage() {
                               </span>
                             )}
                             {owner && (
-                              <span className="text-gray-500">👤 {owner.email}</span>
+                              <span className="text-gray-500"> {owner.email}</span>
                             )}
                             {task.due_date && (
                               <span className={overdue(task) ? "text-red-600 font-medium" : "text-gray-500"}>
-                                📅 Due {new Date(task.due_date).toLocaleDateString()}{overdue(task) ? " (overdue)" : ""}
+                                 Due {new Date(task.due_date).toLocaleDateString()}{overdue(task) ? " (overdue)" : ""}
                               </span>
                             )}
                             {task.completed && task.completed_at && (

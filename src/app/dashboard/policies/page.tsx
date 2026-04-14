@@ -11,9 +11,9 @@ interface Ack {
 }
 
 const typeIcons: Record<string, string> = {
-  information_security: "🔐", access_control: "🔑", incident_response: "🚨",
-  data_classification: "🗂️", change_management: "🔄", vendor_management: "🤝",
-  encryption: "🔒", bcp_dr: "🛡️", acceptable_use: "📜", other: "📄",
+  information_security: "", access_control: "", incident_response: "",
+  data_classification: "", change_management: "", vendor_management: "",
+  encryption: "", bcp_dr: "", acceptable_use: "", other: "",
 };
 
 const statusConfig = {
@@ -175,7 +175,7 @@ export default function PoliciesPage() {
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{typeIcons[selectedPolicy.type] || "📄"}</span>
+              <span className="text-2xl">{typeIcons[selectedPolicy.type] || ""}</span>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{selectedPolicy.title}</h1>
                 <p className="text-sm text-gray-400 mt-0.5">Last updated {selectedPolicy.updated}</p>
@@ -272,7 +272,7 @@ export default function PoliciesPage() {
             return (
               <button key={policy.id} onClick={() => setSelected(policy.id)}
                 className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left">
-                <span className="text-2xl flex-shrink-0">{typeIcons[policy.type] || "📄"}</span>
+                <span className="text-2xl flex-shrink-0">{typeIcons[policy.type] || ""}</span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-gray-900">{policy.title}</div>
                   <div className="text-xs text-gray-400 mt-0.5">Updated {policy.updated}</div>

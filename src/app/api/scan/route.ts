@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
 
       // Log control changes to activity_events
       for (const change of changes) {
-        const icon = change.newStatus === "compliant" ? "✅" : change.newStatus === "non_compliant" ? "❌" : "⚠️";
+        const icon = change.newStatus === "compliant" ? "" : change.newStatus === "non_compliant" ? "" : "";
         const oldLabel = change.oldStatus === "compliant" ? "passing" : change.oldStatus === "non_compliant" ? "failing" : change.oldStatus;
         const newLabel = change.newStatus === "compliant" ? "passing" : change.newStatus === "non_compliant" ? "failing" : change.newStatus;
         try {

@@ -69,7 +69,7 @@ export default function ScanPage() {
 
       {!roleArn && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
-          <span className="text-yellow-500 text-lg flex-shrink-0">⚠️</span>
+          <span className="text-yellow-500 text-lg flex-shrink-0"></span>
           <div>
             <p className="text-sm font-semibold text-yellow-800">AWS not connected yet</p>
             <p className="text-xs text-yellow-700 mt-0.5">Connect your AWS account first so we can pre-fill your role ARN in the scan command. <a href="/dashboard/settings" className="underline font-medium">Connect AWS →</a></p>
@@ -79,7 +79,7 @@ export default function ScanPage() {
 
       {roleArn && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-          <span className="text-green-500">✅</span>
+          <span className="text-green-500"></span>
           <div>
             <p className="text-sm font-semibold text-green-800">AWS connected — role ARN pre-filled in scan command</p>
             <p className="text-xs text-green-700 font-mono mt-0.5 truncate">{roleArn}</p>
@@ -165,7 +165,7 @@ export default function ScanPage() {
 
         {status === "success" && result ? (
           <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-            <div className="text-3xl mb-3">🎉</div>
+            <div className="text-3xl mb-3"></div>
             <h3 className="text-lg font-bold text-green-800 mb-1">Scan uploaded successfully!</h3>
             <p className="text-green-700 text-sm mb-4">{result.controls_mapped} controls mapped to SOC 2 criteria</p>
             <div className="grid grid-cols-4 gap-3 mb-4">
@@ -187,14 +187,14 @@ export default function ScanPage() {
               onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.name.endsWith(".json")) setFile(f); }}>
               {file ? (
                 <div>
-                  <div className="text-2xl mb-2">📄</div>
+                  <div className="text-2xl mb-2"></div>
                   <p className="text-sm font-medium text-gray-800">{file.name}</p>
                   <p className="text-xs text-gray-500 mt-1">{(file.size / 1024).toFixed(1)} KB</p>
                   <button onClick={() => setFile(null)} className="text-xs text-red-500 mt-2 hover:underline">Remove</button>
                 </div>
               ) : (
                 <div>
-                  <div className="text-3xl mb-2">📁</div>
+                  <div className="text-3xl mb-2"></div>
                   <p className="text-sm text-gray-600 mb-2">Drag & drop your Prowler JSON file here</p>
                   <label className="cursor-pointer text-sm text-blue-600 font-medium hover:underline">
                     or browse to select

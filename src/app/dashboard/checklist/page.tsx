@@ -6,10 +6,10 @@ import { supabase } from "@/lib/supabase";
 const PHASES = ["Foundation", "Policies", "Remediation", "Audit Prep"];
 
 const PHASE_ICONS: Record<string, string> = {
-  Foundation: "🏗️",
-  Policies: "📋",
-  Remediation: "🔧",
-  "Audit Prep": "🎯",
+  Foundation: "",
+  Policies: "",
+  Remediation: "",
+  "Audit Prep": "",
 };
 
 const PHASE_DESC: Record<string, string> = {
@@ -46,9 +46,9 @@ function PhaseCard({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-gray-900">{phase}</h3>
-              {isLocked && <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">🔒 Locked</span>}
-              {allDone && <span className="text-xs bg-green-200 text-green-700 px-2 py-0.5 rounded-full font-medium">✅ Complete</span>}
-              {isActive && !allDone && <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full font-medium">🔥 Active</span>}
+              {isLocked && <span className="text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full"> Locked</span>}
+              {allDone && <span className="text-xs bg-green-200 text-green-700 px-2 py-0.5 rounded-full font-medium"> Complete</span>}
+              {isActive && !allDone && <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full font-medium"> Active</span>}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">{PHASE_DESC[phase]}</p>
           </div>
@@ -67,7 +67,7 @@ function PhaseCard({
       {/* Milestone banner */}
       {allDone && (
         <div className="bg-green-50 border-b border-green-100 px-6 py-3 flex items-center gap-2">
-          <span className="text-lg">🎉</span>
+          <span className="text-lg"></span>
           <p className="text-sm font-medium text-green-800">{phase} complete! Great work.</p>
         </div>
       )}
@@ -93,7 +93,7 @@ function PhaseCard({
                   <div className="text-xs text-gray-400 mt-0.5">{task.description}</div>
                 )}
                 {task.completed && task.completed_at && (
-                  <div className="text-xs text-green-600 mt-1">✅ Completed {new Date(task.completed_at).toLocaleDateString()}</div>
+                  <div className="text-xs text-green-600 mt-1"> Completed {new Date(task.completed_at).toLocaleDateString()}</div>
                 )}
               </div>
             </div>
@@ -146,7 +146,7 @@ export default function ChecklistPage() {
   if (displayTasks.length === 0) {
     return (
       <div className="text-center py-16 text-gray-400">
-        <div className="text-4xl mb-3">📋</div>
+        <div className="text-4xl mb-3"></div>
         <p className="text-sm">No checklist items yet. Sign up to get your SOC 2 roadmap.</p>
       </div>
     );
@@ -179,7 +179,7 @@ export default function ChecklistPage() {
           return (
             <div key={phase} className="flex items-center gap-2 flex-shrink-0">
               <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium ${phaseDone ? "bg-green-100 text-green-700" : isActive ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-400"}`}>
-                {phaseDone ? "✅" : isActive ? "🔥" : "🔒"} {phase}
+                {phaseDone ? "" : isActive ? "" : ""} {phase}
               </div>
               {i < PHASES.length - 1 && <span className="text-gray-300">→</span>}
             </div>

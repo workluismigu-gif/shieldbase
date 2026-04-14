@@ -68,7 +68,7 @@ function Header() {
     <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
         <a href="#" className={`text-xl font-extrabold tracking-tight transition-colors ${scrolled ? "text-navy" : "text-white"}`}>
-          🛡️ ShieldBase
+           ShieldBase
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
           {["How It Works", "Pricing", "FAQ"].map((item) => (
@@ -368,10 +368,10 @@ function Problem() {
 /* ─── HOW IT WORKS ─── */
 function HowItWorks() {
   const steps = [
-    { num: "01", title: "Free Assessment", desc: "Take a 5-minute readiness quiz. We identify where you stand against SOC 2 requirements — no commitment needed.", icon: "📋", color: "from-blue/10 to-purple/10" },
-    { num: "02", title: "AI Gap Analysis", desc: "Our AI analyzes your tech stack against all 5 Trust Services Criteria and generates a comprehensive gap report with severity ratings.", icon: "🔍", color: "from-purple/10 to-blue/10" },
-    { num: "03", title: "Custom Deliverables", desc: "Receive 15–25 security policies written for your stack, an evidence collection runbook, and a prioritized remediation roadmap.", icon: "📦", color: "from-blue/10 to-green/10" },
-    { num: "04", title: "Audit Ready", desc: "We connect you with a vetted CPA firm and hand off everything they need. You walk into your audit fully prepared.", icon: "✅", color: "from-green/10 to-blue/10" },
+    { num: "01", title: "Free Assessment", desc: "Take a 5-minute readiness quiz. We identify where you stand against SOC 2 requirements — no commitment needed.", icon: "", color: "from-blue/10 to-purple/10" },
+    { num: "02", title: "AI Gap Analysis", desc: "Our AI analyzes your tech stack against all 5 Trust Services Criteria and generates a comprehensive gap report with severity ratings.", icon: "", color: "from-purple/10 to-blue/10" },
+    { num: "03", title: "Custom Deliverables", desc: "Receive 15–25 security policies written for your stack, an evidence collection runbook, and a prioritized remediation roadmap.", icon: "", color: "from-blue/10 to-green/10" },
+    { num: "04", title: "Audit Ready", desc: "We connect you with a vetted CPA firm and hand off everything they need. You walk into your audit fully prepared.", icon: "", color: "from-green/10 to-blue/10" },
   ];
 
   return (
@@ -490,12 +490,12 @@ function Pricing() {
 /* ─── DELIVERABLES ─── */
 function Deliverables() {
   const items = [
-    { icon: "🔍", title: "Gap Analysis Report", desc: "20–30 page assessment against all 5 Trust Services Criteria with severity ratings and prioritized findings." },
-    { icon: "📋", title: "Custom Policy Package", desc: "15–25 security policies (InfoSec, Access Control, IR, Data Classification) tailored to your tech stack." },
-    { icon: "📁", title: "Evidence Runbook", desc: "Step-by-step evidence collection guide for your actual tools — AWS, GitHub, Slack, Okta, and more." },
-    { icon: "🗺️", title: "Remediation Roadmap", desc: "Prioritized action plan with timelines, config templates, and implementation guidance for every gap." },
-    { icon: "🤝", title: "Auditor Connection", desc: "Matched with a vetted CPA firm. We coordinate so you go straight to audit — no shopping around." },
-    { icon: "📊", title: "Readiness Dashboard", desc: "Track your compliance progress with clear percentage scores across all control areas." },
+    { icon: "", title: "Gap Analysis Report", desc: "20–30 page assessment against all 5 Trust Services Criteria with severity ratings and prioritized findings." },
+    { icon: "", title: "Custom Policy Package", desc: "15–25 security policies (InfoSec, Access Control, IR, Data Classification) tailored to your tech stack." },
+    { icon: "", title: "Evidence Runbook", desc: "Step-by-step evidence collection guide for your actual tools — AWS, GitHub, Slack, Okta, and more." },
+    { icon: "", title: "Remediation Roadmap", desc: "Prioritized action plan with timelines, config templates, and implementation guidance for every gap." },
+    { icon: "", title: "Auditor Connection", desc: "Matched with a vetted CPA firm. We coordinate so you go straight to audit — no shopping around." },
+    { icon: "", title: "Readiness Dashboard", desc: "Track your compliance progress with clear percentage scores across all control areas." },
   ];
 
   return (
@@ -545,7 +545,7 @@ function Frameworks() {
               <div key={i} className={`rounded-xl p-5 text-center border card-hover ${f.available ? "bg-[var(--color-bg)] border-blue/20 shadow-sm" : "bg-[var(--color-bg)] border-[var(--color-border)] opacity-60"}`}>
                 <div className="text-base font-bold text-navy mb-1">{f.name}</div>
                 <div className={`text-xs font-semibold ${f.available ? "text-green" : "text-slate"}`}>
-                  {f.available ? "✅ Available" : "Coming Soon"}
+                  {f.available ? " Available" : "Coming Soon"}
                 </div>
               </div>
             ))}
@@ -650,7 +650,7 @@ function CTA() {
             </p>
             {submitted ? (
               <div className="bg-green/10 border border-green/30 rounded-xl p-8 inline-block">
-                <div className="text-3xl mb-3">🎉</div>
+                <div className="text-3xl mb-3"></div>
                 <h3 className="text-xl font-bold text-white mb-2">You&apos;re in!</h3>
                 <p className="text-slate">We&apos;ll send your free readiness assessment within 24 hours.</p>
               </div>
@@ -682,7 +682,7 @@ function Footer() {
     <footer className="bg-navy border-t border-white/5 py-12">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-lg font-extrabold text-white">🛡️ ShieldBase</div>
+          <div className="text-lg font-extrabold text-white"> ShieldBase</div>
           <div className="flex gap-8 text-sm text-slate">
             <a href="#how-it-works" className="hover:text-white transition">How It Works</a>
             <a href="#pricing" className="hover:text-white transition">Pricing</a>

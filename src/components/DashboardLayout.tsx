@@ -7,16 +7,16 @@ import { signOut } from "@/lib/supabase";
 import { useEffect, useMemo } from "react";
 
 const navItems: { href: string; label: string; icon: string; badge?: string }[] = [
-  { href: "/dashboard", label: "Overview", icon: "📊" },
-  { href: "/dashboard/monitoring", label: "Monitoring", icon: "📡" },
-  { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "📄" },
-  { href: "/dashboard/controls", label: "Controls", icon: "🎯" },
-  { href: "/dashboard/scope", label: "Audit Scope", icon: "🎚️" },
-  { href: "/dashboard/policies", label: "Policies", icon: "📋" },
-  { href: "/dashboard/evidence", label: "Evidence", icon: "📁" },
-  { href: "/dashboard/remediation", label: "Remediation", icon: "🔧" },
-  { href: "/dashboard/team", label: "Team & Auditors", icon: "👥" },
-  { href: "/dashboard/settings", label: "Settings", icon: "⚙️" },
+  { href: "/dashboard", label: "Overview", icon: "" },
+  { href: "/dashboard/monitoring", label: "Monitoring", icon: "" },
+  { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "" },
+  { href: "/dashboard/controls", label: "Controls", icon: "" },
+  { href: "/dashboard/scope", label: "Audit Scope", icon: "" },
+  { href: "/dashboard/policies", label: "Policies", icon: "" },
+  { href: "/dashboard/evidence", label: "Evidence", icon: "" },
+  { href: "/dashboard/remediation", label: "Remediation", icon: "" },
+  { href: "/dashboard/team", label: "Team & Auditors", icon: "" },
+  { href: "/dashboard/settings", label: "Settings", icon: "" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -62,7 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className={`fixed md:sticky top-0 left-0 h-screen w-64 bg-navy flex flex-col z-50 transition-transform md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         {/* Logo */}
         <div className="px-6 py-5 border-b border-white/10">
-          <Link href="/" className="text-lg font-extrabold text-white">🛡️ ShieldBase</Link>
+          <Link href="/" className="text-lg font-extrabold text-white"> ShieldBase</Link>
         </div>
 
         {/* Org selector */}

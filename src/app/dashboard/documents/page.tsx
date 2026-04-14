@@ -2,17 +2,17 @@
 import { useState } from "react";
 
 const mockDocuments = [
-  { id: "1", title: "SOC 2 Gap Analysis Report", type: "gap_analysis", status: "draft", updated: "Not yet generated", icon: "🔍" },
-  { id: "2", title: "Information Security Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "📋" },
-  { id: "3", title: "Access Control Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "🔐" },
-  { id: "4", title: "Incident Response Plan", type: "policy", status: "draft", updated: "Not yet generated", icon: "🚨" },
-  { id: "5", title: "Data Classification Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "📁" },
-  { id: "6", title: "Change Management Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "🔄" },
-  { id: "7", title: "Vendor Management Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "🤝" },
-  { id: "8", title: "Business Continuity Plan", type: "policy", status: "draft", updated: "Not yet generated", icon: "🏗️" },
-  { id: "9", title: "Risk Assessment Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "⚖️" },
-  { id: "10", title: "Evidence Collection Runbook", type: "evidence_runbook", status: "draft", updated: "Not yet generated", icon: "📸" },
-  { id: "11", title: "Remediation Roadmap", type: "remediation_plan", status: "draft", updated: "Not yet generated", icon: "🗺️" },
+  { id: "1", title: "SOC 2 Gap Analysis Report", type: "gap_analysis", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "2", title: "Information Security Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "3", title: "Access Control Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "4", title: "Incident Response Plan", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "5", title: "Data Classification Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "6", title: "Change Management Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "7", title: "Vendor Management Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "8", title: "Business Continuity Plan", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "9", title: "Risk Assessment Policy", type: "policy", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "10", title: "Evidence Collection Runbook", type: "evidence_runbook", status: "draft", updated: "Not yet generated", icon: "" },
+  { id: "11", title: "Remediation Roadmap", type: "remediation_plan", status: "draft", updated: "Not yet generated", icon: "" },
 ];
 
 const statusColors: Record<string, string> = {
@@ -41,7 +41,7 @@ export default function DocumentsPage() {
           <p className="text-slate text-sm mt-1">Your policies, reports, and compliance documents</p>
         </div>
         <button className="bg-blue hover:bg-blue-dark text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition">
-          🤖 Generate All with AI
+           Generate All with AI
         </button>
       </div>
 
@@ -65,7 +65,7 @@ export default function DocumentsPage() {
 
       {/* Info banner */}
       <div className="bg-blue/5 border border-blue/20 rounded-xl p-5 mb-6 flex items-start gap-4">
-        <span className="text-2xl">💡</span>
+        <span className="text-2xl"></span>
         <div>
           <h3 className="text-sm font-semibold text-navy">AI-Generated Documents</h3>
           <p className="text-sm text-slate mt-1">

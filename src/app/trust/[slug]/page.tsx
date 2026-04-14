@@ -7,22 +7,22 @@ const mockCompany = {
   tagline: "Building fast, staying secure.",
   website: "https://acmesaas.com",
   description: "Acme SaaS is a B2B platform helping companies automate their workflows. We take the security of your data seriously.",
-  logo: "🚀",
+  logo: "",
   primaryColor: "#3b82f6",
   complianceScore: 87,
   frameworks: [
-    { name: "SOC 2 Type I", status: "certified", date: "March 2026", icon: "✅" },
-    { name: "SOC 2 Type II", status: "in_progress", date: "Est. Q3 2026", icon: "🔄" },
-    { name: "ISO 27001", status: "planned", date: "2027", icon: "📋" },
+    { name: "SOC 2 Type I", status: "certified", date: "March 2026", icon: "" },
+    { name: "SOC 2 Type II", status: "in_progress", date: "Est. Q3 2026", icon: "" },
+    { name: "ISO 27001", status: "planned", date: "2027", icon: "" },
   ],
   controls: {
     total: 52,
     compliant: 45,
     categories: [
-      { name: "Security", score: 89, icon: "🔐" },
-      { name: "Availability", score: 92, icon: "⚡" },
-      { name: "Confidentiality", score: 88, icon: "🔒" },
-      { name: "Processing Integrity", score: 85, icon: "⚙️" },
+      { name: "Security", score: 89, icon: "" },
+      { name: "Availability", score: 92, icon: "" },
+      { name: "Confidentiality", score: 88, icon: "" },
+      { name: "Processing Integrity", score: 85, icon: "" },
     ],
   },
   policies: [
@@ -35,12 +35,12 @@ const mockCompany = {
     "Business Continuity Plan",
   ],
   integrations: [
-    { name: "AWS", logo: "☁️", description: "Cloud infrastructure" },
-    { name: "GitHub", logo: "🐙", description: "Source control" },
-    { name: "Google Workspace", logo: "📧", description: "Identity & email" },
-    { name: "Slack", logo: "💬", description: "Communication" },
-    { name: "Datadog", logo: "🐕", description: "Monitoring" },
-    { name: "CrowdStrike", logo: "🦅", description: "Endpoint security" },
+    { name: "AWS", logo: "", description: "Cloud infrastructure" },
+    { name: "GitHub", logo: "", description: "Source control" },
+    { name: "Google Workspace", logo: "", description: "Identity & email" },
+    { name: "Slack", logo: "", description: "Communication" },
+    { name: "Datadog", logo: "", description: "Monitoring" },
+    { name: "CrowdStrike", logo: "", description: "Endpoint security" },
   ],
   lastUpdated: "March 31, 2026",
   contact: "security@acmesaas.com",
@@ -74,7 +74,7 @@ export default async function TrustCenterPage({ params }: { params: Promise<{ sl
       <div className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-xl">{company.logo}</div>
+            <div className="w-10 h-10 bg-[var(--color-info)] rounded-xl flex items-center justify-center text-sm font-bold text-white">{company.name.slice(0,2).toUpperCase()}</div>
             <div>
               <div className="font-bold text-[var(--color-foreground)] text-lg">{company.name}</div>
               <div className="text-xs text-[var(--color-muted)]">Trust Center</div>

@@ -35,21 +35,21 @@ function StatCard({ label, value, sub, color = "text-gray-900" }: { label: strin
 // ─── SCAN CATEGORY MAPS ─────────────────────────────────────────────────────
 
 const AWS_CATS: Record<string, { label: string; icon: string; desc: string; controls: string[] }> = {
-  CC6: { label: "Access Controls", icon: "🔑", desc: "IAM, MFA, public exposure", controls: ["CC6","CC.6"] },
-  CC7: { label: "Monitoring", icon: "📡", desc: "CloudTrail, GuardDuty, logs", controls: ["CC7","CC.7"] },
-  C1:  { label: "Encryption", icon: "🔒", desc: "S3, RDS, EBS, KMS", controls: ["C1","CC.C.1"] },
-  A1:  { label: "Availability", icon: "💾", desc: "Backups, recovery, uptime", controls: ["A1","CC.A.1"] },
-  CC8: { label: "Change Mgmt", icon: "🔧", desc: "Infra change pipelines", controls: ["CC8","CC.8"] },
-  PI1: { label: "Processing", icon: "⚙️", desc: "Audit logging, data integrity", controls: ["PI1","PI.1"] },
-  CC3: { label: "Risk Assessment", icon: "📊", desc: "AWS Config, drift detection", controls: ["CC3","CC.3"] },
-  OTHER: { label: "Other", icon: "🔹", desc: "Additional checks", controls: [] },
+  CC6: { label: "Access Controls", icon: "", desc: "IAM, MFA, public exposure", controls: ["CC6","CC.6"] },
+  CC7: { label: "Monitoring", icon: "", desc: "CloudTrail, GuardDuty, logs", controls: ["CC7","CC.7"] },
+  C1:  { label: "Encryption", icon: "", desc: "S3, RDS, EBS, KMS", controls: ["C1","CC.C.1"] },
+  A1:  { label: "Availability", icon: "", desc: "Backups, recovery, uptime", controls: ["A1","CC.A.1"] },
+  CC8: { label: "Change Mgmt", icon: "", desc: "Infra change pipelines", controls: ["CC8","CC.8"] },
+  PI1: { label: "Processing", icon: "", desc: "Audit logging, data integrity", controls: ["PI1","PI.1"] },
+  CC3: { label: "Risk Assessment", icon: "", desc: "AWS Config, drift detection", controls: ["CC3","CC.3"] },
+  OTHER: { label: "Other", icon: "", desc: "Additional checks", controls: [] },
 };
 
 const GITHUB_CATS: Record<string, { label: string; icon: string; desc: string; checks: string[] }> = {
-  branch: { label: "Branch Protection", icon: "🌿", desc: "Force push, deletion, PRs", checks: ["repository_default_branch"] },
-  scanning: { label: "Secret Scanning", icon: "🔍", desc: "Secrets, Dependabot", checks: ["repository_secret","repository_dependency"] },
-  hygiene: { label: "Repo Hygiene", icon: "🗂️", desc: "Signed commits, SECURITY.md", checks: ["repository_branch_delete","repository_default_branch_requires_signed","repository_public_has_securitymd","repository_inactive","repository_immutable"] },
-  org: { label: "Org Security", icon: "🏢", desc: "Verified badge, org settings", checks: ["organization"] },
+  branch: { label: "Branch Protection", icon: "", desc: "Force push, deletion, PRs", checks: ["repository_default_branch"] },
+  scanning: { label: "Secret Scanning", icon: "", desc: "Secrets, Dependabot", checks: ["repository_secret","repository_dependency"] },
+  hygiene: { label: "Repo Hygiene", icon: "", desc: "Signed commits, SECURITY.md", checks: ["repository_branch_delete","repository_default_branch_requires_signed","repository_public_has_securitymd","repository_inactive","repository_immutable"] },
+  org: { label: "Org Security", icon: "", desc: "Verified badge, org settings", checks: ["organization"] },
 };
 
 function getAwsCat(controlId: string) {
@@ -162,12 +162,12 @@ function ScanResultsTabs({
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
             tab === "aws" ? "border-orange-500 text-orange-700 bg-white" : "border-transparent text-gray-400 hover:text-gray-600"
           }`}>
-          ☁️ AWS
+           AWS
           {hasRealData && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
               awsFailing > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
             }`}>
-              {awsFailing > 0 ? `${awsFailing} ⚠` : "✓"}
+              {awsFailing > 0 ? `${awsFailing} ` : "✓"}
             </span>
           )}
         </button>
@@ -175,12 +175,12 @@ function ScanResultsTabs({
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
             tab === "github" ? "border-gray-900 text-gray-900 bg-white" : "border-transparent text-gray-400 hover:text-gray-600"
           }`}>
-          🐙 GitHub
+           GitHub
           {hasGithubData && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
               ghFailing > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
             }`}>
-              {ghFailing > 0 ? `${ghFailing} ⚠` : "✓"}
+              {ghFailing > 0 ? `${ghFailing} ` : "✓"}
             </span>
           )}
         </button>
@@ -195,13 +195,13 @@ function ScanResultsTabs({
         <div className="p-5">
           {!awsConnected ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3">☁️</div>
+              <div className="text-4xl mb-3"></div>
               <p className="text-gray-500 text-sm mb-4">Connect AWS to start scanning your infrastructure</p>
               <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
             </div>
           ) : !hasRealData ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3 animate-pulse">🔍</div>
+              <div className="text-4xl mb-3 animate-pulse"></div>
               <p className="text-gray-500 text-sm">Scan in progress — results will appear here shortly</p>
             </div>
           ) : (
@@ -219,7 +219,7 @@ function ScanResultsTabs({
                       style={{ width: `${Math.round((controls.filter(c=>c.status==="compliant").length/controls.length)*100)}%` }} />
                   </div>
                 </div>
-                {awsFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold">🚨 {awsFailing} to fix</div>}
+                {awsFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold"> {awsFailing} to fix</div>}
               </div>
               <div className="space-y-3">
                 {awsKeys.map(key => {
@@ -266,13 +266,13 @@ function ScanResultsTabs({
         <div className="p-5">
           {!githubConnected ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3">🐙</div>
+              <div className="text-4xl mb-3"></div>
               <p className="text-gray-500 text-sm mb-4">Connect GitHub to monitor your repos</p>
               <a href="/dashboard/settings" className="inline-block bg-gray-900 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
             </div>
           ) : !hasGithubData ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3 animate-pulse">🔍</div>
+              <div className="text-4xl mb-3 animate-pulse"></div>
               <p className="text-gray-500 text-sm">Scan in progress — results will appear here shortly</p>
             </div>
           ) : (
@@ -290,7 +290,7 @@ function ScanResultsTabs({
                       style={{ width: `${Math.round((githubFindings.filter(f=>(f.status_code||f.status)==="PASS").length/githubFindings.length)*100)}%` }} />
                   </div>
                 </div>
-                {ghFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold">🚨 {ghFailing} to fix</div>}
+                {ghFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold"> {ghFailing} to fix</div>}
               </div>
               <div className="space-y-3">
                 {Object.entries(GITHUB_CATS).map(([key, cat]) => {
@@ -345,7 +345,7 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
     let level: CliLine["level"] = "info";
     let prefix = "[SYS]";
     if (e.type === "scan") {
-      const isGh = e.title.includes("GitHub") || e.title.includes("🐙");
+      const isGh = e.title.includes("GitHub") || e.title.includes("");
       prefix = isGh ? "[GH] " : "[AWS]";
       if (e.title.toLowerCase().includes("initiated") || e.title.toLowerCase().includes("auto-scan")) level = "warn";
       else level = "success";
@@ -386,7 +386,7 @@ function useGithubAutoPoll(
   const trigger = useCallback(async () => {
     if (!orgId) return;
     const ts = new Date().toISOString();
-    pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan initiated", detail: "Scheduled 15-min poll", timestamp: ts });
+    pushActivityEvent({ type: "scan", title: " GitHub auto-scan initiated", detail: "Scheduled 15-min poll", timestamp: ts });
     try {
       const res = await fetch("/api/scan/trigger", {
         method: "POST",
@@ -394,10 +394,10 @@ function useGithubAutoPoll(
         body: JSON.stringify({ org_id: orgId, provider: "github" }),
       });
       if (!res.ok) {
-        pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan error", detail: "Trigger failed", timestamp: new Date().toISOString() });
+        pushActivityEvent({ type: "scan", title: " GitHub auto-scan error", detail: "Trigger failed", timestamp: new Date().toISOString() });
       }
     } catch {
-      pushActivityEvent({ type: "scan", title: "🐙 GitHub auto-scan error", detail: "Network error", timestamp: new Date().toISOString() });
+      pushActivityEvent({ type: "scan", title: " GitHub auto-scan error", detail: "Network error", timestamp: new Date().toISOString() });
     }
   }, [orgId, pushActivityEvent]);
 
@@ -530,7 +530,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-2 rounded-lg font-medium">
             {realtimeConnected ? (
               <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live</>  
-            ) : "✅"} {scores.length} source{scores.length > 1 ? "s" : ""} connected
+            ) : ""} {scores.length} source{scores.length > 1 ? "s" : ""} connected
           </div>
         )}
       </div>
@@ -556,7 +556,7 @@ export default function DashboardPage() {
           <div className="space-y-2 mb-3">
             {awsConnected && (
               <div className="flex items-center gap-2">
-                <span className="text-sm">☁️</span>
+                <span className="text-sm"></span>
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-0.5">
                     <span className="text-gray-600">AWS</span>
@@ -571,7 +571,7 @@ export default function DashboardPage() {
             )}
             {githubConnected && (
               <div className="flex items-center gap-2">
-                <span className="text-sm">🐙</span>
+                <span className="text-sm"></span>
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-0.5">
                     <span className="text-gray-600">GitHub</span>
@@ -608,7 +608,7 @@ export default function DashboardPage() {
         {/* Track 2: Manual Evidence */}
         <a href="/dashboard/checklist" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 transition block">
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">📋</span>
+            <span className="text-lg"></span>
             <div>
               <div className="text-sm font-semibold text-gray-800">Manual Evidence</div>
               <div className="text-xs text-gray-400">Policies, training, procedures</div>
@@ -630,7 +630,7 @@ export default function DashboardPage() {
         <span className="text-xs text-gray-500 font-medium">Connected:</span>
         {awsConnected ? (
           <a href="/dashboard/monitoring" className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full font-medium hover:bg-orange-100 transition cursor-pointer">
-            ☁️ AWS
+             AWS
             <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
           </a>
         ) : (
@@ -640,7 +640,7 @@ export default function DashboardPage() {
         )}
         {githubConnected ? (
           <a href="/dashboard/monitoring?provider=github" className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-full font-medium hover:bg-gray-700 transition cursor-pointer">
-            🐙 GitHub
+             GitHub
             <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
           </a>
         ) : (
@@ -663,9 +663,9 @@ export default function DashboardPage() {
           <div className="mt-3 text-sm font-medium text-gray-600">Overall Readiness</div>
           {scores.length > 1 && (
             <div className="mt-1 text-xs text-gray-400 text-center space-y-0.5">
-              {awsScore !== null && <div>☁️ AWS: {awsScore}%</div>}
-              {githubScore !== null && <div>🐙 GitHub: {githubScore}%</div>}
-              {manualScore !== null && <div>📋 Tasks: {manualScore}%</div>}
+              {awsScore !== null && <div> AWS: {awsScore}%</div>}
+              {githubScore !== null && <div> GitHub: {githubScore}%</div>}
+              {manualScore !== null && <div> Tasks: {manualScore}%</div>}
             </div>
           )}
         </div>
@@ -700,7 +700,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-2">
             {activeTasks.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">{totalTaskCount === 0 ? "No tasks yet — connect integrations to get started" : "All tasks complete ✅"}</p>
+              <p className="text-sm text-gray-400 text-center py-4">{totalTaskCount === 0 ? "No tasks yet — connect integrations to get started" : "All tasks complete "}</p>
             ) : activeTasks.map((task) => (
               <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === "critical" ? "bg-red-500" : task.priority === "high" ? "bg-orange-500" : "bg-yellow-500"}`} />

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         await supabase.from("activity_events").insert({
           org_id: org.id,
           type: "scan",
-          title: `🐙 GitHub webhook triggered scan`,
+          title: ` GitHub webhook triggered scan`,
           detail: `Event: ${event} — Real-time re-check`,
           timestamp: new Date().toISOString(),
         });

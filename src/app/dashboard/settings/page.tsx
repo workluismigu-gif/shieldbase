@@ -130,7 +130,7 @@ export default function ConnectPage() {
           <div className={`bg-white rounded-2xl border p-6 ${awsConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl">☁️</div>
+                <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-2xl"></div>
                 <div>
                   <div className="font-semibold text-gray-900">Amazon Web Services</div>
                   <div className="text-xs text-gray-400">Cloud provider</div>
@@ -185,7 +185,7 @@ export default function ConnectPage() {
           <div className={`bg-white rounded-2xl border p-6 ${githubConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-2xl">🐙</div>
+                <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center text-2xl"></div>
                 <div>
                   <div className="font-semibold text-gray-900">GitHub</div>
                   <div className="text-xs text-gray-400">Source control</div>
@@ -236,7 +236,7 @@ export default function ConnectPage() {
           <div className={`bg-white rounded-2xl border p-6 ${googleConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl">📧</div>
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl"></div>
                 <div>
                   <div className="font-semibold text-gray-900">Google Workspace</div>
                   <div className="text-xs text-gray-400">Identity provider</div>
@@ -287,7 +287,7 @@ export default function ConnectPage() {
           <div className={`bg-white rounded-2xl border p-6 ${slackConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl">💬</div>
+                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-2xl"></div>
                 <div>
                   <div className="font-semibold text-gray-900">Slack</div>
                   <div className="text-xs text-gray-400">Communication</div>
@@ -338,7 +338,7 @@ export default function ConnectPage() {
           <div className={`bg-white rounded-2xl border p-6 ${azureConnected ? "border-green-200 border-l-4 border-l-green-400" : "border-gray-200"}`}>
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-[#0078D4]/10 rounded-xl flex items-center justify-center text-2xl">🔷</div>
+                <div className="w-12 h-12 bg-[#0078D4]/10 rounded-xl flex items-center justify-center text-2xl"></div>
                 <div>
                   <div className="font-semibold text-gray-900">Microsoft Azure</div>
                   <div className="text-xs text-gray-400">Cloud provider</div>
@@ -408,7 +408,7 @@ export default function ConnectPage() {
 
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="bg-gray-900 px-6 py-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-2xl">☁️</div>
+            <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-2xl"></div>
             <div>
               <h2 className="text-lg font-bold text-white">Amazon Web Services</h2>
               <p className="text-sm text-gray-400">Read-only access · Takes 2 minutes · No technical knowledge needed</p>
@@ -436,7 +436,7 @@ export default function ConnectPage() {
               </p>
               <a href={CFN_TEMPLATE_URL} target="_blank" rel="noopener noreferrer"
                 className="ml-10 inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition">
-                <span>☁️</span> Open in AWS Console →
+                <span></span> Open in AWS Console →
               </a>
               <p className="text-xs text-gray-400 ml-10 mt-2">Opens in a new tab · Takes about 60 seconds to create</p>
             </div>
@@ -469,7 +469,7 @@ export default function ConnectPage() {
               <div className="ml-10 space-y-3">
                 {arnSaved ? (
                   <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
-                    <span className="text-2xl">🎉</span>
+                    <span className="text-2xl"></span>
                     <div>
                       <p className="text-sm font-bold text-green-800">AWS connected successfully!</p>
                       <p className="text-xs text-green-600 mt-0.5">We'll run your first scan within the next few minutes and update your dashboard.</p>
@@ -491,7 +491,7 @@ export default function ConnectPage() {
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 mt-2">
-              <p className="text-xs font-semibold text-gray-600 mb-2">🔒 Security & Privacy</p>
+              <p className="text-xs font-semibold text-gray-600 mb-2"> Security & Privacy</p>
               <ul className="text-xs text-gray-500 space-y-1">
                 <li>• ShieldBase uses <strong>ReadOnlyAccess</strong> and <strong>SecurityAudit</strong> policies only</li>
                 <li>• We <strong>never</strong> modify, create, or delete any resources in your account</li>
@@ -515,7 +515,7 @@ export default function ConnectPage() {
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="bg-gray-900 px-6 py-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center text-2xl">🐙</div>
+            <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center text-2xl"></div>
             <div>
               <h2 className="text-lg font-bold text-white">GitHub</h2>
               <p className="text-sm text-gray-400">Read-only · Authorize in 30 seconds</p>
@@ -535,7 +535,7 @@ export default function ConnectPage() {
             </div>
             <a href={githubOAuthUrl} target="_blank" rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-xl font-semibold transition">
-              <span>🐙</span> Authorize ShieldBase on GitHub →
+              <span></span> Authorize ShieldBase on GitHub →
             </a>
             <p className="text-xs text-gray-400 text-center">You'll be redirected to GitHub to install our app on your organization</p>
           </div>
@@ -552,7 +552,7 @@ export default function ConnectPage() {
         <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">← Back</button>
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="bg-gray-900 px-6 py-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-2xl">📧</div>
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-2xl"></div>
             <div>
               <h2 className="text-lg font-bold text-white">Google Workspace</h2>
               <p className="text-sm text-gray-400">Admin read-only · Requires Google Workspace Admin</p>
@@ -560,7 +560,7 @@ export default function ConnectPage() {
           </div>
           <div className="p-6 space-y-4">
             <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4">
-              <p className="text-sm text-yellow-800 font-medium mb-1">⚠️ Requires Super Admin</p>
+              <p className="text-sm text-yellow-800 font-medium mb-1"> Requires Super Admin</p>
               <p className="text-xs text-yellow-700">A Google Workspace Super Admin must authorize this connection. If that's not you, forward these instructions to your IT admin.</p>
             </div>
             <div className="space-y-2">
@@ -573,7 +573,7 @@ export default function ConnectPage() {
             </div>
             <a href={googleAuthUrl}
               className={`w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition ${!GOOGLE_CLIENT_ID ? "opacity-50 pointer-events-none" : ""}`}>
-              <span>📧</span> Authorize with Google →
+              <span></span> Authorize with Google →
             </a>
             {!GOOGLE_CLIENT_ID && <p className="text-xs text-red-500 text-center">NEXT_PUBLIC_GOOGLE_CLIENT_ID not configured</p>}
             <p className="text-xs text-gray-400 text-center">Redirects to Google OAuth — sign in with your Workspace Admin account</p>
@@ -591,7 +591,7 @@ export default function ConnectPage() {
         <button onClick={() => setStep("choose")} className="text-sm text-blue-600 hover:underline">← Back</button>
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
           <div className="bg-gray-900 px-6 py-5 flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-2xl">💬</div>
+            <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center text-2xl"></div>
             <div>
               <h2 className="text-lg font-bold text-white">Slack</h2>
               <p className="text-sm text-gray-400">Workspace admin access · Authorize in seconds</p>
@@ -608,7 +608,7 @@ export default function ConnectPage() {
             </div>
             <a href={slackAuthUrl}
               className={`w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold transition ${!SLACK_CLIENT_ID ? "opacity-50 pointer-events-none" : ""}`}>
-              <span>💬</span> Add to Slack →
+              <span></span> Add to Slack →
             </a>
             {!SLACK_CLIENT_ID && <p className="text-xs text-red-500 text-center">NEXT_PUBLIC_SLACK_CLIENT_ID not configured</p>}
             <p className="text-xs text-gray-400 text-center">Redirects to Slack OAuth — you'll need Workspace Admin or Owner access</p>
