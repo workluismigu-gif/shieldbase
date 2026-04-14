@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import { Building2, FileText, Wrench, GraduationCap, User, CalendarDays, Check, Circle } from "lucide-react";
+import { formatDateOnly, isPast } from "@/lib/dates";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -96,7 +97,7 @@ export default function RemediationPage() {
   const filtered = tasks.filter(t =>
     filter === "all" ? true : filter === "done" ? t.completed : !t.completed
   );
-  const overdue = (t: Task) => t.due_date && !t.completed && new Date(t.due_date) < new Date();
+  const overdue = (t: Task) => !!t.due_date && !t.completed && isPast(t.due_date);
 
   if (orgLoading) return <div className="flex items-center justify-center h-64 text-[var(--color-muted)] text-sm">Loading tasks...</div>;
 
@@ -177,7 +178,7 @@ export default function RemediationPage() {
                             )}
                             {task.due_date && (
                               <span className={`inline-flex items-center gap-1 ${overdue(task) ? "text-[var(--color-danger)] font-medium" : "text-[var(--color-muted)]"}`}>
-                                <CalendarDays className="w-3 h-3" strokeWidth={1.8}/> Due {new Date(task.due_date).toLocaleDateString()}{overdue(task) ? " (overdue)" : ""}
+                                <CalendarDays className="w-3 h-3" strokeWidth={1.8}/> Due {formatDateOnly(task.due_date)}{overdue(task) ? " (overdue)" : ""}
                               </span>
                             )}
                             {task.completed && task.completed_at && (

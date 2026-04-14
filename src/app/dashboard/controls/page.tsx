@@ -63,18 +63,18 @@ export default function ControlsPage() {
       </div>
 
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] overflow-hidden">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-[var(--color-surface)]">
-            <tr className="text-left text-xs uppercase text-[var(--color-muted)]">
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Category</th>
+            <tr className="text-left text-[11px] uppercase tracking-wider text-[var(--color-muted)]">
+              <th className="px-4 py-3 w-[90px]">ID</th>
+              <th className="px-4 py-3 w-[140px]">Category</th>
               <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Severity</th>
-              <th className="px-4 py-3"></th>
+              <th className="px-4 py-3 w-[120px]">Status</th>
+              <th className="px-4 py-3 w-[90px]">Severity</th>
+              <th className="px-4 py-3 w-[140px]"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {loading ? (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
             ) : filtered.length === 0 ? (
@@ -82,11 +82,11 @@ export default function ControlsPage() {
             ) : (
               filtered.map(c => (
                 <tr key={c.control_id} className="hover:bg-[var(--color-surface)]">
-                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted)]">{c.control_id}</td>
-                  <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.category}</td>
-                  <td className="px-4 py-3 text-[var(--color-foreground)]">{c.title}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted)] truncate">{c.control_id}</td>
+                  <td className="px-4 py-3 text-xs text-[var(--color-muted)] truncate">{c.category}</td>
+                  <td className="px-4 py-3 text-[var(--color-foreground)] truncate" title={c.title}>{c.title}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs font-medium px-2 py-1 rounded border ${statusColor(c.status)}`}>
+                    <span className={`text-xs font-medium px-2 py-1 rounded border ${statusColor(c.status)} whitespace-nowrap`}>
                       {c.status.replace("_", " ")}
                     </span>
                   </td>

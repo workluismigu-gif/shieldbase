@@ -160,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]" />
               {frameworkLabel}
             </span>
-            {dayOfJourney !== null && (
+            {dayOfJourney !== null && role !== "auditor_readonly" && (
               <span className="text-xs font-medium text-[var(--color-info)] bg-[var(--color-info-bg)] px-2.5 py-1 rounded-md">
                 Day {dayOfJourney} of 90
               </span>

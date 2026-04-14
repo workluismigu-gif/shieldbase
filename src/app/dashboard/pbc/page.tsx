@@ -6,6 +6,7 @@ import {
   ClipboardList, Plus, Check, X, ExternalLink, Filter, Trash2,
   CheckCircle2, AlertCircle, Clock, FileQuestion
 } from "lucide-react";
+import { formatDateOnly, isPast } from "@/lib/dates";
 
 type Status = "requested" | "provided" | "accepted" | "rejected";
 
@@ -154,7 +155,7 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
   const meta = statusMeta[item.status];
   const isAuditor = role === "auditor_readonly";
 
-  const overdue = item.due_date && item.status === "requested" && new Date(item.due_date) < new Date();
+  const overdue = item.due_date && item.status === "requested" && isPast(item.due_date);
   const linkedControl = controls.find(c => c.control_id === item.control_id);
 
   const post = async (body: Record<string, unknown>) => {
@@ -200,7 +201,7 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
             )}
             <div className="flex items-center gap-3 text-xs text-[var(--color-muted)] mt-2">
               <span>Created {new Date(item.created_at).toLocaleDateString()}</span>
-              {item.due_date && <span>Due {new Date(item.due_date).toLocaleDateString()}</span>}
+              {item.due_date && <span>Due {formatDateOnly(item.due_date)}</span>}
               {item.provided_at && <span>Provided {new Date(item.provided_at).toLocaleDateString()}</span>}
               {item.reviewed_at && <span>Reviewed {new Date(item.reviewed_at).toLocaleDateString()}</span>}
             </div>

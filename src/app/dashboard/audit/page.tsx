@@ -7,6 +7,7 @@ import {
   Gavel, ClipboardList, AlertOctagon, ShieldCheck, Activity, ArrowUpRight,
   CheckCircle2, AlertCircle, Clock, X, FileSearch
 } from "lucide-react";
+import { formatDateOnly, isPast, formatDateRange } from "@/lib/dates";
 
 interface PbcRequest {
   id: string;
@@ -47,7 +48,7 @@ export default function AuditPage() {
     if (!pbc) return null;
     const counts = { requested: 0, provided: 0, accepted: 0, rejected: 0 };
     pbc.forEach(p => { counts[p.status]++; });
-    const overdue = pbc.filter(p => p.status === "requested" && p.due_date && new Date(p.due_date) < new Date()).length;
+    const overdue = pbc.filter(p => p.status === "requested" && p.due_date && isPast(p.due_date)).length;
     return { ...counts, overdue, total: pbc.length };
   }, [pbc]);
 
@@ -78,8 +79,8 @@ export default function AuditPage() {
       <Section title="Engagement scope">
         <div className="grid md:grid-cols-3 gap-3">
           <ScopeCard label="Frameworks" value={frameworks.length > 0 ? frameworks.map(formatFramework).join(" · ") : "Not set"} />
-          <ScopeCard label="Audit period" value={(scope.audit_period_start as string) && (scope.audit_period_end as string)
-            ? `${scope.audit_period_start} → ${scope.audit_period_end}`
+          <ScopeCard label="Audit period" value={(scope.audit_period_start as string) || (scope.audit_period_end as string)
+            ? formatDateRange(scope.audit_period_start as string, scope.audit_period_end as string)
             : "Not defined"} hint={!scope.audit_period_start ? "Set this in Audit Scope" : undefined} />
           <ScopeCard label="Last scan" value={lastScanIso ? new Date(lastScanIso).toLocaleString() : "No scans yet"} />
         </div>
@@ -119,19 +120,19 @@ export default function AuditPage() {
             </div>
           ) : (
             <div className="space-y-2">
-              {pbc.filter(p => p.status === "requested" || p.status === "provided").slice(0, 6).map(p => (
+              {pbc.filter(p => p.status === "requested" || p.status === "provided" || p.status === "rejected").slice(0, 6).map(p => (
                 <Link key={p.id} href="/dashboard/pbc"
                   className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[var(--color-surface)] transition">
                   <PbcStatusDot status={p.status} />
                   <span className="text-sm text-[var(--color-foreground-subtle)] flex-1 truncate">{p.title}</span>
                   {p.due_date && (
-                    <span className={`text-xs ${new Date(p.due_date) < new Date() && p.status === "requested" ? "text-[var(--color-danger)] font-medium" : "text-[var(--color-muted)]"}`}>
-                      Due {new Date(p.due_date).toLocaleDateString()}
+                    <span className={`text-xs ${isPast(p.due_date) && p.status === "requested" ? "text-[var(--color-danger)] font-medium" : "text-[var(--color-muted)]"}`}>
+                      Due {formatDateOnly(p.due_date)}
                     </span>
                   )}
                 </Link>
               ))}
-              {pbc.filter(p => p.status === "requested" || p.status === "provided").length === 0 && (
+              {pbc.filter(p => p.status === "requested" || p.status === "provided" || p.status === "rejected").length === 0 && (
                 <div className="text-sm text-[var(--color-muted)] italic">Nothing outstanding — all caught up.</div>
               )}
             </div>
