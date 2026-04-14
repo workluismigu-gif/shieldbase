@@ -207,7 +207,7 @@ export default function GapAnalysisPage() {
   );
 }
 
-interface PdfCtl { control_id: string; category: string; title: string; status: string; severity?: string; }
+interface PdfCtl { id?: string; control_id?: string; category: string; title: string; status: string; severity?: string; }
 
 function DownloadPdfButton({ controls }: { controls: PdfCtl[] }) {
   const { org } = useOrg();
