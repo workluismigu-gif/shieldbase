@@ -327,7 +327,7 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 function MonitoringPage() {
-  const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org, pushActivityEvent } = useOrg();
+  const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org, pushActivityEvent, canWrite } = useOrg();
   const searchParams = useSearchParams();
   const [provider, setProvider] = useState<"aws" | "github">(searchParams.get("provider") === "github" ? "github" : "aws");
 
@@ -422,11 +422,13 @@ function MonitoringPage() {
             <Download className="w-4 h-4" strokeWidth={1.8} />
             {exporting ? "Exporting..." : "Export Evidence"}
           </button>
-          <button onClick={triggerScan} disabled={scanning || !org?.id}
-            className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
-            <RefreshCw className={`w-4 h-4 ${scanning ? "animate-spin" : ""}`} strokeWidth={1.8} />
-            {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
-          </button>
+          {canWrite && (
+            <button onClick={triggerScan} disabled={scanning || !org?.id}
+              className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
+              <RefreshCw className={`w-4 h-4 ${scanning ? "animate-spin" : ""}`} strokeWidth={1.8} />
+              {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
+            </button>
+          )}
         </div>
       </div>
 

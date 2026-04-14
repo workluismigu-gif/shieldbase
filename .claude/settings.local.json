@@ -16,7 +16,8 @@
       "Bash(git commit -m 'fix\\(dashboard\\): correct source count, weighted overall readiness, dark-theme sweep:*)",
       "Bash(git commit -m 'style\\(dashboard\\): lucide icon pass across inner pages:*)",
       "mcp__supabase__list_tables",
-      "Bash(git commit -m 'fix\\(invite\\): accept-invite flow creates accounts inline:*)"
+      "Bash(git commit -m 'fix\\(invite\\): accept-invite flow creates accounts inline:*)",
+      "Bash(git commit -m 'feat\\(rbac\\): auditor_readonly sees the org and can'\\\\''t write to it:*)"
     ]
   }
 }

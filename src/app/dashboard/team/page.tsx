@@ -19,7 +19,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function TeamPage() {
-  const { org, userEmail } = useOrg();
+  const { org, userEmail, canWrite } = useOrg();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
@@ -101,6 +101,7 @@ export default function TeamPage() {
         </p>
       </div>
 
+      {canWrite && (
       <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6">
         <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-4">Invite a member</h2>
         <div className="grid md:grid-cols-[1fr_200px_auto] gap-3">
@@ -130,14 +131,15 @@ export default function TeamPage() {
         {error && <p className="text-sm text-[var(--color-danger)] mt-3">{error}</p>}
         {inviteUrl && (
           <div className="mt-4 bg-[var(--color-success-bg)] border border-[var(--color-success)] rounded-lg p-4">
-            <p className="text-sm font-semibold text-green-800 mb-2">Invite created — share this link:</p>
+            <p className="text-sm font-semibold text-[var(--color-success)] mb-2">Invite created — share this link:</p>
             <div className="flex gap-2">
               <code className="flex-1 bg-[var(--color-bg)] border border-[var(--color-success)] rounded px-3 py-2 text-xs font-mono text-[var(--color-foreground-subtle)] truncate">{inviteUrl}</code>
-              <button onClick={() => copyInviteUrl(inviteUrl)} className="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">Copy</button>
+              <button onClick={() => copyInviteUrl(inviteUrl)} className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-4 py-2 rounded font-medium">Copy</button>
             </div>
           </div>
         )}
       </div>
+      )}
 
       <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--color-border)]">
@@ -190,7 +192,9 @@ export default function TeamPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleRevoke(m.id)} className="text-xs text-[var(--color-danger)] hover:underline">Revoke</button>
+                    {canWrite && (
+                      <button onClick={() => handleRevoke(m.id)} className="text-xs text-[var(--color-danger)] hover:underline">Revoke</button>
+                    )}
                   </td>
                 </tr>
               ))}

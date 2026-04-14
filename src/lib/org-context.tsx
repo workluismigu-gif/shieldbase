@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
-import { getOrg, getSession, supabase, type OrgRow } from "@/lib/supabase";
+import { getOrg, getSession, supabase, type OrgRow, type OrgRole } from "@/lib/supabase";
 
 export interface ControlRow {
   control_id: string;
@@ -69,6 +69,8 @@ export interface RawFinding {
 interface OrgContextValue {
   org: OrgRow | null;
   userEmail: string | null;
+  role: OrgRole | null;
+  canWrite: boolean;
   loading: boolean;
   controls: ControlRow[];
   lastScan: string | null;
@@ -85,6 +87,8 @@ interface OrgContextValue {
 const OrgContext = createContext<OrgContextValue>({
   org: null,
   userEmail: null,
+  role: null,
+  canWrite: false,
   loading: true,
   controls: [],
   lastScan: null,
@@ -352,7 +356,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, loading, controls, lastScan, lastGithubScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected, pushActivityEvent }}>
+    <OrgContext.Provider value={{ org, userEmail, role: org?.role ?? null, canWrite: (org?.role ?? "owner") !== "auditor_readonly", loading, controls, lastScan, lastGithubScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected, pushActivityEvent }}>
       {children}
     </OrgContext.Provider>
   );

@@ -49,7 +49,7 @@ const STATUS_STYLES: Record<Status, string> = {
 };
 
 export default function RemediationPage() {
-  const { org, loading: orgLoading } = useOrg();
+  const { org, loading: orgLoading, canWrite } = useOrg();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [filter, setFilter] = useState<"all" | "open" | "done">("all");
@@ -155,9 +155,11 @@ export default function RemediationPage() {
                       className={`bg-[var(--color-bg)] rounded-xl border p-4 transition ${task.completed ? "border-[var(--color-success)] bg-[var(--color-success-bg)]/30" : overdue(task) ? "border-red-300" : "border-[var(--color-border)]"}`}>
                       <div className="flex items-start gap-4">
                         <button
-                          onClick={() => toggleCompleted(task)}
+                          onClick={() => canWrite && toggleCompleted(task)}
+                          disabled={!canWrite}
+                          title={canWrite ? "" : "Read-only access — owner/admin can mark complete"}
                           className={`w-6 h-6 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition ${
-                            task.completed ? "bg-green-500 border-green-500 text-white" : "border-[var(--color-border-strong)] hover:border-blue-400"
+                            task.completed ? "bg-[var(--color-success)] border-[var(--color-success)] text-white" : "border-[var(--color-border-strong)] hover:border-[var(--color-info)] disabled:hover:border-[var(--color-border-strong)] disabled:cursor-not-allowed"
                           }`}>
                           {task.completed && <Check className="w-3.5 h-3.5" strokeWidth={2.5} />}
                         </button>
@@ -184,10 +186,12 @@ export default function RemediationPage() {
                           </div>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${PHASE_COLORS[phase] ?? "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{phase}</span>
-                        <button onClick={() => setExpanded(isExpanded ? null : task.id)}
-                          className="text-xs text-[var(--color-info)] hover:underline flex-shrink-0">
-                          {isExpanded ? "Close" : "Edit"}
-                        </button>
+                        {canWrite && (
+                          <button onClick={() => setExpanded(isExpanded ? null : task.id)}
+                            className="text-xs text-[var(--color-info)] hover:underline flex-shrink-0">
+                            {isExpanded ? "Close" : "Edit"}
+                          </button>
+                        )}
                       </div>
 
                       {isExpanded && (

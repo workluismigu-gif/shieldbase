@@ -127,7 +127,7 @@ Establish requirements for managing access to information systems.
 };
 
 export default function PoliciesPage() {
-  const { org, userEmail } = useOrg();
+  const { org, userEmail, canWrite } = useOrg();
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<string | null>(null);
   const [acks, setAcks] = useState<Ack[]>([]);
@@ -220,14 +220,18 @@ export default function PoliciesPage() {
                       <h3 className="text-sm font-semibold text-[var(--color-foreground)]">Policy acknowledgement</h3>
                       <p className="text-xs text-[var(--color-muted)] mt-0.5">{policyAcks.length} signature{policyAcks.length === 1 ? "" : "s"} on record</p>
                     </div>
-                    <button
-                      onClick={() => acknowledge(policyKey)}
-                      disabled={acking || hasAcked}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                        hasAcked ? "bg-[var(--color-success-bg)] text-[var(--color-success)] cursor-default" : "bg-blue-600 hover:opacity-90 text-white"
-                      }`}>
-                      {hasAcked ? "✓ Acknowledged" : acking ? "Signing…" : "Acknowledge policy"}
-                    </button>
+                    {canWrite ? (
+                      <button
+                        onClick={() => acknowledge(policyKey)}
+                        disabled={acking || hasAcked}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                          hasAcked ? "bg-[var(--color-success-bg)] text-[var(--color-success)] cursor-default" : "bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90"
+                        }`}>
+                        {hasAcked ? "✓ Acknowledged" : acking ? "Signing…" : "Acknowledge policy"}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-[var(--color-muted)] px-3 py-1 rounded-md bg-[var(--color-surface-2)]">View only</span>
+                    )}
                   </div>
                   {policyAcks.length > 0 && (
                     <div className="bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] divide-y divide-gray-100 text-sm">

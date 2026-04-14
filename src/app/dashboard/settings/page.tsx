@@ -34,7 +34,7 @@ const SLACK_SCOPES = [
 type Step = "choose" | "aws" | "github" | "google" | "slack" | "azure" | "done";
 
 export default function ConnectPage() {
-  const { org } = useOrg();
+  const { org, canWrite, role } = useOrg();
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
   const awsConnected = !!techStack.aws_role_arn;
   const githubConnected = !!techStack.github_token;
@@ -118,11 +118,22 @@ export default function ConnectPage() {
     }
   };
 
+  if (!canWrite) {
+    return (
+      <div className="max-w-3xl space-y-4">
+        <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">Integrations</h1>
+        <div className="bg-[var(--color-info-bg)] border border-[var(--color-info)]/30 rounded-xl p-5 text-sm text-[var(--color-foreground-subtle)]">
+          As an <span className="font-medium text-[var(--color-foreground)]">{role === "auditor_readonly" ? "auditor (read-only)" : role}</span>, you can&apos;t add or modify integrations. Ask the organization owner if a connection needs to be reconfigured.
+        </div>
+      </div>
+    );
+  }
+
   if (step === "choose") {
     return (
       <div className="space-y-8 max-w-3xl">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Integrations</h1>
+          <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">Integrations</h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">Connect your cloud accounts and services so ShieldBase can automatically collect compliance evidence.</p>
         </div>
 

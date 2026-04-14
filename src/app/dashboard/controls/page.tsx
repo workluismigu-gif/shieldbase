@@ -6,7 +6,7 @@ import ControlTestModal from "@/components/ControlTestModal";
 type FilterStatus = "all" | "compliant" | "partial" | "non_compliant" | "not_assessed";
 
 export default function ControlsPage() {
-  const { controls, loading } = useOrg();
+  const { controls, loading, canWrite, role } = useOrg();
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
@@ -35,8 +35,12 @@ export default function ControlsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Controls</h1>
-        <p className="text-sm text-[var(--color-muted)] mt-1">Test, annotate, and sign off on individual controls for SOC 2 audit.</p>
+        <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">Controls</h1>
+        <p className="text-sm text-[var(--color-muted)] mt-1">
+          {role === "auditor_readonly"
+            ? "View the client's SOC 2 controls. Sign-off and status changes are owner/admin only."
+            : "Test, annotate, and sign off on individual controls for SOC 2 audit."}
+        </p>
       </div>
 
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 flex flex-wrap gap-3">
@@ -88,10 +92,14 @@ export default function ControlsPage() {
                   </td>
                   <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.severity ?? "-"}</td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
-                      className="text-xs bg-blue-600 hover:opacity-90 text-white px-3 py-1.5 rounded-md font-medium">
-                      Test & sign off
-                    </button>
+                    {canWrite ? (
+                      <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
+                        className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
+                        Test & sign off
+                      </button>
+                    ) : (
+                      <span className="text-xs text-[var(--color-muted)]">View only</span>
+                    )}
                   </td>
                 </tr>
               ))

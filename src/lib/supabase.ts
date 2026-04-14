@@ -42,17 +42,7 @@ export async function getSession() {
   return data.session;
 }
 
-// Get org for current user
-export async function getOrg() {
-  const session = await getSession();
-  if (!session) return null;
-  const { data } = await supabase
-    .from("organizations")
-    .select("*")
-    .eq("owner_id", session.user.id)
-    .single();
-  return data;
-}
+export type OrgRole = "owner" | "admin" | "auditor_readonly";
 
 export type OrgRow = {
   id: string;
@@ -66,4 +56,36 @@ export type OrgRow = {
   cloud_provider: string | null;
   frameworks: string[];
   scope_config?: Record<string, unknown> | null;
+  role?: OrgRole;
 };
+
+// Get org for current user. Owners are looked up via organizations.owner_id;
+// invited members (admin / auditor_readonly) are resolved via org_members.
+export async function getOrg(): Promise<OrgRow | null> {
+  const session = await getSession();
+  if (!session) return null;
+
+  const { data: owned } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("owner_id", session.user.id)
+    .maybeSingle();
+  if (owned) return { ...(owned as OrgRow), role: "owner" };
+
+  const { data: membership } = await supabase
+    .from("org_members")
+    .select("org_id, role")
+    .eq("user_id", session.user.id)
+    .not("accepted_at", "is", null)
+    .maybeSingle();
+  if (!membership?.org_id) return null;
+
+  const { data: memberOrg } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("id", membership.org_id)
+    .maybeSingle();
+  if (!memberOrg) return null;
+
+  return { ...(memberOrg as OrgRow), role: membership.role as OrgRole };
+}
