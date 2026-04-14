@@ -4,19 +4,18 @@ import { createClient } from "@supabase/supabase-js";
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const code = searchParams.get("code");
-  const state = searchParams.get("state"); // org_id passed via state param
+  const state = searchParams.get("state");
 
   if (!code) {
-    return NextResponse.redirect(new URL("/dashboard/connect?error=github_denied", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/dashboard/settings?error=github_denied", req.nextUrl.origin));
   }
 
-  // Exchange code for access token
   const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: { "Accept": "application/json", "Content-Type": "application/json" },
     body: JSON.stringify({
       client_id: process.env.GITHUB_CLIENT_ID ?? "Ov23lihUSDcOADRW0Kkw",
-      client_secret: process.env.GITHUB_CLIENT_SECRET ?? "a645adedd5b539f029319e877f93e94a3d28e48f",
+      client_secret: process.env.GITHUB_CLIENT_SECRET ?? "",
       code,
     }),
   });
@@ -26,10 +25,9 @@ export async function GET(req: NextRequest) {
   if (!accessToken) {
     const errMsg = tokenData.error_description || tokenData.error || "no_token";
     console.error("GitHub token exchange failed:", tokenData);
-    return NextResponse.redirect(new URL(`/dashboard/connect?error=github_token&detail=${encodeURIComponent(errMsg)}`, req.nextUrl.origin));
+    return NextResponse.redirect(new URL(`/dashboard/settings?error=github_token&detail=${encodeURIComponent(errMsg)}`, req.nextUrl.origin));
   }
 
-  // Get GitHub user info
   const userRes = await fetch("https://api.github.com/user", {
     headers: { Authorization: `Bearer ${accessToken}`, "User-Agent": "ShieldBase" },
   });
@@ -40,14 +38,10 @@ export async function GET(req: NextRequest) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Find org by state (org_id) — passed when starting OAuth
-  let orgId = state;
-
-  // Fallback: look up org by Supabase user if state not set
+  const orgId = state;
   if (!orgId) {
-    // We can't reliably get user session here — require state
     console.error("No state param, cannot identify org");
-    return NextResponse.redirect(new URL("/dashboard/connect?error=no_org", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/dashboard/settings?error=no_org", req.nextUrl.origin));
   }
 
   const { data: org } = await supabase
@@ -70,7 +64,6 @@ export async function GET(req: NextRequest) {
       })
       .eq("id", org.id);
 
-    // Trigger GitHub scan async
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shieldbase.vercel.app";
     fetch(`${siteUrl}/api/scan/trigger`, {
       method: "POST",
@@ -82,5 +75,5 @@ export async function GET(req: NextRequest) {
     }).catch(console.error);
   }
 
-  return NextResponse.redirect(new URL("/dashboard/connect?connected=github", req.nextUrl.origin));
+  return NextResponse.redirect(new URL("/dashboard/settings?connected=github", req.nextUrl.origin));
 }

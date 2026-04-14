@@ -4,13 +4,12 @@ import { createClient } from "@supabase/supabase-js";
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const code = searchParams.get("code");
-  const state = searchParams.get("state"); // org_id passed via state param
+  const state = searchParams.get("state");
 
   if (!code) {
-    return NextResponse.redirect(new URL("/dashboard/connect?error=github_denied", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/dashboard/settings?error=github_denied", req.nextUrl.origin));
   }
 
-  // Exchange code for access token
   const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: { "Accept": "application/json", "Content-Type": "application/json" },
@@ -24,22 +23,19 @@ export async function GET(req: NextRequest) {
   const accessToken = tokenData.access_token;
 
   if (!accessToken) {
-    return NextResponse.redirect(new URL("/dashboard/connect?error=github_token", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/dashboard/settings?error=github_token", req.nextUrl.origin));
   }
 
-  // Get GitHub user/org info
   const userRes = await fetch("https://api.github.com/user", {
     headers: { Authorization: `Bearer ${accessToken}`, "User-Agent": "ShieldBase" },
   });
   const githubUser = await userRes.json();
 
-  // Save to org via service role
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Find org by state (org_id) or fallback to user lookup
   if (state) {
     const { data: org } = await supabase
       .from("organizations")
@@ -61,7 +57,6 @@ export async function GET(req: NextRequest) {
         })
         .eq("id", org.id);
 
-      // Trigger GitHub scan
       const triggerUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://shieldbase.vercel.app"}/api/scan/trigger`;
       fetch(triggerUrl, {
         method: "POST",
@@ -74,5 +69,5 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(new URL("/dashboard/connect?connected=github", req.nextUrl.origin));
+  return NextResponse.redirect(new URL("/dashboard/settings?connected=github", req.nextUrl.origin));
 }
