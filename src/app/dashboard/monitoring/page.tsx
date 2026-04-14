@@ -200,7 +200,7 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
       <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
         <div className="text-4xl mb-4">☁️</div>
         <h2 className="text-lg font-semibold text-gray-800 mb-2">No AWS scan data yet</h2>
-        <a href="/dashboard/connect" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition mt-2">Connect AWS →</a>
+        <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition mt-2">Connect AWS →</a>
       </div>
     );
   }
