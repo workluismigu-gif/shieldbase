@@ -2,7 +2,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 interface ControlLite {
-  control_id: string;
+  id?: string;
+  control_id?: string;
   category: string;
   title: string;
   status: string;
@@ -80,7 +81,7 @@ export function generateGapAnalysisPDF(org: OrgLite, controls: ControlLite[]): v
   const rows: string[][] = [];
   for (const [cat, items] of Object.entries(grouped).sort()) {
     for (const c of items) {
-      rows.push([cat, c.control_id, c.title, c.status.replace("_", " "), c.severity ?? "-"]);
+      rows.push([cat, c.control_id ?? c.id ?? "", c.title, c.status.replace("_", " "), c.severity ?? "-"]);
     }
   }
 
