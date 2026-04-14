@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [loading, userEmail]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[var(--color-surface)] flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   active
                     ? "bg-blue/15 text-blue-light"
-                    : "text-slate hover:text-white hover:bg-white/5"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
                 }`}>
                 <span className="text-base">{item.icon}</span>
                 <span className="flex-1">{item.label}</span>
@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <button
               onClick={async () => { await signOut(); window.location.href = "/auth"; }}
-              className="text-slate hover:text-white transition text-xs" title="Sign out">
+              className="text-slate-400 hover:text-white transition text-xs" title="Sign out">
               ↩
             </button>
           </div>
@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-30">
+        <header className="bg-[var(--color-bg)] border-b border-[var(--color-border)] px-6 py-3 flex items-center justify-between sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="md:hidden text-navy-lighter">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />

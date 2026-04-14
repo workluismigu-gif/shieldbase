@@ -65,7 +65,7 @@ function Header() {
   }, []);
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
         <a href="#" className={`text-xl font-extrabold tracking-tight transition-colors ${scrolled ? "text-navy" : "text-white"}`}>
           🛡️ ShieldBase
@@ -91,11 +91,11 @@ function Header() {
         </button>
       </div>
       {open && (
-        <nav className="md:hidden bg-white border-t px-6 pb-4 flex flex-col gap-3 text-sm text-navy-lighter">
+        <nav className="md:hidden bg-[var(--color-bg)] border-t px-6 pb-4 flex flex-col gap-3 text-sm text-navy-lighter">
           <a href="#how-it-works" onClick={() => setOpen(false)} className="py-2">How It Works</a>
           <a href="#pricing" onClick={() => setOpen(false)} className="py-2">Pricing</a>
           <a href="#faq" onClick={() => setOpen(false)} className="py-2">FAQ</a>
-          <a href="/auth" onClick={() => setOpen(false)} className="py-2 text-blue-600 font-medium">Sign In</a>
+          <a href="/auth" onClick={() => setOpen(false)} className="py-2 text-[var(--color-info)] font-medium">Sign In</a>
           <a href="/auth" onClick={() => setOpen(false)} className="bg-blue text-white text-center py-2.5 rounded-lg font-semibold">Get Started Free →</a>
         </nav>
       )}
@@ -130,7 +130,7 @@ function Hero() {
               <a href="/auth" className="bg-blue hover:bg-blue-dark text-white px-7 py-3.5 rounded-lg font-semibold text-base transition-all hover:shadow-lg hover:shadow-blue/25 text-center">
                 Start Free Assessment →
               </a>
-              <a href="/auth" className="border border-white/20 text-white px-7 py-3.5 rounded-lg font-semibold text-base hover:bg-white/5 transition text-center">
+              <a href="/auth" className="border border-white/20 text-white px-7 py-3.5 rounded-lg font-semibold text-base hover:bg-[var(--color-bg)]/5 transition text-center">
                 Sign In
               </a>
             </div>
@@ -196,12 +196,12 @@ function Hero() {
 function LogoBar() {
   const logos = ["Stripe", "Notion", "Vercel", "Linear", "Retool", "Loom", "Figma", "Airtable", "Supabase", "PostHog"];
   return (
-    <section className="bg-white border-b border-gray-100 py-8 overflow-hidden">
+    <section className="bg-[var(--color-bg)] border-b border-[var(--color-border)] py-8 overflow-hidden">
       <p className="text-center text-sm text-slate font-medium mb-6">Trusted by fast-growing startups</p>
       <div className="relative">
         <div className="flex gap-16 marquee-track" style={{ width: "max-content" }}>
           {[...logos, ...logos].map((name, i) => (
-            <div key={i} className="text-lg font-bold text-gray-300 whitespace-nowrap tracking-wider uppercase">{name}</div>
+            <div key={i} className="text-lg font-bold text-[var(--color-muted)] whitespace-nowrap tracking-wider uppercase">{name}</div>
           ))}
         </div>
       </div>
@@ -212,7 +212,7 @@ function LogoBar() {
 /* ─── METRICS ─── */
 function Metrics() {
   return (
-    <section className="bg-white py-20">
+    <section className="bg-[var(--color-bg)] py-20">
       <div className="max-w-6xl mx-auto px-6">
         <Reveal className="reveal">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
@@ -240,7 +240,7 @@ function Metrics() {
 /* ─── PROBLEM ─── */
 function Problem() {
   return (
-    <section className="bg-gray-50 py-24">
+    <section className="bg-[var(--color-surface)] py-24">
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
@@ -277,7 +277,7 @@ function Problem() {
               </div>
             </Reveal>
             <Reveal className="reveal-right">
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-8 shadow-sm">
                 <div className="text-sm text-slate mb-4 font-medium">Traditional SOC 2 Timeline</div>
                 <div className="space-y-4">
                   {[
@@ -293,13 +293,13 @@ function Problem() {
                         <span className="text-navy-lighter font-medium">{item.phase}</span>
                         <span className="text-red-400">{item.weeks}</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-1.5">
+                      <div className="w-full bg-[var(--color-surface-2)] rounded-full h-1.5">
                         <div className="bg-red-300 h-1.5 rounded-full" style={{ width: item.w }} />
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm">
+                <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex justify-between text-sm">
                   <span className="text-slate">Total time</span>
                   <span className="text-red-500 font-bold">3–6 months</span>
                 </div>
@@ -310,7 +310,7 @@ function Problem() {
           {/* Row 2: visual left, text right — FLIPPED */}
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <Reveal className="reveal-left">
-              <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-8 shadow-sm">
                 <div className="text-sm text-slate mb-4 font-medium">ShieldBase Timeline</div>
                 <div className="space-y-4">
                   {[
@@ -325,13 +325,13 @@ function Problem() {
                         <span className="text-navy-lighter font-medium">{item.phase}</span>
                         <span className="text-green font-medium">{item.weeks}</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-1.5">
+                      <div className="w-full bg-[var(--color-surface-2)] rounded-full h-1.5">
                         <div className={`${item.color} h-1.5 rounded-full`} style={{ width: item.w }} />
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between text-sm">
+                <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex justify-between text-sm">
                   <span className="text-slate">Total time</span>
                   <span className="text-green font-bold">30 days</span>
                 </div>
@@ -375,7 +375,7 @@ function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="bg-white py-24">
+    <section id="how-it-works" className="bg-[var(--color-bg)] py-24">
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
@@ -386,7 +386,7 @@ function HowItWorks() {
 
         <div className="relative">
           {/* Connecting line */}
-          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gray-200 -translate-x-1/2" />
+          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-[var(--color-border)] -translate-x-1/2" />
 
           <div className="space-y-16">
             {steps.map((step, i) => (
@@ -400,7 +400,7 @@ function HowItWorks() {
                     <p className="text-slate leading-relaxed">{step.desc}</p>
                   </div>
                   <div className={`${i % 2 === 1 ? "md:order-1" : ""} flex justify-center`}>
-                    <div className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-5xl shadow-sm border border-gray-100 card-hover`}>
+                    <div className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-5xl shadow-sm border border-[var(--color-border)] card-hover`}>
                       {step.icon}
                     </div>
                   </div>
@@ -417,7 +417,7 @@ function HowItWorks() {
 /* ─── PRICING ─── */
 function Pricing() {
   return (
-    <section id="pricing" className="bg-gray-50 py-24">
+    <section id="pricing" className="bg-[var(--color-surface)] py-24">
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
@@ -429,7 +429,7 @@ function Pricing() {
         <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {/* Competitor 1 */}
           <Reveal className="reveal">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
+            <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 text-center">
               <div className="text-sm text-slate mb-2 font-medium">Traditional Consultant</div>
               <div className="text-3xl font-black text-red-400 mb-1">$50K–$150K</div>
               <div className="text-xs text-slate mb-4">3–6 months</div>
@@ -464,7 +464,7 @@ function Pricing() {
 
           {/* Competitor 2 */}
           <Reveal className="reveal">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 text-center">
+            <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 text-center">
               <div className="text-sm text-slate mb-2 font-medium">Vanta + Auditor</div>
               <div className="text-3xl font-black text-yellow-500 mb-1">$18K–$65K</div>
               <div className="text-xs text-slate mb-4">1–3 months + ongoing</div>
@@ -499,7 +499,7 @@ function Deliverables() {
   ];
 
   return (
-    <section className="bg-white py-24">
+    <section className="bg-[var(--color-bg)] py-24">
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-16">
@@ -510,7 +510,7 @@ function Deliverables() {
         <Reveal className="stagger">
           <div className="grid md:grid-cols-3 gap-6">
             {items.map((item, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-6 card-hover border border-gray-100">
+              <div key={i} className="bg-[var(--color-surface)] rounded-2xl p-6 card-hover border border-[var(--color-border)]">
                 <div className="text-3xl mb-3">{item.icon}</div>
                 <h3 className="text-lg font-bold text-navy mb-2">{item.title}</h3>
                 <p className="text-sm text-slate leading-relaxed">{item.desc}</p>
@@ -526,7 +526,7 @@ function Deliverables() {
 /* ─── FRAMEWORKS ─── */
 function Frameworks() {
   return (
-    <section className="bg-gray-50 py-24">
+    <section className="bg-[var(--color-surface)] py-24">
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-12">
@@ -542,7 +542,7 @@ function Frameworks() {
               { name: "ISO 27001", available: false },
               { name: "HIPAA", available: false },
             ].map((f, i) => (
-              <div key={i} className={`rounded-xl p-5 text-center border card-hover ${f.available ? "bg-white border-blue/20 shadow-sm" : "bg-white border-gray-200 opacity-60"}`}>
+              <div key={i} className={`rounded-xl p-5 text-center border card-hover ${f.available ? "bg-[var(--color-bg)] border-blue/20 shadow-sm" : "bg-[var(--color-bg)] border-[var(--color-border)] opacity-60"}`}>
                 <div className="text-base font-bold text-navy mb-1">{f.name}</div>
                 <div className={`text-xs font-semibold ${f.available ? "text-green" : "text-slate"}`}>
                   {f.available ? "✅ Available" : "Coming Soon"}
@@ -591,7 +591,7 @@ function FAQ() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="bg-white py-24">
+    <section id="faq" className="bg-[var(--color-bg)] py-24">
       <div className="max-w-3xl mx-auto px-6">
         <Reveal>
           <div className="text-center mb-12">
@@ -601,8 +601,8 @@ function FAQ() {
         <Reveal>
           <div className="space-y-2">
             {faqs.map((f, i) => (
-              <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
-                <button onClick={() => setOpenIdx(openIdx === i ? null : i)} className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition">
+              <div key={i} className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+                <button onClick={() => setOpenIdx(openIdx === i ? null : i)} className="w-full flex items-center justify-between p-5 text-left hover:bg-[var(--color-surface)] transition">
                   <span className="text-navy font-semibold text-sm pr-4">{f.q}</span>
                   <span className={`text-blue text-xl transition-transform ${openIdx === i ? "rotate-45" : ""}`}>+</span>
                 </button>
