@@ -21,7 +21,8 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__apply_migration",
       "Bash(git commit -m 'feat\\(pbc\\): Provided By Client request workflow + RLS for invited members:*)",
-      "Bash(git commit -m 'fix\\(pbc\\): remove duplicate DashboardLayout wrapper:*)"
+      "Bash(git commit -m 'fix\\(pbc\\): remove duplicate DashboardLayout wrapper:*)",
+      "Bash(git commit -m 'feat\\(pbc\\): strict role separation — auditor creates+reviews, owner/admin responds:*)"
     ]
   }
 }

@@ -68,8 +68,12 @@ export async function POST(req: NextRequest) {
     const db = admin();
 
     if (body.action === "create") {
-      // Auditors and owners can create requests. Auditors are the primary
-      // creators, but owners may want to track internal asks too.
+      // Strict separation: only the external auditor creates PBC requests.
+      // The point of PBC is the auditor formally asking the client for
+      // evidence; an owner asking themselves defeats the trail.
+      if (ctx.role !== "auditor_readonly") {
+        return NextResponse.json({ error: "Only the auditor can create PBC requests" }, { status: 403 });
+      }
       if (!body.title) return NextResponse.json({ error: "title required" }, { status: 400 });
       const { data, error } = await db
         .from("pbc_requests")
@@ -124,7 +128,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.action === "review") {
-      // Only auditors review. (Owners can also for internal asks.)
+      // Only the auditor can accept or reject — segregation of duties.
+      if (ctx.role !== "auditor_readonly") {
+        return NextResponse.json({ error: "Only the auditor can review responses" }, { status: 403 });
+      }
       if (!body.request_id || !body.decision) {
         return NextResponse.json({ error: "request_id and decision required" }, { status: 400 });
       }

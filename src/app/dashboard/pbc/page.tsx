@@ -83,11 +83,13 @@ export default function PbcPage() {
                 : "The auditor uses this list to ask for evidence. Respond with notes and a link to the artifact, then they accept or send back for more detail."}
             </p>
           </div>
-          <button onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 text-sm px-4 py-2 rounded-lg font-medium transition flex-shrink-0">
-            <Plus className="w-4 h-4" strokeWidth={1.8} />
-            New request
-          </button>
+          {isAuditor && (
+            <button onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 text-sm px-4 py-2 rounded-lg font-medium transition flex-shrink-0">
+              <Plus className="w-4 h-4" strokeWidth={1.8} />
+              New request
+            </button>
+          )}
         </div>
 
         {/* Filter chips */}
@@ -110,7 +112,11 @@ export default function PbcPage() {
           <div className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-12 text-center">
             <FileQuestion className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3" strokeWidth={1.4} />
             <p className="text-sm text-[var(--color-muted)]">
-              {filter === "all" ? "No PBC requests yet." : `No ${filter} requests.`}
+              {filter !== "all"
+                ? `No ${filter} requests.`
+                : isAuditor
+                  ? "No PBC requests yet — start by asking the client for evidence."
+                  : "No requests from your auditor yet. They&apos;ll show up here as soon as one is sent."}
             </p>
           </div>
         ) : (
@@ -254,7 +260,7 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
           )}
 
           {/* Review section */}
-          {item.status === "provided" && (isAuditor || role === "owner") && (
+          {item.status === "provided" && isAuditor && (
             <div className="space-y-2">
               <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">Auditor review</div>
               <div className="flex gap-2">
