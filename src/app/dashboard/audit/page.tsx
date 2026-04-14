@@ -5,9 +5,10 @@ import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import {
   Gavel, ClipboardList, AlertOctagon, ShieldCheck, Activity, ArrowUpRight,
-  CheckCircle2, AlertCircle, Clock, X, FileSearch, Beaker
+  CheckCircle2, AlertCircle, Clock, X, FileSearch, Beaker, Download
 } from "lucide-react";
 import { formatDateOnly, isPast, formatDateRange } from "@/lib/dates";
+import { generateWorkpaperPdf, type WorkpaperData } from "@/lib/workpaper-pdf";
 
 interface PbcRequest {
   id: string;
@@ -19,8 +20,9 @@ interface PbcRequest {
 }
 
 export default function AuditPage() {
-  const { org, role, controls, scanHistory } = useOrg();
+  const { org, role, controls, scanHistory, userEmail } = useOrg();
   const [pbc, setPbc] = useState<PbcRequest[] | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const isAuditor = role === "auditor_readonly";
 
@@ -56,24 +58,119 @@ export default function AuditPage() {
   const exceptions = useMemo(() => controls.filter(c => c.status === "non_compliant" || c.status === "partial"), [controls]);
   const lastScanIso = scanHistory[0]?.created_at;
 
+  const handleExport = useCallback(async () => {
+    if (!org?.id || exporting) return;
+    setExporting(true);
+    try {
+      const sampleIds = controls.filter(c => c.in_sample).map(c => c.control_id);
+
+      const { data: sampleRows } = sampleIds.length > 0
+        ? await supabase
+            .from("controls")
+            .select("control_id, title, status, severity, test_notes, test_attributes, tested_at, approved_at")
+            .eq("org_id", org.id)
+            .in("control_id", sampleIds)
+        : { data: [] as Array<{ control_id: string; title: string; status: string; severity: string | null; test_notes: string | null; test_attributes: Record<string, string> | null; tested_at: string | null; approved_at: string | null }> };
+
+      const { data: commentRows } = sampleIds.length > 0
+        ? await supabase
+            .from("control_comments")
+            .select("control_id, author_email, body, created_at")
+            .eq("org_id", org.id)
+            .in("control_id", sampleIds)
+            .order("created_at", { ascending: true })
+        : { data: [] as Array<{ control_id: string; author_email: string | null; body: string; created_at: string }> };
+
+      const commentsBy = new Map<string, { author_email: string | null; body: string; created_at: string }[]>();
+      for (const c of commentRows ?? []) {
+        const arr = commentsBy.get(c.control_id) ?? [];
+        arr.push({ author_email: c.author_email, body: c.body, created_at: c.created_at });
+        commentsBy.set(c.control_id, arr);
+      }
+
+      const scope = (org.scope_config ?? {}) as Record<string, unknown>;
+      const data: WorkpaperData = {
+        org_name: org.name ?? "Organization",
+        generated_at: new Date().toISOString(),
+        generated_by: userEmail ?? "unknown",
+        frameworks: ((org.frameworks ?? []) as string[]),
+        audit_period_start: (scope.audit_period_start as string) ?? null,
+        audit_period_end: (scope.audit_period_end as string) ?? null,
+        scope_notes: (scope.scope_notes as string) ?? null,
+        sample_controls: (sampleRows ?? []).map(r => ({
+          control_id: r.control_id,
+          title: r.title,
+          status: r.status,
+          severity: r.severity,
+          test_notes: r.test_notes,
+          test_attributes: r.test_attributes,
+          tested_at: r.tested_at,
+          approved_at: r.approved_at,
+          comments: commentsBy.get(r.control_id) ?? [],
+        })),
+        exceptions: exceptions.map(e => ({
+          control_id: e.control_id,
+          title: e.title,
+          status: e.status,
+          severity: e.severity,
+        })),
+        pbc: (pbc ?? []).map(p => ({
+          title: p.title,
+          status: p.status,
+          created_at: p.created_at,
+          provided_at: null,
+          reviewed_at: null,
+          control_id: p.control_id,
+        })),
+      };
+
+      const blob = generateWorkpaperPdf(data);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const slug = (org.name ?? "workpaper").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      a.download = `${slug}-workpaper-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Workpaper export failed", err);
+      alert("Workpaper export failed. Check console for details.");
+    } finally {
+      setExporting(false);
+    }
+  }, [org, controls, exceptions, pbc, userEmail, exporting]);
+
   const frameworks = (org?.frameworks ?? []) as string[];
   const scope = (org?.scope_config ?? {}) as Record<string, unknown>;
 
   return (
     <div className="space-y-8">
-      <div>
-        <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--color-muted)] bg-[var(--color-surface-2)] px-2.5 py-1 rounded-md mb-3">
-          <Gavel className="w-3.5 h-3.5" strokeWidth={1.8} />
-          Audit Workspace
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-[var(--color-muted)] bg-[var(--color-surface-2)] px-2.5 py-1 rounded-md mb-3">
+            <Gavel className="w-3.5 h-3.5" strokeWidth={1.8} />
+            Audit Workspace
+          </div>
+          <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">
+            {isAuditor ? "Engagement overview" : "Audit readiness"}
+          </h1>
+          <p className="text-sm text-[var(--color-muted)] mt-1.5 max-w-2xl">
+            {isAuditor
+              ? "Everything you need to plan, sample, request evidence, and document findings for this engagement."
+              : "What your auditor sees. Use this to track readiness and respond to outstanding requests."}
+          </p>
         </div>
-        <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">
-          {isAuditor ? "Engagement overview" : "Audit readiness"}
-        </h1>
-        <p className="text-sm text-[var(--color-muted)] mt-1.5 max-w-2xl">
-          {isAuditor
-            ? "Everything you need to plan, sample, request evidence, and document findings for this engagement."
-            : "What your auditor sees. Use this to track readiness and respond to outstanding requests."}
-        </p>
+        <button
+          onClick={handleExport}
+          disabled={exporting || !org?.id}
+          className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium px-4 py-2 rounded-lg transition flex-shrink-0"
+          title={stats.inSample === 0 ? "Mark controls as in-sample first" : "Download a PDF workpaper of the engagement"}
+        >
+          <Download className="w-4 h-4" strokeWidth={1.8} />
+          {exporting ? "Generating…" : "Export workpaper"}
+        </button>
       </div>
 
       {/* Engagement scope */}
