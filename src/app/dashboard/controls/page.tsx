@@ -92,14 +92,10 @@ export default function ControlsPage() {
                   </td>
                   <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.severity ?? "-"}</td>
                   <td className="px-4 py-3 text-right">
-                    {canWrite ? (
-                      <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
-                        className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
-                        Test & sign off
-                      </button>
-                    ) : (
-                      <span className="text-xs text-[var(--color-muted)]">View only</span>
-                    )}
+                    <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
+                      className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
+                      {canWrite ? "Test & sign off" : "Open"}
+                    </button>
                   </td>
                 </tr>
               ))
