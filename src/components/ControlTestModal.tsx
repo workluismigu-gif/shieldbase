@@ -46,6 +46,7 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [signOffName, setSignOffName] = useState("");
 
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [commentBody, setCommentBody] = useState("");
@@ -69,6 +70,18 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
   }, [loadComments]);
 
   const handleSave = async () => {
+    if (approve) {
+      const expected = (userEmail ?? "").trim().toLowerCase();
+      const typed = signOffName.trim().toLowerCase();
+      if (!typed) {
+        setError("Type your email to confirm sign-off.");
+        return;
+      }
+      if (typed !== expected) {
+        setError(`Confirmation must match your account email (${userEmail}).`);
+        return;
+      }
+    }
     setSaving(true);
     setError("");
     try {
@@ -214,10 +227,22 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
               </select>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-[var(--color-foreground-subtle)]">
-              <input type="checkbox" checked={approve} onChange={(e) => setApprove(e.target.checked)} />
-              Sign off — approve this control
-            </label>
+            <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-3 space-y-2">
+              <label className="flex items-center gap-2 text-sm text-[var(--color-foreground-subtle)] cursor-pointer">
+                <input type="checkbox" checked={approve} onChange={(e) => { setApprove(e.target.checked); if (!e.target.checked) setSignOffName(""); }} />
+                Sign off — approve this control
+              </label>
+              {approve && (
+                <div className="pl-6 space-y-1.5">
+                  <p className="text-xs text-[var(--color-muted)]">
+                    Sign-off creates a permanent audit record. Type your email <span className="text-[var(--color-foreground-subtle)] font-medium">({userEmail})</span> to confirm.
+                  </p>
+                  <input type="text" value={signOffName} onChange={(e) => setSignOffName(e.target.value)}
+                    placeholder={userEmail ?? ""} autoComplete="off"
+                    className="w-full bg-[var(--color-bg)] border border-[var(--color-border-strong)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)]" />
+                </div>
+              )}
+            </div>
 
             {error && <p className="text-sm text-[var(--color-danger)]">{error}</p>}
 

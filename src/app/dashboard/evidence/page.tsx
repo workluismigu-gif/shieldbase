@@ -102,8 +102,24 @@ export default function EvidencePage() {
   const [records, setRecords] = useState<EvidenceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeKeyRef = useRef<string | null>(null);
+
+  const inDateRange = (iso: string): boolean => {
+    if (!dateFrom && !dateTo) return true;
+    const ts = new Date(iso).getTime();
+    if (dateFrom) {
+      const from = new Date(dateFrom + "T00:00:00").getTime();
+      if (ts < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo + "T23:59:59").getTime();
+      if (ts > to) return false;
+    }
+    return true;
+  };
 
   const loadEvidence = useCallback(async () => {
     setLoading(true);
@@ -123,6 +139,7 @@ export default function EvidencePage() {
 
   const recordsByKey: Record<string, EvidenceRecord[]> = {};
   for (const r of records) {
+    if (!inDateRange(r.collected_at)) continue;
     if (!recordsByKey[r.control_id]) recordsByKey[r.control_id] = [];
     recordsByKey[r.control_id].push(r);
   }
@@ -215,12 +232,27 @@ export default function EvidencePage() {
         </div>
 
         <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <div>
               <h2 className="text-lg font-bold text-[var(--color-foreground)]">{selectedCategory}</h2>
-              <p className="text-sm text-[var(--color-muted)]">{collectedCount}/{items.length} items collected</p>
+              <p className="text-sm text-[var(--color-muted)]">{collectedCount}/{items.length} items collected{(dateFrom || dateTo) ? " (in range)" : ""}</p>
             </div>
             <div className="text-2xl font-black text-[var(--color-info)]">{items.length ? Math.round(collectedCount/items.length*100) : 0}%</div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 items-center mb-6 pb-4 border-b border-[var(--color-border)]">
+            <span className="text-xs font-medium text-[var(--color-muted)]">Filter by collected date:</span>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+              className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md px-2 py-1 text-xs text-[var(--color-foreground)]" />
+            <span className="text-xs text-[var(--color-muted)]">→</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+              className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md px-2 py-1 text-xs text-[var(--color-foreground)]" />
+            {(dateFrom || dateTo) && (
+              <button onClick={() => { setDateFrom(""); setDateTo(""); }}
+                className="text-xs text-[var(--color-muted)] hover:text-[var(--color-foreground)] underline ml-1">
+                clear
+              </button>
+            )}
           </div>
 
           <div className="space-y-3">

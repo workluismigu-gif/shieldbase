@@ -35,7 +35,9 @@
       "mcp__playwright__browser_close",
       "Bash(git commit -m 'fix\\(audit-ux\\): four bugs from auditor E2E test:*)",
       "Bash(git commit -m 'fix: medium-priority audit-UX cleanup \\(#5-#10\\):*)",
-      "Bash(git commit -m 'feat\\(audit\\): wishlist features — sample selection, test attributes, scope RBAC:*)"
+      "Bash(git commit -m 'feat\\(audit\\): wishlist features — sample selection, test attributes, scope RBAC:*)",
+      "Bash(ls src/lib/crosswalk*)",
+      "Bash(git commit -m 'feat: two-step sign-off + evidence date range filter:*)"
     ]
   }
 }
