@@ -23,7 +23,8 @@
       "Bash(git commit -m 'feat\\(pbc\\): Provided By Client request workflow + RLS for invited members:*)",
       "Bash(git commit -m 'fix\\(pbc\\): remove duplicate DashboardLayout wrapper:*)",
       "Bash(git commit -m 'feat\\(pbc\\): strict role separation — auditor creates+reviews, owner/admin responds:*)",
-      "Bash(git commit -m 'feat\\(controls\\): per-control comments + read-only modal for auditors:*)"
+      "Bash(git commit -m 'feat\\(controls\\): per-control comments + read-only modal for auditors:*)",
+      "Bash(git commit -m 'feat\\(audit\\): /dashboard/audit workspace landing for engagement overview:*)"
     ]
   }
 }
