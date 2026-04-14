@@ -15,19 +15,19 @@ function ScoreRing({ score }: { score: number }) {
           className="transition-all duration-1000" />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-black text-gray-900">{score}%</span>
-        <span className="text-xs text-gray-500">Ready</span>
+        <span className="text-3xl font-black text-[var(--color-foreground)]">{score}%</span>
+        <span className="text-xs text-[var(--color-muted)]">Ready</span>
       </div>
     </div>
   );
 }
 
-function StatCard({ label, value, sub, color = "text-gray-900" }: { label: string; value: string; sub?: string; color?: string }) {
+function StatCard({ label, value, sub, color = "text-[var(--color-foreground)]" }: { label: string; value: string; sub?: string; color?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <div className="text-xs text-gray-500 font-medium mb-1">{label}</div>
+    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5">
+      <div className="text-xs text-[var(--color-muted)] font-medium mb-1">{label}</div>
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+      {sub && <div className="text-xs text-[var(--color-muted)] mt-0.5">{sub}</div>}
     </div>
   );
 }
@@ -80,31 +80,31 @@ function QuestCard({ icon, label, desc, passing, total, allPass, children }: {
   return (
     <div className={`rounded-xl border-2 overflow-hidden transition-all ${
       allPass ? "border-green-300 bg-gradient-to-br from-green-50 to-emerald-50"
-              : failing > 0 ? "border-red-200 bg-gradient-to-br from-red-50 to-orange-50"
-              : "border-yellow-200 bg-gradient-to-br from-yellow-50 to-amber-50"
+              : failing > 0 ? "border-[var(--color-danger)] bg-gradient-to-br from-red-50 to-orange-50"
+              : "border-[var(--color-warning)] bg-gradient-to-br from-yellow-50 to-amber-50"
     }`}>
       <button onClick={() => setOpen(!open)} className="w-full p-4 flex items-center gap-3 text-left">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
-          allPass ? "bg-green-200" : failing > 0 ? "bg-red-100" : "bg-yellow-100"
+          allPass ? "bg-[var(--color-success-bg)]" : failing > 0 ? "bg-[var(--color-danger-bg)]" : "bg-yellow-100"
         }`}>{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-bold text-gray-900">{label}</span>
+            <span className="text-sm font-bold text-[var(--color-foreground)]">{label}</span>
             {allPass
               ? <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full font-bold">✓ CLEARED</span>
               : <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">{failing} OPEN</span>}
           </div>
-          <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+          <div className="text-xs text-[var(--color-muted)] mt-0.5">{desc}</div>
           <div className="flex items-center gap-2 mt-1.5">
-            <div className="flex-1 bg-white/70 rounded-full h-1.5 overflow-hidden">
+            <div className="flex-1 bg-[var(--color-bg)]/70 rounded-full h-1.5 overflow-hidden">
               <div className={`h-full rounded-full transition-all duration-700 ${
                 allPass ? "bg-green-500" : failing > 0 ? "bg-gradient-to-r from-red-400 to-orange-400" : "bg-yellow-400"
               }`} style={{ width: `${pct}%` }} />
             </div>
-            <span className="text-xs font-bold text-gray-600 flex-shrink-0">{pct}%</span>
+            <span className="text-xs font-bold text-[var(--color-muted)] flex-shrink-0">{pct}%</span>
           </div>
         </div>
-        <span className="text-gray-400 text-xs flex-shrink-0">{open ? "▲" : "▼"}</span>
+        <span className="text-[var(--color-muted)] text-xs flex-shrink-0">{open ? "▲" : "▼"}</span>
       </button>
       {open && <div className="border-t border-white/60">{children}</div>}
     </div>
@@ -114,7 +114,7 @@ function QuestCard({ icon, label, desc, passing, total, allPass, children }: {
 const sevBadge: Record<string, string> = {
   critical: "bg-red-600 text-white",
   high: "bg-orange-500 text-white",
-  medium: "bg-yellow-400 text-gray-900",
+  medium: "bg-yellow-400 text-[var(--color-foreground)]",
   low: "bg-blue-400 text-white",
 };
 
@@ -155,17 +155,17 @@ function ScanResultsTabs({
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] overflow-hidden">
       {/* Tab Header */}
-      <div className="flex border-b border-gray-100 bg-gray-50">
+      <div className="flex border-b border-[var(--color-border)] bg-[var(--color-surface)]">
         <button onClick={() => setTab("aws")}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
-            tab === "aws" ? "border-orange-500 text-orange-700 bg-white" : "border-transparent text-gray-400 hover:text-gray-600"
+            tab === "aws" ? "border-orange-500 text-[var(--color-warning)] bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-muted)]"
           }`}>
            AWS
           {hasRealData && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-              awsFailing > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
+              awsFailing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"
             }`}>
               {awsFailing > 0 ? `${awsFailing} ` : "✓"}
             </span>
@@ -173,19 +173,19 @@ function ScanResultsTabs({
         </button>
         <button onClick={() => setTab("github")}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
-            tab === "github" ? "border-gray-900 text-gray-900 bg-white" : "border-transparent text-gray-400 hover:text-gray-600"
+            tab === "github" ? "border-gray-900 text-[var(--color-foreground)] bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-muted)]"
           }`}>
            GitHub
           {hasGithubData && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-              ghFailing > 0 ? "bg-red-100 text-red-600" : "bg-green-100 text-green-700"
+              ghFailing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"
             }`}>
               {ghFailing > 0 ? `${ghFailing} ` : "✓"}
             </span>
           )}
         </button>
         <div className="flex-1" />
-        <a href="/dashboard/monitoring" className="self-center mr-4 text-xs text-blue-600 font-medium hover:underline">
+        <a href="/dashboard/monitoring" className="self-center mr-4 text-xs text-[var(--color-info)] font-medium hover:underline">
           Full report →
         </a>
       </div>
@@ -196,22 +196,22 @@ function ScanResultsTabs({
           {!awsConnected ? (
             <div className="text-center py-10">
               <div className="text-4xl mb-3"></div>
-              <p className="text-gray-500 text-sm mb-4">Connect AWS to start scanning your infrastructure</p>
+              <p className="text-[var(--color-muted)] text-sm mb-4">Connect AWS to start scanning your infrastructure</p>
               <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
             </div>
           ) : !hasRealData ? (
             <div className="text-center py-10">
               <div className="text-4xl mb-3 animate-pulse"></div>
-              <p className="text-gray-500 text-sm">Scan in progress — results will appear here shortly</p>
+              <p className="text-[var(--color-muted)] text-sm">Scan in progress — results will appear here shortly</p>
             </div>
           ) : (
             <>
               {/* XP bar */}
               <div className="mb-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-4 flex items-center gap-4">
-                <div className="text-3xl font-black text-orange-600">{Math.round((controls.filter(c=>c.status==="compliant").length/controls.length)*100)}%</div>
+                <div className="text-3xl font-black text-[var(--color-warning)]">{Math.round((controls.filter(c=>c.status==="compliant").length/controls.length)*100)}%</div>
                 <div className="flex-1">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span className="font-semibold text-gray-700">SOC 2 Compliance Score</span>
+                  <div className="flex justify-between text-xs text-[var(--color-muted)] mb-1">
+                    <span className="font-semibold text-[var(--color-foreground-subtle)]">SOC 2 Compliance Score</span>
                     <span>{controls.filter(c=>c.status==="compliant").length}/{controls.length} checks passing</span>
                   </div>
                   <div className="w-full bg-orange-100 rounded-full h-3 overflow-hidden">
@@ -233,7 +233,7 @@ function ScanResultsTabs({
                       <div className="divide-y divide-white/60">
                         {group.map(ctrl => (
                           <div key={ctrl.control_id} className={`flex items-center gap-3 px-4 py-2.5 ${
-                            ctrl.status === "non_compliant" ? "bg-red-50/60" : ""
+                            ctrl.status === "non_compliant" ? "bg-[var(--color-danger-bg)]/60" : ""
                           }`}>
                             <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${
                               ctrl.status === "compliant" ? "bg-green-500" : ctrl.status === "non_compliant" ? "bg-red-500" : "bg-yellow-400"
@@ -241,11 +241,11 @@ function ScanResultsTabs({
                               {ctrl.status === "compliant" ? "✓" : ctrl.status === "non_compliant" ? "✗" : "!"}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium text-gray-800 truncate">{ctrl.title}</div>
-                              <div className="text-xs text-gray-400">{ctrl.control_id}</div>
+                              <div className="text-xs font-medium text-[var(--color-foreground-subtle)] truncate">{ctrl.title}</div>
+                              <div className="text-xs text-[var(--color-muted)]">{ctrl.control_id}</div>
                             </div>
                             {ctrl.severity && ctrl.status === "non_compliant" && (
-                              <span className={`text-xs px-1.5 py-0.5 rounded font-bold capitalize flex-shrink-0 ${sevBadge[ctrl.severity] || "bg-gray-200 text-gray-700"}`}>
+                              <span className={`text-xs px-1.5 py-0.5 rounded font-bold capitalize flex-shrink-0 ${sevBadge[ctrl.severity] || "bg-[var(--color-border)] text-[var(--color-foreground-subtle)]"}`}>
                                 {ctrl.severity}
                               </span>
                             )}
@@ -267,13 +267,13 @@ function ScanResultsTabs({
           {!githubConnected ? (
             <div className="text-center py-10">
               <div className="text-4xl mb-3"></div>
-              <p className="text-gray-500 text-sm mb-4">Connect GitHub to monitor your repos</p>
-              <a href="/dashboard/settings" className="inline-block bg-gray-900 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
+              <p className="text-[var(--color-muted)] text-sm mb-4">Connect GitHub to monitor your repos</p>
+              <a href="/dashboard/settings" className="inline-block bg-[var(--color-foreground)] hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
             </div>
           ) : !hasGithubData ? (
             <div className="text-center py-10">
               <div className="text-4xl mb-3 animate-pulse"></div>
-              <p className="text-gray-500 text-sm">Scan in progress — results will appear here shortly</p>
+              <p className="text-[var(--color-muted)] text-sm">Scan in progress — results will appear here shortly</p>
             </div>
           ) : (
             <>
@@ -281,7 +281,7 @@ function ScanResultsTabs({
               <div className="mb-5 bg-gradient-to-r from-gray-900 to-gray-700 rounded-xl p-4 flex items-center gap-4">
                 <div className="text-3xl font-black text-white">{Math.round((githubFindings.filter(f=>(f.status_code||f.status)==="PASS").length/githubFindings.length)*100)}%</div>
                 <div className="flex-1">
-                  <div className="flex justify-between text-xs text-gray-300 mb-1">
+                  <div className="flex justify-between text-xs text-[var(--color-muted)] mb-1">
                     <span className="font-semibold text-white">GitHub Security Score</span>
                     <span>{githubFindings.filter(f=>(f.status_code||f.status)==="PASS").length}/{githubFindings.length} checks passing</span>
                   </div>
@@ -305,11 +305,11 @@ function ScanResultsTabs({
                         {group.map((f, i) => {
                           const pass = (f.status_code || f.status) === "PASS";
                           return (
-                            <div key={i} className={`flex items-center gap-3 px-4 py-2.5 ${!pass ? "bg-red-50/60" : ""}`}>
+                            <div key={i} className={`flex items-center gap-3 px-4 py-2.5 ${!pass ? "bg-[var(--color-danger-bg)]/60" : ""}`}>
                               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 ${pass ? "bg-green-500" : "bg-red-500"}`}>
                                 {pass ? "✓" : "✗"}
                               </span>
-                              <div className="text-xs font-medium text-gray-800 flex-1 min-w-0 truncate">
+                              <div className="text-xs font-medium text-[var(--color-foreground-subtle)] flex-1 min-w-0 truncate">
                                 {f.finding_info?.title || f.metadata?.event_code || f.check_id || "Check"}
                               </div>
                             </div>
@@ -363,19 +363,19 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
 }
 
 const CLI_COLORS: Record<CliLine["level"], string> = {
-  info:    "text-gray-400",
+  info:    "text-[var(--color-muted)]",
   success: "text-green-400",
   warn:    "text-yellow-400",
-  error:   "text-red-400",
+  error:   "text-[var(--color-danger)]",
   system:  "text-blue-400",
 };
 
 const CLI_PREFIX_COLORS: Record<CliLine["level"], string> = {
-  info:    "text-gray-500",
-  success: "text-green-500",
+  info:    "text-[var(--color-muted)]",
+  success: "text-[var(--color-success)]",
   warn:    "text-yellow-500",
-  error:   "text-red-500",
-  system:  "text-blue-500",
+  error:   "text-[var(--color-danger)]",
+  system:  "text-[var(--color-info)]",
 };
 
 function useGithubAutoPoll(
@@ -422,27 +422,27 @@ function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgI
   return (
     <div className="rounded-xl overflow-hidden border border-gray-800 shadow-xl">
       {/* Title bar */}
-      <div className="bg-gray-900 px-4 py-2.5 flex items-center justify-between border-b border-gray-800">
+      <div className="bg-[var(--color-foreground)] px-4 py-2.5 flex items-center justify-between border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <span className="text-gray-600 font-mono text-xs">#</span>
-          <span className="text-gray-400 font-mono text-xs font-semibold">activity-monitor</span>
+          <span className="text-[var(--color-muted)] font-mono text-xs">#</span>
+          <span className="text-[var(--color-muted)] font-mono text-xs font-semibold">activity-monitor</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 text-xs text-green-500 font-mono">
+          <span className="flex items-center gap-1 text-xs text-[var(--color-success)] font-mono">
             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" /> LIVE
           </span>
-          <span className="text-xs text-gray-600 font-mono">gh↓ 15m</span>
+          <span className="text-xs text-[var(--color-muted)] font-mono">gh↓ 15m</span>
         </div>
       </div>
 
       {/* Log body */}
       <div ref={scrollRef} className="bg-gray-950 p-4 h-64 overflow-y-auto font-mono text-xs space-y-1 scroll-smooth">
-        <div className="text-gray-600 mb-2">--- #activity-monitor | read-only | {lines.length} events ---</div>
+        <div className="text-[var(--color-muted)] mb-2">--- #activity-monitor | read-only | {lines.length} events ---</div>
         {lines.length === 0 ? (
-          <div className="text-gray-600">No activity yet. Connect an integration to start scanning.</div>
+          <div className="text-[var(--color-muted)]">No activity yet. Connect an integration to start scanning.</div>
         ) : lines.map(line => (
           <div key={line.id} className="flex items-start gap-2 leading-relaxed">
-            <span className="text-gray-600 flex-shrink-0 tabular-nums">{line.ts}</span>
+            <span className="text-[var(--color-muted)] flex-shrink-0 tabular-nums">{line.ts}</span>
             <span className={`flex-shrink-0 font-bold ${CLI_PREFIX_COLORS[line.level]}`}>{line.prefix}</span>
             <span className={CLI_COLORS[line.level]}>{line.msg}</span>
           </div>
@@ -452,10 +452,10 @@ function ActivityTerminal({ timeline, orgId }: { timeline: TimelineEvent[]; orgI
   );
 }
 
-const priorityColor = { critical: "bg-red-100 text-red-700", high: "bg-orange-100 text-orange-700", medium: "bg-yellow-100 text-yellow-700", low: "bg-blue-100 text-blue-700" };
-const statusColor = { todo: "bg-gray-100 text-gray-600", in_progress: "bg-blue-100 text-blue-700", done: "bg-green-100 text-green-700" };
+const priorityColor = { critical: "bg-[var(--color-danger-bg)] text-[var(--color-danger)]", high: "bg-orange-100 text-[var(--color-warning)]", medium: "bg-yellow-100 text-[var(--color-warning)]", low: "bg-[var(--color-info-bg)] text-[var(--color-info)]" };
+const statusColor = { todo: "bg-[var(--color-surface-2)] text-[var(--color-muted)]", in_progress: "bg-[var(--color-info-bg)] text-[var(--color-info)]", done: "bg-[var(--color-success-bg)] text-[var(--color-success)]" };
 const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
-const policyStatusColor = { draft: "bg-yellow-100 text-yellow-700", review: "bg-blue-100 text-blue-700", approved: "bg-green-100 text-green-700", needs_update: "bg-red-100 text-red-700" };
+const policyStatusColor = { draft: "bg-yellow-100 text-[var(--color-warning)]", review: "bg-[var(--color-info-bg)] text-[var(--color-info)]", approved: "bg-[var(--color-success-bg)] text-[var(--color-success)]", needs_update: "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" };
 
 export default function DashboardPage() {
   const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings } = useOrg();
@@ -506,8 +506,13 @@ export default function DashboardPage() {
   const manualScore = totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : null;
 
   const scores = [awsScore, githubScore, manualScore].filter(s => s !== null) as number[];
-  const combinedScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  // Weighted by check count so Overall matches what users expect from Automated + Manual:
+  // (AWS pass + GitHub pass + tasks done) / (AWS total + GitHub total + task total)
+  const totalPassing = (hasRealData ? realCompliant : 0) + (hasGithubData ? githubCompliant : 0) + doneTasks;
+  const totalItems = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0) + totalTaskCount;
+  const combinedScore = totalItems > 0 ? Math.round((totalPassing / totalItems) * 100) : 0;
   const score = combinedScore;
+  const connectedIntegrations = [awsConnected, githubConnected].filter(Boolean).length;
   // Evidence: count controls with evidence (compliant = evidence exists)
   const totalEvidence = hasRealData ? realTotal : 0;
   const collectedEvidence = hasRealData ? realCompliant : 0;
@@ -519,18 +524,18 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">SOC 2 Compliance Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">SOC 2 Compliance Dashboard</h1>
+          <p className="text-sm text-[var(--color-muted)] mt-1">
             {scores.length > 0
-              ? `Overall readiness across ${scores.length} source${scores.length > 1 ? "s" : ""} • ${lastScan ? `Last scanned: ${lastScan}` : ""}`
+              ? `${totalPassing}/${totalItems} checks passing${lastScan ? ` • Last scanned: ${lastScan}` : ""}`
               : "Track your progress toward SOC 2 Type I certification"}
           </p>
         </div>
-        {scores.length > 0 && (
-          <div className="flex items-center gap-2 text-xs bg-green-50 text-green-700 border border-green-200 px-3 py-2 rounded-lg font-medium">
+        {connectedIntegrations > 0 && (
+          <div className="flex items-center gap-2 text-xs bg-[var(--color-success-bg)] text-[var(--color-success)] border border-[var(--color-success)] px-3 py-2 rounded-lg font-medium">
             {realtimeConnected ? (
-              <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live</>  
-            ) : ""} {scores.length} source{scores.length > 1 ? "s" : ""} connected
+              <><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live</>
+            ) : ""} {connectedIntegrations} integration{connectedIntegrations > 1 ? "s" : ""} connected
           </div>
         )}
       </div>
@@ -538,14 +543,14 @@ export default function DashboardPage() {
       {/* Two-track progress */}
       <div className="grid md:grid-cols-2 gap-4">
         {/* Track 1: Automated */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <div className="text-sm font-semibold text-gray-800">Automated Checks</div>
-              <div className="text-xs text-gray-400">Prowler security scans</div>
+              <div className="text-sm font-semibold text-[var(--color-foreground-subtle)]">Automated Checks</div>
+              <div className="text-xs text-[var(--color-muted)]">Prowler security scans</div>
             </div>
             {realtimeConnected && (
-              <span className="flex items-center gap-1 text-xs text-green-600 font-medium">
+              <span className="flex items-center gap-1 text-xs text-[var(--color-success)] font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
                 Live
               </span>
@@ -559,14 +564,14 @@ export default function DashboardPage() {
                 <span className="text-sm"></span>
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-0.5">
-                    <span className="text-gray-600">AWS</span>
-                    <span className="text-gray-400">{hasRealData ? `${realCompliant}/${realTotal}` : "pending"}</span>
+                    <span className="text-[var(--color-muted)]">AWS</span>
+                    <span className="text-[var(--color-muted)]">{hasRealData ? `${realCompliant}/${realTotal}` : "pending"}</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div className="w-full bg-[var(--color-surface-2)] rounded-full h-1.5">
                     <div className="h-full bg-green-500 rounded-full" style={{ width: `${hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%` }} />
                   </div>
                 </div>
-                <span className="text-xs font-bold text-gray-700 w-8 text-right">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
+                <span className="text-xs font-bold text-[var(--color-foreground-subtle)] w-8 text-right">{hasRealData ? Math.round((realCompliant / realTotal) * 100) : 0}%</span>
               </div>
             )}
             {githubConnected && (
@@ -574,15 +579,15 @@ export default function DashboardPage() {
                 <span className="text-sm"></span>
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-0.5">
-                    <span className="text-gray-600">GitHub</span>
-                    <span className="text-gray-400">{hasGithubData ? `${githubCompliant}/${githubTotal}` : "pending..."}</span>
+                    <span className="text-[var(--color-muted)]">GitHub</span>
+                    <span className="text-[var(--color-muted)]">{hasGithubData ? `${githubCompliant}/${githubTotal}` : "pending..."}</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
+                  <div className="w-full bg-[var(--color-surface-2)] rounded-full h-1.5">
                     <div className={`h-full rounded-full transition-all duration-700 ${hasGithubData ? "bg-purple-500" : "bg-purple-300 animate-pulse"}`}
                       style={{ width: hasGithubData ? `${githubPct}%` : "30%" }} />
                   </div>
                 </div>
-                {hasGithubData && <span className="text-xs font-bold text-gray-700 w-8 text-right">{githubPct}%</span>}
+                {hasGithubData && <span className="text-xs font-bold text-[var(--color-foreground-subtle)] w-8 text-right">{githubPct}%</span>}
               </div>
             )}
           </div>
@@ -596,55 +601,55 @@ export default function DashboardPage() {
             return (
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black text-gray-900">{autoAvg}%</span>
-                  <span className="text-xs text-gray-400">{totalChecks > 0 ? `${totalPass}/${totalChecks} passing` : "No scan yet"}</span>
+                  <span className="text-2xl font-black text-[var(--color-foreground)]">{autoAvg}%</span>
+                  <span className="text-xs text-[var(--color-muted)]">{totalChecks > 0 ? `${totalPass}/${totalChecks} passing` : "No scan yet"}</span>
                 </div>
-                {totalFail > 0 && <div className="mt-1 text-xs text-red-600 font-medium">{totalFail} failing — needs attention</div>}
+                {totalFail > 0 && <div className="mt-1 text-xs text-[var(--color-danger)] font-medium">{totalFail} failing — needs attention</div>}
               </div>
             );
           })()}
         </div>
 
         {/* Track 2: Manual Evidence */}
-        <a href="/dashboard/checklist" className="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 transition block">
+        <a href="/dashboard/checklist" className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5 hover:border-blue-300 transition block">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg"></span>
             <div>
-              <div className="text-sm font-semibold text-gray-800">Manual Evidence</div>
-              <div className="text-xs text-gray-400">Policies, training, procedures</div>
+              <div className="text-sm font-semibold text-[var(--color-foreground-subtle)]">Manual Evidence</div>
+              <div className="text-xs text-[var(--color-muted)]">Policies, training, procedures</div>
             </div>
           </div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-2xl font-black text-gray-900">{totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0}%</span>
-            <span className="text-xs text-gray-400">{doneTasks}/{totalTaskCount} complete</span>
+            <span className="text-2xl font-black text-[var(--color-foreground)]">{totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0}%</span>
+            <span className="text-xs text-[var(--color-muted)]">{doneTasks}/{totalTaskCount} complete</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-[var(--color-surface-2)] rounded-full h-2 overflow-hidden">
             <div className="h-full bg-blue-500 transition-all duration-700 rounded-full" style={{ width: `${totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : 0}%` }} />
           </div>
-          <div className="mt-2 text-xs text-blue-600 font-medium">View roadmap →</div>
+          <div className="mt-2 text-xs text-[var(--color-info)] font-medium">View roadmap →</div>
         </a>
       </div>
 
       {/* Integrations bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs text-gray-500 font-medium">Connected:</span>
+        <span className="text-xs text-[var(--color-muted)] font-medium">Connected:</span>
         {awsConnected ? (
-          <a href="/dashboard/monitoring" className="flex items-center gap-1.5 text-xs bg-orange-50 text-orange-700 border border-orange-200 px-3 py-1.5 rounded-full font-medium hover:bg-orange-100 transition cursor-pointer">
+          <a href="/dashboard/monitoring" className="flex items-center gap-1.5 text-xs bg-orange-50 text-[var(--color-warning)] border border-orange-200 px-3 py-1.5 rounded-full font-medium hover:bg-orange-100 transition cursor-pointer">
              AWS
             <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
           </a>
         ) : (
-          <a href="/dashboard/settings" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-orange-600 hover:border-orange-300 transition">
+          <a href="/dashboard/settings" className="text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-3 py-1.5 rounded-full hover:text-[var(--color-warning)] hover:border-orange-300 transition">
             + AWS
           </a>
         )}
         {githubConnected ? (
-          <a href="/dashboard/monitoring?provider=github" className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 rounded-full font-medium hover:bg-gray-700 transition cursor-pointer">
+          <a href="/dashboard/monitoring?provider=github" className="flex items-center gap-1.5 text-xs bg-[var(--color-foreground)] text-white px-3 py-1.5 rounded-full font-medium hover:bg-gray-700 transition cursor-pointer">
              GitHub
             <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
           </a>
         ) : (
-          <a href="/dashboard/settings" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-gray-700 hover:border-gray-400 transition">
+          <a href="/dashboard/settings" className="text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-3 py-1.5 rounded-full hover:text-[var(--color-foreground-subtle)] hover:border-gray-400 transition">
             + GitHub
           </a>
         )}
@@ -652,17 +657,17 @@ export default function DashboardPage() {
 
       {/* Score + Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        <div className="md:col-span-1 bg-white rounded-xl border border-gray-200 p-6 flex flex-col items-center justify-center">
+        <div className="md:col-span-1 bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6 flex flex-col items-center justify-center">
           {loading ? (
-            <div className="w-36 h-36 rounded-full border-8 border-gray-100 flex items-center justify-center">
-              <span className="text-gray-400 text-sm">Loading...</span>
+            <div className="w-36 h-36 rounded-full border-8 border-[var(--color-border)] flex items-center justify-center">
+              <span className="text-[var(--color-muted)] text-sm">Loading...</span>
             </div>
           ) : (
             <ScoreRing score={score} />
           )}
-          <div className="mt-3 text-sm font-medium text-gray-600">Overall Readiness</div>
+          <div className="mt-3 text-sm font-medium text-[var(--color-muted)]">Overall Readiness</div>
           {scores.length > 1 && (
-            <div className="mt-1 text-xs text-gray-400 text-center space-y-0.5">
+            <div className="mt-1 text-xs text-[var(--color-muted)] text-center space-y-0.5">
               {awsScore !== null && <div> AWS: {awsScore}%</div>}
               {githubScore !== null && <div> GitHub: {githubScore}%</div>}
               {manualScore !== null && <div> Tasks: {manualScore}%</div>}
@@ -674,10 +679,10 @@ export default function DashboardPage() {
             label="AWS Controls"
             value={hasRealData ? `${realCompliant}/${realTotal}` : "—"}
             sub={hasRealData ? `${realNonCompliant} failing` : "No scan yet"}
-            color={hasRealData && realNonCompliant > 0 ? "text-orange-600" : "text-green-600"}
+            color={hasRealData && realNonCompliant > 0 ? "text-[var(--color-warning)]" : "text-[var(--color-success)]"}
           />
-          <StatCard label="Policies" value={totalPolicies > 0 ? `${approvedPolicies}/${totalPolicies}` : "—"} sub={totalPolicies > 0 ? `${totalPolicies - approvedPolicies} to review` : "No policies yet"} color="text-blue-600" />
-          <StatCard label="Tasks Completed" value={`${doneTasks}/${totalTaskCount}`} sub={`${inProgressTasks} in progress`} color="text-orange-600" />
+          <StatCard label="Policies" value={totalPolicies > 0 ? `${approvedPolicies}/${totalPolicies}` : "—"} sub={totalPolicies > 0 ? `${totalPolicies - approvedPolicies} to review` : "No policies yet"} color="text-[var(--color-info)]" />
+          <StatCard label="Tasks Completed" value={`${doneTasks}/${totalTaskCount}`} sub={`${inProgressTasks} in progress`} color="text-[var(--color-warning)]" />
         </div>
       </div>
 
@@ -693,20 +698,20 @@ export default function DashboardPage() {
 
       {/* Tasks + Policies */}
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Active Tasks</h2>
-            <a href="/dashboard/remediation" className="text-xs text-blue-600 font-medium hover:underline">View all →</a>
+            <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Active Tasks</h2>
+            <a href="/dashboard/remediation" className="text-xs text-[var(--color-info)] font-medium hover:underline">View all →</a>
           </div>
           <div className="space-y-2">
             {activeTasks.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">{totalTaskCount === 0 ? "No tasks yet — connect integrations to get started" : "All tasks complete "}</p>
+              <p className="text-sm text-[var(--color-muted)] text-center py-4">{totalTaskCount === 0 ? "No tasks yet — connect integrations to get started" : "All tasks complete "}</p>
             ) : activeTasks.map((task) => (
-              <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+              <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-surface)] transition">
                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${task.priority === "critical" ? "bg-red-500" : task.priority === "high" ? "bg-orange-500" : "bg-yellow-500"}`} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">{task.title}</div>
-                  <div className="text-xs text-gray-400">{task.category} · Due {task.due}</div>
+                  <div className="text-sm font-medium text-[var(--color-foreground-subtle)] truncate">{task.title}</div>
+                  <div className="text-xs text-[var(--color-muted)]">{task.category} · Due {task.due}</div>
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${statusColor[task.status as keyof typeof statusColor]}`}>
                   {statusLabel[task.status as keyof typeof statusLabel]}
@@ -716,21 +721,21 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Policies</h2>
-            <a href="/dashboard/policies" className="text-xs text-blue-600 font-medium hover:underline">View all →</a>
+            <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Policies</h2>
+            <a href="/dashboard/policies" className="text-xs text-[var(--color-info)] font-medium hover:underline">View all →</a>
           </div>
           <div className="space-y-2">
             {displayPolicies.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">No policies yet</p>
+              <p className="text-sm text-[var(--color-muted)] text-center py-4">No policies yet</p>
             ) : displayPolicies.map((policy) => (
-              <div key={policy.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition">
+              <div key={policy.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-[var(--color-surface)] transition">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">{policy.title}</div>
-                  <div className="text-xs text-gray-400">Updated {policy.updated}</div>
+                  <div className="text-sm font-medium text-[var(--color-foreground-subtle)] truncate">{policy.title}</div>
+                  <div className="text-xs text-[var(--color-muted)]">Updated {policy.updated}</div>
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${policyStatusColor[policy.status as keyof typeof policyStatusColor] ?? "bg-gray-100 text-gray-600"}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize flex-shrink-0 ${policyStatusColor[policy.status as keyof typeof policyStatusColor] ?? "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>
                   {policy.status}
                 </span>
               </div>

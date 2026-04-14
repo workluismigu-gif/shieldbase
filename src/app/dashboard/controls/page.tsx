@@ -27,24 +27,24 @@ export default function ControlsPage() {
   }, [controls, filter, categoryFilter, search]);
 
   const statusColor = (s: string) =>
-    s === "compliant" ? "bg-green-50 text-green-700 border-green-200" :
-    s === "partial" ? "bg-yellow-50 text-yellow-700 border-yellow-200" :
-    s === "non_compliant" ? "bg-red-50 text-red-700 border-red-200" :
-    "bg-gray-50 text-gray-600 border-gray-200";
+    s === "compliant" ? "bg-[var(--color-success-bg)] text-[var(--color-success)] border-[var(--color-success)]" :
+    s === "partial" ? "bg-[var(--color-warning-bg)] text-[var(--color-warning)] border-[var(--color-warning)]" :
+    s === "non_compliant" ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]" :
+    "bg-[var(--color-surface)] text-[var(--color-muted)] border-[var(--color-border)]";
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Controls</h1>
-        <p className="text-sm text-gray-500 mt-1">Test, annotate, and sign off on individual controls for SOC 2 audit.</p>
+        <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Controls</h1>
+        <p className="text-sm text-[var(--color-muted)] mt-1">Test, annotate, and sign off on individual controls for SOC 2 audit.</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-wrap gap-3">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 flex flex-wrap gap-3">
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by control ID or title…"
-          className="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="flex-1 min-w-[200px] border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
         <select value={filter} onChange={(e) => setFilter(e.target.value as FilterStatus)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          className="border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm">
           <option value="all">All statuses</option>
           <option value="compliant">Compliant</option>
           <option value="partial">Partial</option>
@@ -52,16 +52,16 @@ export default function ControlsPage() {
           <option value="not_assessed">Not assessed</option>
         </select>
         <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          className="border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm">
           <option value="">All categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left text-xs uppercase text-gray-500">
+          <thead className="bg-[var(--color-surface)]">
+            <tr className="text-left text-xs uppercase text-[var(--color-muted)]">
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Category</th>
               <th className="px-4 py-3">Title</th>
@@ -72,24 +72,24 @@ export default function ControlsPage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No controls match — run a scan or adjust filters.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">No controls match — run a scan or adjust filters.</td></tr>
             ) : (
               filtered.map(c => (
-                <tr key={c.control_id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-mono text-xs text-gray-600">{c.control_id}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600">{c.category}</td>
-                  <td className="px-4 py-3 text-gray-900">{c.title}</td>
+                <tr key={c.control_id} className="hover:bg-[var(--color-surface)]">
+                  <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted)]">{c.control_id}</td>
+                  <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.category}</td>
+                  <td className="px-4 py-3 text-[var(--color-foreground)]">{c.title}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-medium px-2 py-1 rounded border ${statusColor(c.status)}`}>
                       {c.status.replace("_", " ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">{c.severity ?? "-"}</td>
+                  <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.severity ?? "-"}</td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
-                      className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-medium">
+                      className="text-xs bg-blue-600 hover:opacity-90 text-white px-3 py-1.5 rounded-md font-medium">
                       Test & sign off
                     </button>
                   </td>

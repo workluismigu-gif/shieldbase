@@ -209,18 +209,18 @@ export default function EvidencePage() {
       <div className="space-y-6">
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
         <div className="flex items-center gap-3">
-          <button onClick={() => setSelectedCategory(null)} className="text-sm text-blue-600 hover:underline">← Back to evidence</button>
-          <span className="text-gray-300">|</span>
-          <span className="text-sm font-medium text-gray-700">{selectedCategory}</span>
+          <button onClick={() => setSelectedCategory(null)} className="text-sm text-[var(--color-info)] hover:underline">← Back to evidence</button>
+          <span className="text-[var(--color-muted)]">|</span>
+          <span className="text-sm font-medium text-[var(--color-foreground-subtle)]">{selectedCategory}</span>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">{selectedCategory}</h2>
-              <p className="text-sm text-gray-500">{collectedCount}/{items.length} items collected</p>
+              <h2 className="text-lg font-bold text-[var(--color-foreground)]">{selectedCategory}</h2>
+              <p className="text-sm text-[var(--color-muted)]">{collectedCount}/{items.length} items collected</p>
             </div>
-            <div className="text-2xl font-black text-blue-600">{items.length ? Math.round(collectedCount/items.length*100) : 0}%</div>
+            <div className="text-2xl font-black text-[var(--color-info)]">{items.length ? Math.round(collectedCount/items.length*100) : 0}%</div>
           </div>
 
           <div className="space-y-3">
@@ -229,27 +229,27 @@ export default function EvidencePage() {
               const hasEvidence = (recordsByKey[key]?.length ?? 0) > 0;
               const evidenceRows = recordsByKey[key] ?? [];
               return (
-                <div key={idx} className={`p-4 rounded-xl border transition ${hasEvidence ? "bg-green-50 border-green-200" : "bg-gray-50 border-gray-200"}`}>
+                <div key={idx} className={`p-4 rounded-xl border transition ${hasEvidence ? "bg-[var(--color-success-bg)] border-[var(--color-success)]" : "bg-[var(--color-surface)] border-[var(--color-border)]"}`}>
                   <div className="flex items-start gap-4">
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${hasEvidence ? "bg-green-500 border-green-500 text-white" : "border-gray-300"}`}>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${hasEvidence ? "bg-green-500 border-green-500 text-white" : "border-[var(--color-border-strong)]"}`}>
                       {hasEvidence && <span className="text-xs">✓</span>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="text-sm font-semibold text-gray-800">{item.name}</span>
-                        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{item.source}</span>
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{item.frequency}</span>
+                        <span className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{item.name}</span>
+                        <span className="text-xs bg-[var(--color-border)] text-[var(--color-muted)] px-2 py-0.5 rounded-full">{item.source}</span>
+                        <span className="text-xs bg-[var(--color-info-bg)] text-[var(--color-info)] px-2 py-0.5 rounded-full">{item.frequency}</span>
                       </div>
-                      <p className="text-xs text-gray-500 mb-2">{item.how}</p>
+                      <p className="text-xs text-[var(--color-muted)] mb-2">{item.how}</p>
 
                       {evidenceRows.length > 0 && (
                         <div className="space-y-1 mb-2">
                           {evidenceRows.map((r) => (
                             <div key={r.id} className="flex items-center gap-2 text-xs">
-                              <span className="text-gray-400">{new Date(r.collected_at).toLocaleDateString()}</span>
-                              <span className="font-medium text-gray-700 truncate max-w-[240px]">{r.evidence_data?.file_name ?? r.evidence_type}</span>
+                              <span className="text-[var(--color-muted)]">{new Date(r.collected_at).toLocaleDateString()}</span>
+                              <span className="font-medium text-[var(--color-foreground-subtle)] truncate max-w-[240px]">{r.evidence_data?.file_name ?? r.evidence_type}</span>
                               {r.evidence_data?.storage_path && (
-                                <button onClick={() => handleDownload(r.evidence_data.storage_path!)} className="text-blue-600 hover:underline">Download</button>
+                                <button onClick={() => handleDownload(r.evidence_data.storage_path!)} className="text-[var(--color-info)] hover:underline">Download</button>
                               )}
                             </div>
                           ))}
@@ -260,13 +260,13 @@ export default function EvidencePage() {
                         <button
                           onClick={() => handleUploadClick(key)}
                           disabled={uploadingKey === key}
-                          className="text-xs bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-md font-medium"
+                          className="text-xs bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white px-3 py-1.5 rounded-md font-medium"
                         >
                           {uploadingKey === key ? "Uploading…" : " Upload file"}
                         </button>
                         <button
                           onClick={() => handleAttest(key)}
-                          className="text-xs border border-gray-300 hover:border-gray-400 text-gray-700 px-3 py-1.5 rounded-md font-medium"
+                          className="text-xs border border-[var(--color-border-strong)] hover:border-gray-400 text-[var(--color-foreground-subtle)] px-3 py-1.5 rounded-md font-medium"
                         >
                           Mark collected (manual)
                         </button>
@@ -287,23 +287,23 @@ export default function EvidencePage() {
       <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Evidence Collection</h1>
-          <p className="text-sm text-gray-500 mt-1">Upload evidence files and track what your auditor needs for each control area</p>
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Evidence Collection</h1>
+          <p className="text-sm text-[var(--color-muted)] mt-1">Upload evidence files and track what your auditor needs for each control area</p>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <span className="font-semibold text-gray-700">{loading ? "…" : `${totalCollected}/${totalItems} collected`}</span>
-          <span className={`px-3 py-1.5 rounded-lg font-medium ${overallPct >= 80 ? "bg-green-100 text-green-700" : overallPct >= 50 ? "bg-blue-100 text-blue-700" : "bg-yellow-100 text-yellow-700"}`}>
+          <span className="font-semibold text-[var(--color-foreground-subtle)]">{loading ? "…" : `${totalCollected}/${totalItems} collected`}</span>
+          <span className={`px-3 py-1.5 rounded-lg font-medium ${overallPct >= 80 ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : overallPct >= 50 ? "bg-[var(--color-info-bg)] text-[var(--color-info)]" : "bg-yellow-100 text-[var(--color-warning)]"}`}>
             {overallPct}% complete
           </span>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
-        <div className="flex justify-between text-sm text-gray-500 mb-2">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4">
+        <div className="flex justify-between text-sm text-[var(--color-muted)] mb-2">
           <span>Overall evidence collection</span>
-          <span className="font-semibold text-gray-800">{overallPct}%</span>
+          <span className="font-semibold text-[var(--color-foreground-subtle)]">{overallPct}%</span>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-3">
+        <div className="w-full bg-[var(--color-surface-2)] rounded-full h-3">
           <div className="bg-blue-500 h-3 rounded-full transition-all duration-500" style={{ width: `${overallPct}%` }} />
         </div>
       </div>
@@ -316,17 +316,17 @@ export default function EvidencePage() {
           const pct = total ? Math.round(collected / total * 100) : 0;
           return (
             <button key={i} onClick={() => setSelectedCategory(item.category)}
-              className="bg-white rounded-xl border border-gray-200 p-5 text-left hover:border-blue-300 hover:shadow-sm transition group">
+              className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5 text-left hover:border-blue-300 hover:shadow-sm transition group">
               <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold text-gray-800 group-hover:text-blue-600 transition">{item.category}</h3>
-                <span className={`text-lg font-black ${pct === 100 ? "text-green-600" : pct >= 50 ? "text-blue-600" : "text-gray-400"}`}>{pct}%</span>
+                <h3 className="font-semibold text-[var(--color-foreground-subtle)] group-hover:text-[var(--color-info)] transition">{item.category}</h3>
+                <span className={`text-lg font-black ${pct === 100 ? "text-[var(--color-success)]" : pct >= 50 ? "text-[var(--color-info)]" : "text-[var(--color-muted)]"}`}>{pct}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-2 mb-3">
+              <div className="w-full bg-[var(--color-surface-2)] rounded-full h-2 mb-3">
                 <div className={`h-2 rounded-full ${pct === 100 ? "bg-green-500" : "bg-blue-500"}`} style={{ width: `${pct}%` }} />
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">{collected}/{total} items collected</span>
-                <span className="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition">View details →</span>
+                <span className="text-xs text-[var(--color-muted)]">{collected}/{total} items collected</span>
+                <span className="text-xs text-[var(--color-info)] opacity-0 group-hover:opacity-100 transition">View details →</span>
               </div>
             </button>
           );

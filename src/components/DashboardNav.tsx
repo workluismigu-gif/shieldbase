@@ -33,7 +33,7 @@ export default function DashboardNav() {
           return (
             <a key={item.href} href={item.href}
               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition
-                ${active ? "bg-blue/10 text-blue" : "text-slate hover:text-white hover:bg-white/5"}`}>
+                ${active ? "bg-blue/10 text-blue" : "text-slate hover:text-white hover:bg-[var(--color-bg)]/5"}`}>
               <span>{item.icon}</span>
               {item.label}
             </a>

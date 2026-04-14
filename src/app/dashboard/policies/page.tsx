@@ -17,10 +17,10 @@ const typeIcons: Record<string, string> = {
 };
 
 const statusConfig = {
-  approved:     { label: "Approved",     color: "bg-green-100 text-green-700",  dot: "bg-green-500" },
-  review:       { label: "In Review",    color: "bg-blue-100 text-blue-700",    dot: "bg-blue-500" },
-  draft:        { label: "Draft",        color: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-400" },
-  needs_update: { label: "Needs Update", color: "bg-red-100 text-red-700",      dot: "bg-red-500" },
+  approved:     { label: "Approved",     color: "bg-[var(--color-success-bg)] text-[var(--color-success)]",  dot: "bg-green-500" },
+  review:       { label: "In Review",    color: "bg-[var(--color-info-bg)] text-[var(--color-info)]",    dot: "bg-blue-500" },
+  draft:        { label: "Draft",        color: "bg-yellow-100 text-[var(--color-warning)]", dot: "bg-yellow-400" },
+  needs_update: { label: "Needs Update", color: "bg-[var(--color-danger-bg)] text-[var(--color-danger)]",      dot: "bg-red-500" },
 };
 
 const policyContent: Record<string, string> = {
@@ -168,36 +168,36 @@ export default function PoliciesPage() {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => setSelected(null)} className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+          <button onClick={() => setSelected(null)} className="text-sm text-[var(--color-info)] hover:underline flex items-center gap-1">
             ← Back to policies
           </button>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
+          <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
             <div className="flex items-center gap-3">
               <span className="text-2xl">{typeIcons[selectedPolicy.type] || ""}</span>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{selectedPolicy.title}</h1>
-                <p className="text-sm text-gray-400 mt-0.5">Last updated {selectedPolicy.updated}</p>
+                <h1 className="text-xl font-bold text-[var(--color-foreground)]">{selectedPolicy.title}</h1>
+                <p className="text-sm text-[var(--color-muted)] mt-0.5">Last updated {selectedPolicy.updated}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.color}`}>{s.label}</span>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+              <button className="bg-blue-600 hover:opacity-90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
                 ⬇ Download
               </button>
             </div>
           </div>
           <div className="p-6">
             <div className="prose prose-sm max-w-none">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans leading-relaxed">
+              <pre className="whitespace-pre-wrap text-sm text-[var(--color-foreground-subtle)] font-sans leading-relaxed">
                 {policyContent[selectedPolicy.id] || `# ${selectedPolicy.title}\n\nThis policy document will be generated based on your organization's tech stack and specific requirements.\n\nSchedule a call with your ShieldBase consultant to review and customize this policy.`}
               </pre>
             </div>
           </div>
 
           {/* Acknowledgement section */}
-          <div className="border-t border-gray-100 bg-gray-50 p-6">
+          <div className="border-t border-[var(--color-border)] bg-[var(--color-surface)] p-6">
             {(() => {
               const policyKey = selectedPolicy.id;
               const policyAcks = acks.filter(a => a.policy_key === policyKey);
@@ -207,24 +207,24 @@ export default function PoliciesPage() {
                 <>
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900">Policy acknowledgement</h3>
-                      <p className="text-xs text-gray-500 mt-0.5">{policyAcks.length} signature{policyAcks.length === 1 ? "" : "s"} on record</p>
+                      <h3 className="text-sm font-semibold text-[var(--color-foreground)]">Policy acknowledgement</h3>
+                      <p className="text-xs text-[var(--color-muted)] mt-0.5">{policyAcks.length} signature{policyAcks.length === 1 ? "" : "s"} on record</p>
                     </div>
                     <button
                       onClick={() => acknowledge(policyKey)}
                       disabled={acking || hasAcked}
                       className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                        hasAcked ? "bg-green-100 text-green-700 cursor-default" : "bg-blue-600 hover:bg-blue-700 text-white"
+                        hasAcked ? "bg-[var(--color-success-bg)] text-[var(--color-success)] cursor-default" : "bg-blue-600 hover:opacity-90 text-white"
                       }`}>
                       {hasAcked ? "✓ Acknowledged" : acking ? "Signing…" : "Acknowledge policy"}
                     </button>
                   </div>
                   {policyAcks.length > 0 && (
-                    <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+                    <div className="bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] divide-y divide-gray-100 text-sm">
                       {policyAcks.map(a => (
                         <div key={`${a.user_id}-${a.policy_key}`} className="px-4 py-2 flex justify-between items-center text-xs">
-                          <span className="font-mono text-gray-600 truncate max-w-[300px]">{a.user_id === (userEmail ? a.user_id : "") ? userEmail : a.user_id}</span>
-                          <span className="text-gray-500">{new Date(a.acknowledged_at).toLocaleString()}</span>
+                          <span className="font-mono text-[var(--color-muted)] truncate max-w-[300px]">{a.user_id === (userEmail ? a.user_id : "") ? userEmail : a.user_id}</span>
+                          <span className="text-[var(--color-muted)]">{new Date(a.acknowledged_at).toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -243,10 +243,10 @@ export default function PoliciesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Policy Documents</h1>
-          <p className="text-sm text-gray-500 mt-1">Your custom security policies generated for your tech stack</p>
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Policy Documents</h1>
+          <p className="text-sm text-[var(--color-muted)] mt-1">Your custom security policies generated for your tech stack</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
+        <button className="flex items-center gap-2 bg-blue-600 hover:opacity-90 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition">
           ⬇ Download All as ZIP
         </button>
       </div>
@@ -255,32 +255,32 @@ export default function PoliciesPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {(["all","approved","review","draft"] as const).map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`bg-white rounded-xl border p-4 text-left transition ${filter === f ? "ring-2 ring-blue-500 border-blue-300" : "border-gray-200 hover:border-gray-300"}`}>
-            <div className={`text-2xl font-black ${f === "approved" ? "text-green-600" : f === "review" ? "text-blue-600" : f === "draft" ? "text-yellow-600" : "text-gray-800"}`}>
+            className={`bg-[var(--color-bg)] rounded-xl border p-4 text-left transition ${filter === f ? "ring-2 ring-blue-500 border-blue-300" : "border-[var(--color-border)] hover:border-[var(--color-border-strong)]"}`}>
+            <div className={`text-2xl font-black ${f === "approved" ? "text-[var(--color-success)]" : f === "review" ? "text-[var(--color-info)]" : f === "draft" ? "text-[var(--color-warning)]" : "text-[var(--color-foreground-subtle)]"}`}>
               {counts[f]}
             </div>
-            <div className="text-xs text-gray-500 capitalize mt-0.5">{f === "all" ? "Total Policies" : f}</div>
+            <div className="text-xs text-[var(--color-muted)] capitalize mt-0.5">{f === "all" ? "Total Policies" : f}</div>
           </button>
         ))}
       </div>
 
       {/* Policy list */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
         <div className="divide-y divide-gray-100">
           {filtered.map(policy => {
             const s = statusConfig[policy.status];
             return (
               <button key={policy.id} onClick={() => setSelected(policy.id)}
-                className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left">
+                className="w-full flex items-center gap-4 p-4 hover:bg-[var(--color-surface)] transition text-left">
                 <span className="text-2xl flex-shrink-0">{typeIcons[policy.type] || ""}</span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-gray-900">{policy.title}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">Updated {policy.updated}</div>
+                  <div className="text-sm font-semibold text-[var(--color-foreground)]">{policy.title}</div>
+                  <div className="text-xs text-[var(--color-muted)] mt-0.5">Updated {policy.updated}</div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <div className={`w-2 h-2 rounded-full ${s.dot}`} />
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${s.color}`}>{s.label}</span>
-                  <span className="text-gray-300 text-sm">→</span>
+                  <span className="text-[var(--color-muted)] text-sm">→</span>
                 </div>
               </button>
             );

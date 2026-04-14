@@ -16,8 +16,8 @@ const mockDocuments = [
 ];
 
 const statusColors: Record<string, string> = {
-  draft: "bg-gray-100 text-slate",
-  review: "bg-yellow-50 text-yellow-600",
+  draft: "bg-[var(--color-surface-2)] text-slate",
+  review: "bg-[var(--color-warning-bg)] text-[var(--color-warning)]",
   approved: "bg-green/10 text-green",
 };
 
@@ -56,7 +56,7 @@ export default function DocumentsPage() {
         ].map((f) => (
           <button key={f.key} onClick={() => setFilter(f.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-              filter === f.key ? "bg-navy text-white" : "bg-gray-100 text-slate hover:bg-gray-200"
+              filter === f.key ? "bg-navy text-white" : "bg-[var(--color-surface-2)] text-slate hover:bg-[var(--color-border)]"
             }`}>
             {f.label}
           </button>
@@ -75,8 +75,8 @@ export default function DocumentsPage() {
       </div>
 
       {/* Document list */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-6 py-3 border-b border-gray-100 text-xs font-semibold text-slate uppercase">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)]">
+        <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-6 py-3 border-b border-[var(--color-border)] text-xs font-semibold text-slate uppercase">
           <span></span>
           <span>Document</span>
           <span>Type</span>
@@ -84,13 +84,13 @@ export default function DocumentsPage() {
           <span>Actions</span>
         </div>
         {filtered.map((doc) => (
-          <div key={doc.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-6 py-4 border-b border-gray-50 last:border-0 items-center hover:bg-gray-50 transition">
+          <div key={doc.id} className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-6 py-4 border-b border-gray-50 last:border-0 items-center hover:bg-[var(--color-surface)] transition">
             <span className="text-xl">{doc.icon}</span>
             <div>
               <div className="text-sm font-medium text-navy">{doc.title}</div>
               <div className="text-xs text-slate">{doc.updated}</div>
             </div>
-            <span className="text-xs bg-gray-100 text-slate px-2 py-1 rounded-md font-medium">
+            <span className="text-xs bg-[var(--color-surface-2)] text-slate px-2 py-1 rounded-md font-medium">
               {typeLabels[doc.type]}
             </span>
             <span className={`text-xs px-2 py-1 rounded-md font-medium ${statusColors[doc.status]}`}>

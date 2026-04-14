@@ -94,17 +94,17 @@ function getControlCategory(controlId: string): string {
 }
 
 const statusConfig = {
-  compliant:     { label: "Pass",    color: "text-green-600 bg-green-50",   dot: "bg-green-500",  icon: "✓" },
-  non_compliant: { label: "Fail",    color: "text-red-600 bg-red-50",       dot: "bg-red-500",    icon: "✗" },
-  partial:       { label: "Warning", color: "text-yellow-600 bg-yellow-50", dot: "bg-yellow-400", icon: "!" },
-  not_assessed:  { label: "Unknown", color: "text-gray-500 bg-gray-50",     dot: "bg-gray-300",   icon: "?" },
+  compliant:     { label: "Pass",    color: "text-[var(--color-success)] bg-[var(--color-success-bg)]",   dot: "bg-green-500",  icon: "✓" },
+  non_compliant: { label: "Fail",    color: "text-[var(--color-danger)] bg-[var(--color-danger-bg)]",       dot: "bg-red-500",    icon: "✗" },
+  partial:       { label: "Warning", color: "text-[var(--color-warning)] bg-[var(--color-warning-bg)]", dot: "bg-yellow-400", icon: "!" },
+  not_assessed:  { label: "Unknown", color: "text-[var(--color-muted)] bg-[var(--color-surface)]",     dot: "bg-gray-300",   icon: "?" },
 };
 
 const impactConfig: Record<string, string> = {
-  critical: "text-red-700 bg-red-100",
-  high: "text-orange-700 bg-orange-100",
-  medium: "text-yellow-700 bg-yellow-100",
-  low: "text-blue-700 bg-blue-100",
+  critical: "text-[var(--color-danger)] bg-[var(--color-danger-bg)]",
+  high: "text-[var(--color-warning)] bg-orange-100",
+  medium: "text-[var(--color-warning)] bg-yellow-100",
+  low: "text-[var(--color-info)] bg-[var(--color-info-bg)]",
 };
 
 function AWSCategoryCard({ catKey, controls }: { catKey: string; controls: ControlRow[] }) {
@@ -117,47 +117,47 @@ function AWSCategoryCard({ catKey, controls }: { catKey: string; controls: Contr
   const allPass = failing === 0 && partial === 0;
 
   return (
-    <div className={`bg-white rounded-xl border ${allPass ? "border-green-200" : failing > 0 ? "border-red-200" : "border-yellow-200"} overflow-hidden`}>
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-gray-50 transition">
+    <div className={`bg-[var(--color-bg)] rounded-xl border ${allPass ? "border-[var(--color-success)]" : failing > 0 ? "border-[var(--color-danger)]" : "border-[var(--color-warning)]"} overflow-hidden`}>
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-[var(--color-surface)] transition">
         <span className="text-xl">{cat.icon}</span>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-gray-800">{cat.label}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${allPass ? "bg-green-100 text-green-700" : failing > 0 ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+            <span className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{cat.label}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : failing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-yellow-100 text-[var(--color-warning)]"}`}>
               {allPass ? "✓ All passing" : failing > 0 ? `${failing} failing` : `${partial} partial`}
             </span>
           </div>
-          <div className="text-xs text-gray-400 mt-0.5">SOC 2: {cat.soc2}</div>
+          <div className="text-xs text-[var(--color-muted)] mt-0.5">SOC 2: {cat.soc2}</div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-xs text-gray-500">{passing}/{controls.length}</div>
-          <div className="w-20 bg-gray-100 rounded-full h-1.5">
+          <div className="text-xs text-[var(--color-muted)]">{passing}/{controls.length}</div>
+          <div className="w-20 bg-[var(--color-surface-2)] rounded-full h-1.5">
             <div className={`h-full rounded-full transition-all duration-500 ${allPass ? "bg-green-500" : failing > 0 ? "bg-red-400" : "bg-yellow-400"}`}
               style={{ width: `${controls.length > 0 ? (passing / controls.length) * 100 : 0}%` }} />
           </div>
-          <span className="text-gray-400 text-xs">{expanded ? "▲" : "▼"}</span>
+          <span className="text-[var(--color-muted)] text-xs">{expanded ? "▲" : "▼"}</span>
         </div>
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-[var(--color-border)]">
           {(failing > 0 || partial > 0) && cat.howToFix && (
-            <div className="mx-4 my-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-blue-800 mb-1"> How to fix</p>
-              <p className="text-xs text-blue-700">{cat.howToFix}</p>
+            <div className="mx-4 my-3 bg-[var(--color-info-bg)] border border-blue-100 rounded-lg p-3">
+              <p className="text-xs font-semibold text-[var(--color-info)] mb-1"> How to fix</p>
+              <p className="text-xs text-[var(--color-info)]">{cat.howToFix}</p>
             </div>
           )}
           <div className="divide-y divide-gray-50">
             {controls.map(ctrl => {
               const s = statusConfig[ctrl.status] ?? statusConfig.not_assessed;
               return (
-                <div key={ctrl.control_id} className={`flex items-start gap-3 px-4 py-3 ${ctrl.status === "non_compliant" ? "bg-red-50/40" : ctrl.status === "partial" ? "bg-yellow-50/30" : ""}`}>
+                <div key={ctrl.control_id} className={`flex items-start gap-3 px-4 py-3 ${ctrl.status === "non_compliant" ? "bg-[var(--color-danger-bg)]/40" : ctrl.status === "partial" ? "bg-[var(--color-warning-bg)]/30" : ""}`}>
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5 ${s.dot}`}>{s.icon}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-800">{ctrl.title}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">{ctrl.control_id}</div>
+                        <div className="text-sm font-medium text-[var(--color-foreground-subtle)]">{ctrl.title}</div>
+                        <div className="text-xs text-[var(--color-muted)] mt-0.5">{ctrl.control_id}</div>
                       </div>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium capitalize ${impactConfig[ctrl.severity] || ""}`}>{ctrl.severity}</span>
@@ -197,9 +197,9 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
 
   if (controls.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+      <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-12 text-center">
         <div className="text-4xl mb-4"></div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">No AWS scan data yet</h2>
+        <h2 className="text-lg font-semibold text-[var(--color-foreground-subtle)] mb-2">No AWS scan data yet</h2>
         <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition mt-2">Connect AWS →</a>
       </div>
     );
@@ -208,18 +208,18 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-2xl font-black text-gray-900">{score}%</div>
-            <div className="text-xs text-gray-400">{passing} passing · {failing} failing · {partial} partial · {controls.length} total</div>
+            <div className="text-2xl font-black text-[var(--color-foreground)]">{score}%</div>
+            <div className="text-xs text-[var(--color-muted)]">{passing} passing · {failing} failing · {partial} partial · {controls.length} total</div>
           </div>
           <div className="flex items-center gap-2">
-            {failing > 0 && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium"> {failing} to fix</div>}
-            {lastScan && <div className="text-xs text-gray-400">Last scan: {lastScan} {realtimeConnected && <span className="text-green-500">● live</span>}</div>}
+            {failing > 0 && <div className="bg-[var(--color-danger-bg)] border border-[var(--color-danger)] rounded-lg px-3 py-2 text-xs text-[var(--color-danger)] font-medium"> {failing} to fix</div>}
+            {lastScan && <div className="text-xs text-[var(--color-muted)]">Last scan: {lastScan} {realtimeConnected && <span className="text-[var(--color-success)]">● live</span>}</div>}
           </div>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div className="w-full bg-[var(--color-surface-2)] rounded-full h-2 overflow-hidden">
           <div className="h-full bg-gradient-to-r from-orange-400 to-green-500 rounded-full transition-all duration-700"
             style={{ width: `${score}%` }} />
         </div>
@@ -283,32 +283,32 @@ function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CA
   const allPass = failing === 0;
 
   return (
-    <div className={`bg-white rounded-xl border ${allPass ? "border-green-200" : "border-red-200"} overflow-hidden`}>
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-gray-50 transition">
+    <div className={`bg-[var(--color-bg)] rounded-xl border ${allPass ? "border-[var(--color-success)]" : "border-[var(--color-danger)]"} overflow-hidden`}>
+      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-[var(--color-surface)] transition">
         <span className="text-xl">{category.icon}</span>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-800">{category.label}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${allPass ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+            <span className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{category.label}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : "bg-[var(--color-danger-bg)] text-[var(--color-danger)]"}`}>
               {allPass ? "✓ All passing" : `${failing} failing`}
             </span>
           </div>
-          <div className="text-xs text-gray-400 mt-0.5">SOC 2: {category.soc2}</div>
+          <div className="text-xs text-[var(--color-muted)] mt-0.5">SOC 2: {category.soc2}</div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-xs text-gray-500">{passing}/{catFindings.length}</div>
-          <div className="w-20 bg-gray-100 rounded-full h-1.5">
+          <div className="text-xs text-[var(--color-muted)]">{passing}/{catFindings.length}</div>
+          <div className="w-20 bg-[var(--color-surface-2)] rounded-full h-1.5">
             <div className={`h-full rounded-full ${allPass ? "bg-green-500" : "bg-red-400"}`} style={{ width: `${catFindings.length > 0 ? (passing / catFindings.length) * 100 : 0}%` }} />
           </div>
-          <span className="text-gray-400 text-xs">{expanded ? "▲" : "▼"}</span>
+          <span className="text-[var(--color-muted)] text-xs">{expanded ? "▲" : "▼"}</span>
         </div>
       </button>
       {expanded && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-[var(--color-border)]">
           {failing > 0 && (
-            <div className="mx-4 my-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-blue-800 mb-1"> How to fix</p>
-              <p className="text-xs text-blue-700">{category.howToFix}</p>
+            <div className="mx-4 my-3 bg-[var(--color-info-bg)] border border-blue-100 rounded-lg p-3">
+              <p className="text-xs font-semibold text-[var(--color-info)] mb-1"> How to fix</p>
+              <p className="text-xs text-[var(--color-info)]">{category.howToFix}</p>
             </div>
           )}
           <div className="divide-y divide-gray-50">
@@ -316,11 +316,11 @@ function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CA
               const sCode = f.status_code || f.status || "PASS";
               const pass = sCode === "PASS";
               return (
-                <div key={i} className={`flex items-start gap-3 px-4 py-3 ${!pass ? "bg-red-50/40" : ""}`}>
+                <div key={i} className={`flex items-start gap-3 px-4 py-3 ${!pass ? "bg-[var(--color-danger-bg)]/40" : ""}`}>
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5 ${pass ? "bg-green-500" : "bg-red-500"}`}>{pass ? "✓" : "✗"}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-800">{f.finding_info?.title || f.metadata?.event_code || ""}</div>
-                    {(f.status_detail || f.message) && <div className="text-xs text-gray-500 mt-0.5">{f.status_detail || f.message}</div>}
+                    <div className="text-sm font-medium text-[var(--color-foreground-subtle)]">{f.finding_info?.title || f.metadata?.event_code || ""}</div>
+                    {(f.status_detail || f.message) && <div className="text-xs text-[var(--color-muted)] mt-0.5">{f.status_detail || f.message}</div>}
                   </div>
                 </div>
               );
@@ -335,11 +335,11 @@ function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CA
 function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; lastScan: string | null }) {
   if (findings.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+      <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-12 text-center">
         <div className="text-4xl mb-4"></div>
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">No GitHub scan data yet</h2>
-        <p className="text-sm text-gray-500 mb-4">GitHub is connected. A scan will run automatically within 15 minutes, or trigger one manually.</p>
-        <button className="inline-block bg-gray-900 hover:bg-gray-800 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition" disabled>
+        <h2 className="text-lg font-semibold text-[var(--color-foreground-subtle)] mb-2">No GitHub scan data yet</h2>
+        <p className="text-sm text-[var(--color-muted)] mb-4">GitHub is connected. A scan will run automatically within 15 minutes, or trigger one manually.</p>
+        <button className="inline-block bg-[var(--color-foreground)] hover:bg-[var(--color-foreground)] text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition" disabled>
           Scan pending...
         </button>
       </div>
@@ -352,18 +352,18 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
 
   return (
     <div className="space-y-4">
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <div className="text-2xl font-black text-gray-900">{score}%</div>
-            <div className="text-xs text-gray-400">{passing} passing · {failing} failing · {findings.length} total checks</div>
+            <div className="text-2xl font-black text-[var(--color-foreground)]">{score}%</div>
+            <div className="text-xs text-[var(--color-muted)]">{passing} passing · {failing} failing · {findings.length} total checks</div>
           </div>
           <div className="flex items-center gap-2">
-            {failing > 0 && <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-xs text-red-700 font-medium"> {failing} to fix</div>}
-            {lastScan && <div className="text-xs text-gray-400 text-right">Last scan: {lastScan}</div>}
+            {failing > 0 && <div className="bg-[var(--color-danger-bg)] border border-[var(--color-danger)] rounded-lg px-3 py-2 text-xs text-[var(--color-danger)] font-medium"> {failing} to fix</div>}
+            {lastScan && <div className="text-xs text-[var(--color-muted)] text-right">Last scan: {lastScan}</div>}
           </div>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+        <div className="w-full bg-[var(--color-surface-2)] rounded-full h-2 overflow-hidden">
           <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: `${score}%` }} />
         </div>
       </div>
@@ -450,18 +450,18 @@ function MonitoringPage() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400 text-sm">Loading monitoring data...</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-[var(--color-muted)] text-sm">Loading monitoring data...</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Continuous Monitoring</h1>
-          <p className="text-sm text-gray-500 mt-1">Real-time security checks across your connected integrations</p>
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Continuous Monitoring</h1>
+          <p className="text-sm text-[var(--color-muted)] mt-1">Real-time security checks across your connected integrations</p>
         </div>
         <div className="flex items-center gap-3">
           {realtimeConnected && (
-            <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+            <span className="flex items-center gap-1.5 text-xs text-[var(--color-success)] font-medium">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" /> Live
             </span>
           )}
@@ -470,7 +470,7 @@ function MonitoringPage() {
              {exporting ? "Exporting..." : "Export Evidence"}
           </button>
           <button onClick={triggerScan} disabled={scanning || !org?.id}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
+            className="flex items-center gap-2 bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
             <span className={scanning ? "animate-spin" : ""}></span>
             {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
           </button>
@@ -478,31 +478,31 @@ function MonitoringPage() {
       </div>
 
       {scanMsg && (
-        <div className={`text-sm px-4 py-3 rounded-lg ${scanMsg.startsWith("Error") ? "bg-red-50 text-red-700 border border-red-200" : "bg-blue-50 text-blue-700 border border-blue-200"}`}>
+        <div className={`text-sm px-4 py-3 rounded-lg ${scanMsg.startsWith("Error") ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)] border border-[var(--color-danger)]" : "bg-[var(--color-info-bg)] text-[var(--color-info)] border border-[var(--color-info)]"}`}>
           {scanMsg}
         </div>
       )}
 
       {/* Provider tabs */}
-      <div className="flex gap-2 border-b border-gray-200 pb-1">
+      <div className="flex gap-2 border-b border-[var(--color-border)] pb-1">
         <button onClick={() => setProvider("aws")}
           className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
-            provider === "aws" ? "border-orange-500 text-orange-700 bg-orange-50" : "border-transparent text-gray-500 hover:text-gray-700"
+            provider === "aws" ? "border-orange-500 text-[var(--color-warning)] bg-orange-50" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
           }`}>
            AWS
           {scanning && provider === "aws" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
-          <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-500"}`}>{controls.length}</span>
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-orange-100 text-[var(--color-warning)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{controls.length}</span>
         </button>
         <button onClick={() => setProvider("github")}
           className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
-            provider === "github" ? "border-gray-900 text-gray-900 bg-gray-50" : "border-transparent text-gray-500 hover:text-gray-700"
+            provider === "github" ? "border-gray-900 text-[var(--color-foreground)] bg-[var(--color-surface)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
           }`}>
            GitHub
           {scanning && provider === "github" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
           {!scanning && githubFindings.length > 0 && <span className="w-2 h-2 rounded-full bg-green-500" />}
           {githubFindings.length > 0
-            ? <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "github" ? "bg-gray-200 text-gray-700" : "bg-gray-100 text-gray-500"}`}>{githubFindings.length}</span>
-            : <span className="text-xs text-gray-400 ml-1">not scanned</span>}
+            ? <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "github" ? "bg-[var(--color-border)] text-[var(--color-foreground-subtle)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{githubFindings.length}</span>
+            : <span className="text-xs text-[var(--color-muted)] ml-1">not scanned</span>}
         </button>
       </div>
 

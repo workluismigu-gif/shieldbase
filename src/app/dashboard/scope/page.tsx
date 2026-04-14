@@ -76,52 +76,52 @@ export default function ScopePage() {
   return (
     <div className="max-w-3xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Audit Scope</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Audit Scope</h1>
+        <p className="text-sm text-[var(--color-muted)] mt-1">
           Define exactly what&apos;s in scope for your SOC 2 audit. Auditors reference this to bound their evidence requests and testing.
         </p>
       </div>
 
       {/* Audit period */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-gray-900">Audit period</h2>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Audit period</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-semibold text-gray-700 mb-1 block">Period start</label>
+            <label className="text-xs font-semibold text-[var(--color-foreground-subtle)] mb-1 block">Period start</label>
             <input type="date" value={cfg.audit_period_start ?? ""}
               onChange={(e) => setCfg(prev => ({ ...prev, audit_period_start: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              className="w-full border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-semibold text-gray-700 mb-1 block">Period end</label>
+            <label className="text-xs font-semibold text-[var(--color-foreground-subtle)] mb-1 block">Period end</label>
             <input type="date" value={cfg.audit_period_end ?? ""}
               onChange={(e) => setCfg(prev => ({ ...prev, audit_period_end: e.target.value }))}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+              className="w-full border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm" />
           </div>
         </div>
       </section>
 
       {/* Products / systems */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Products & systems in scope</h2>
-        <p className="text-xs text-gray-500">List the products, services, or systems that are part of the audit.</p>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Products & systems in scope</h2>
+        <p className="text-xs text-[var(--color-muted)]">List the products, services, or systems that are part of the audit.</p>
         <textarea value={cfg.scoped_products ?? ""}
           onChange={(e) => setCfg(prev => ({ ...prev, scoped_products: e.target.value }))}
           rows={3}
           placeholder="e.g. ShieldBase SaaS platform — web app, API, scanning pipeline. Excludes internal marketing site and employee tooling."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          className="w-full border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm" />
       </section>
 
       {/* Environments */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Environments in scope</h2>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Environments in scope</h2>
         <div className="flex flex-wrap gap-2">
           {ENV_OPTIONS.map(env => {
             const isIn = (cfg.included_environments ?? []).includes(env);
             return (
               <button key={env} onClick={() => toggleEnv(env)}
                 className={`text-xs font-medium px-3 py-1.5 rounded-full border transition ${
-                  isIn ? "bg-blue-600 border-blue-600 text-white" : "bg-white border-gray-300 text-gray-700 hover:border-gray-400"
+                  isIn ? "bg-blue-600 border-blue-600 text-white" : "bg-[var(--color-bg)] border-[var(--color-border-strong)] text-[var(--color-foreground-subtle)] hover:border-gray-400"
                 }`}>
                 {isIn ? "✓ " : "+ "}{env}
               </button>
@@ -131,14 +131,14 @@ export default function ScopePage() {
       </section>
 
       {/* AWS accounts */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">AWS accounts</h2>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">AWS accounts</h2>
         {(cfg.aws_accounts ?? []).length === 0 ? (
-          <p className="text-xs text-gray-500">No AWS account connected. Connect one on the Settings page to manage scope.</p>
+          <p className="text-xs text-[var(--color-muted)]">No AWS account connected. Connect one on the Settings page to manage scope.</p>
         ) : (
           <div className="space-y-2">
             {(cfg.aws_accounts ?? []).map((acct, idx) => (
-              <div key={acct.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div key={acct.id} className="flex items-center gap-3 p-3 bg-[var(--color-surface)] rounded-lg">
                 <input type="checkbox" checked={acct.in_scope}
                   onChange={(e) => {
                     const updated = [...(cfg.aws_accounts ?? [])];
@@ -146,7 +146,7 @@ export default function ScopePage() {
                     setCfg(prev => ({ ...prev, aws_accounts: updated }));
                   }}
                 />
-                <code className="text-xs text-gray-600 font-mono">{acct.id}</code>
+                <code className="text-xs text-[var(--color-muted)] font-mono">{acct.id}</code>
                 <input type="text" value={acct.label ?? ""}
                   onChange={(e) => {
                     const updated = [...(cfg.aws_accounts ?? [])];
@@ -154,7 +154,7 @@ export default function ScopePage() {
                     setCfg(prev => ({ ...prev, aws_accounts: updated }));
                   }}
                   placeholder="Label (e.g. Production)"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs" />
+                  className="flex-1 border border-[var(--color-border-strong)] rounded px-2 py-1 text-xs" />
               </div>
             ))}
           </div>
@@ -162,14 +162,14 @@ export default function ScopePage() {
       </section>
 
       {/* GitHub orgs */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">GitHub organizations</h2>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">GitHub organizations</h2>
         {(cfg.github_orgs ?? []).length === 0 ? (
-          <p className="text-xs text-gray-500">No GitHub org connected.</p>
+          <p className="text-xs text-[var(--color-muted)]">No GitHub org connected.</p>
         ) : (
           <div className="space-y-2">
             {(cfg.github_orgs ?? []).map((gh, idx) => (
-              <div key={gh.login} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div key={gh.login} className="flex items-center gap-3 p-3 bg-[var(--color-surface)] rounded-lg">
                 <input type="checkbox" checked={gh.in_scope}
                   onChange={(e) => {
                     const updated = [...(cfg.github_orgs ?? [])];
@@ -177,7 +177,7 @@ export default function ScopePage() {
                     setCfg(prev => ({ ...prev, github_orgs: updated }));
                   }}
                 />
-                <span className="text-sm font-medium text-gray-800">@{gh.login}</span>
+                <span className="text-sm font-medium text-[var(--color-foreground-subtle)]">@{gh.login}</span>
               </div>
             ))}
           </div>
@@ -185,12 +185,12 @@ export default function ScopePage() {
       </section>
 
       {/* Data classification */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Data classification</h2>
-        <p className="text-xs text-gray-500">Highest classification of data handled within the audit scope.</p>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Data classification</h2>
+        <p className="text-xs text-[var(--color-muted)]">Highest classification of data handled within the audit scope.</p>
         <select value={cfg.data_classification ?? ""}
           onChange={(e) => setCfg(prev => ({ ...prev, data_classification: e.target.value as ScopeConfig["data_classification"] }))}
-          className="w-full md:w-72 border border-gray-300 rounded-lg px-3 py-2 text-sm">
+          className="w-full md:w-72 border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm">
           <option value="">Select classification…</option>
           <option value="public">Public</option>
           <option value="internal">Internal</option>
@@ -200,19 +200,19 @@ export default function ScopePage() {
       </section>
 
       {/* Notes */}
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-        <h2 className="text-lg font-semibold text-gray-900">Scope exclusions & notes</h2>
+      <section className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 space-y-3">
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Scope exclusions & notes</h2>
         <textarea value={cfg.notes ?? ""}
           onChange={(e) => setCfg(prev => ({ ...prev, notes: e.target.value }))}
           rows={4}
           placeholder="Document anything explicitly out of scope, carve-outs, or dependencies an auditor should know about."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+          className="w-full border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm" />
       </section>
 
       <div className="sticky bottom-4 flex justify-end gap-2">
-        {saved && <span className="text-sm text-green-600 self-center">✓ Saved</span>}
+        {saved && <span className="text-sm text-[var(--color-success)] self-center">✓ Saved</span>}
         <button onClick={handleSave} disabled={saving}
-          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-semibold text-sm shadow">
+          className="bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-semibold text-sm shadow">
           {saving ? "Saving…" : "Save scope"}
         </button>
       </div>

@@ -42,16 +42,16 @@ export default function AcceptInvitePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="bg-white rounded-2xl border border-gray-200 p-8 max-w-md w-full text-center">
+    <div className="min-h-screen bg-[var(--color-surface)] flex items-center justify-center p-6">
+      <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-8 max-w-md w-full text-center">
         <div className="text-4xl mb-4"></div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">You&apos;ve been invited to ShieldBase</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <h1 className="text-2xl font-bold text-[var(--color-foreground)] mb-2">You&apos;ve been invited to ShieldBase</h1>
+        <p className="text-sm text-[var(--color-muted)] mb-6">
           Accept the invite to access this organization&apos;s SOC 2 workspace.
         </p>
 
         {success ? (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm text-green-800">
+          <div className="bg-[var(--color-success-bg)] border border-[var(--color-success)] rounded-xl p-4 text-sm text-green-800">
              Invite accepted! Redirecting to dashboard…
           </div>
         ) : (
@@ -59,14 +59,14 @@ export default function AcceptInvitePage() {
             <button
               onClick={handleAccept}
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition"
+              className="w-full bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition"
             >
               {loading ? "Accepting…" : "Accept invite"}
             </button>
-            <p className="text-xs text-gray-400 mt-3">
+            <p className="text-xs text-[var(--color-muted)] mt-3">
               You&apos;ll need to sign in with the email the invite was sent to.
             </p>
-            {error && <p className="text-sm text-red-600 mt-4">{error}</p>}
+            {error && <p className="text-sm text-[var(--color-danger)] mt-4">{error}</p>}
           </>
         )}
       </div>
