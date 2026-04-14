@@ -1,4 +1,0 @@
-[     767ms] [LOG] [useOrg] Fetching GitHub findings for org: 5b1d6f90-ab55-4b58-ac6e-55c25de7d175 @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
-[     848ms] [LOG] [useOrg] All scans: [Object, Object, Object, Object, Object] error: null @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
-[     963ms] [LOG] [useOrg] Latest scan: {findings: Array(33), scan_type: github, created_at: 2026-04-14T21:07:05.905749+00:00} error: null @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
-[     963ms] [LOG] [useOrg] GitHub findings loaded: 33 items, scan_type: github @ https://shieldbase.vercel.app/_next/static/chunks/0bdm.l.u2d6bd.js:0
