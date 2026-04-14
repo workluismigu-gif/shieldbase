@@ -3,6 +3,7 @@ import { useState } from "react";
 import { mockControls } from "@/lib/mock-data";
 import { useOrg } from "@/lib/org-context";
 import { generateGapAnalysisPDF } from "@/lib/pdf";
+import { AlertOctagon } from "lucide-react";
 
 const criteriaInfo: Record<string, { name: string; description: string; color: string }> = {
   CC1: { name: "Control Environment", description: "Organization structure, oversight, accountability", color: "bg-[var(--color-info-bg)] border-[var(--color-info)] text-[var(--color-info)]" },
@@ -107,9 +108,9 @@ export default function GapAnalysisPage() {
       {/* Critical alert */}
       {criticalCount > 0 && (
         <div className="bg-[var(--color-danger-bg)] border border-[var(--color-danger)] rounded-xl p-4 flex items-start gap-3">
-          <span className="text-[var(--color-danger)] text-lg"></span>
+          <AlertOctagon className="w-5 h-5 text-[var(--color-danger)] flex-shrink-0 mt-0.5" strokeWidth={1.8} />
           <div>
-            <p className="text-sm font-semibold text-red-800">{criticalCount} critical gaps require immediate attention</p>
+            <p className="text-sm font-semibold text-[var(--color-danger)]">{criticalCount} critical gaps require immediate attention</p>
             <p className="text-xs text-[var(--color-danger)] mt-0.5">These are audit blockers — address before scheduling your SOC 2 audit.</p>
           </div>
         </div>

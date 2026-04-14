@@ -2,14 +2,17 @@
 import { useState } from "react";
 import { useOrg, type TaskRow } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
+import { Building2, FileText, Wrench, GraduationCap, Lock, CheckCircle2, Flame, Check, ArrowRight, ListChecks } from "lucide-react";
+
+type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 const PHASES = ["Foundation", "Policies", "Remediation", "Audit Prep"];
 
-const PHASE_ICONS: Record<string, string> = {
-  Foundation: "",
-  Policies: "",
-  Remediation: "",
-  "Audit Prep": "",
+const PHASE_ICONS: Record<string, LucideIcon> = {
+  Foundation: Building2,
+  Policies: FileText,
+  Remediation: Wrench,
+  "Audit Prep": GraduationCap,
 };
 
 const PHASE_DESC: Record<string, string> = {
@@ -42,13 +45,15 @@ function PhaseCard({
       {/* Phase header */}
       <div className={`px-6 py-4 flex items-center justify-between ${allDone ? "bg-[var(--color-success-bg)]" : isActive ? "bg-[var(--color-info-bg)]" : "bg-[var(--color-surface)]"}`}>
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{PHASE_ICONS[phase]}</span>
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${allDone ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : isActive ? "bg-[var(--color-info-bg)] text-[var(--color-info)]" : "bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)]"}`}>
+            {(() => { const Icon = PHASE_ICONS[phase]; return <Icon className="w-[18px] h-[18px]" strokeWidth={1.6} />; })()}
+          </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-[var(--color-foreground)]">{phase}</h3>
-              {isLocked && <span className="text-xs bg-[var(--color-border)] text-[var(--color-muted)] px-2 py-0.5 rounded-full"> Locked</span>}
-              {allDone && <span className="text-xs bg-[var(--color-success-bg)] text-[var(--color-success)] px-2 py-0.5 rounded-full font-medium"> Complete</span>}
-              {isActive && !allDone && <span className="text-xs bg-blue-200 text-[var(--color-info)] px-2 py-0.5 rounded-full font-medium"> Active</span>}
+              <h3 className="font-semibold text-[var(--color-foreground)]">{phase}</h3>
+              {isLocked && <span className="inline-flex items-center gap-1 text-[10px] bg-[var(--color-surface-2)] text-[var(--color-muted)] px-1.5 py-0.5 rounded"><Lock className="w-3 h-3" strokeWidth={1.8}/> Locked</span>}
+              {allDone && <span className="inline-flex items-center gap-1 text-[10px] bg-[var(--color-success-bg)] text-[var(--color-success)] px-1.5 py-0.5 rounded font-medium"><CheckCircle2 className="w-3 h-3" strokeWidth={1.8}/> Complete</span>}
+              {isActive && !allDone && <span className="inline-flex items-center gap-1 text-[10px] bg-[var(--color-info-bg)] text-[var(--color-info)] px-1.5 py-0.5 rounded font-medium"><Flame className="w-3 h-3" strokeWidth={1.8}/> Active</span>}
             </div>
             <p className="text-xs text-[var(--color-muted)] mt-0.5">{PHASE_DESC[phase]}</p>
           </div>
@@ -66,15 +71,15 @@ function PhaseCard({
 
       {/* Milestone banner */}
       {allDone && (
-        <div className="bg-[var(--color-success-bg)] border-b border-green-100 px-6 py-3 flex items-center gap-2">
-          <span className="text-lg"></span>
-          <p className="text-sm font-medium text-green-800">{phase} complete! Great work.</p>
+        <div className="bg-[var(--color-success-bg)] border-b border-[var(--color-border)] px-6 py-3 flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 text-[var(--color-success)]" strokeWidth={1.8} />
+          <p className="text-sm font-medium text-[var(--color-success)]">{phase} complete! Great work.</p>
         </div>
       )}
 
       {/* Tasks */}
       {!isLocked && (
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-[var(--color-border)]">
           {tasks.sort((a, b) => a.order - b.order).map(task => (
             <div key={task.id} className={`flex items-start gap-4 px-6 py-4 transition ${task.completed ? "bg-[var(--color-success-bg)]/40" : "hover:bg-[var(--color-surface)]"}`}>
               <button
@@ -83,7 +88,7 @@ function PhaseCard({
                   task.completed ? "bg-green-500 border-green-500 text-white" : "border-[var(--color-border-strong)] hover:border-blue-400"
                 }`}
               >
-                {task.completed && <span className="text-xs">✓</span>}
+                {task.completed && <Check className="w-3.5 h-3.5" strokeWidth={2.5} />}
               </button>
               <div className="flex-1 min-w-0">
                 <div className={`text-sm font-medium ${task.completed ? "line-through text-[var(--color-muted)]" : "text-[var(--color-foreground-subtle)]"}`}>
@@ -93,7 +98,7 @@ function PhaseCard({
                   <div className="text-xs text-[var(--color-muted)] mt-0.5">{task.description}</div>
                 )}
                 {task.completed && task.completed_at && (
-                  <div className="text-xs text-[var(--color-success)] mt-1"> Completed {new Date(task.completed_at).toLocaleDateString()}</div>
+                  <div className="inline-flex items-center gap-1 text-xs text-[var(--color-success)] mt-1"><Check className="w-3 h-3" strokeWidth={2}/> Completed {new Date(task.completed_at).toLocaleDateString()}</div>
                 )}
               </div>
             </div>
@@ -146,7 +151,7 @@ export default function ChecklistPage() {
   if (displayTasks.length === 0) {
     return (
       <div className="text-center py-16 text-[var(--color-muted)]">
-        <div className="text-4xl mb-3"></div>
+        <ListChecks className="w-10 h-10 mx-auto mb-3" strokeWidth={1.4} />
         <p className="text-sm">No checklist items yet. Sign up to get your SOC 2 roadmap.</p>
       </div>
     );
@@ -178,8 +183,9 @@ export default function ChecklistPage() {
           const isActive = i === activePhaseIndex;
           return (
             <div key={phase} className="flex items-center gap-2 flex-shrink-0">
-              <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium ${phaseDone ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : isActive ? "bg-[var(--color-info-bg)] text-[var(--color-info)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>
-                {phaseDone ? "" : isActive ? "" : ""} {phase}
+              <div className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium ${phaseDone ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : isActive ? "bg-[var(--color-info-bg)] text-[var(--color-info)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>
+                {phaseDone ? <CheckCircle2 className="w-3 h-3" strokeWidth={2}/> : isActive ? <Flame className="w-3 h-3" strokeWidth={2}/> : <Lock className="w-3 h-3" strokeWidth={2}/>}
+                {phase}
               </div>
               {i < PHASES.length - 1 && <span className="text-[var(--color-muted)]">→</span>}
             </div>
@@ -190,7 +196,9 @@ export default function ChecklistPage() {
       {/* Next action CTA */}
       {nextTask && (
         <div className="bg-[var(--color-info-bg)] border border-[var(--color-info)] rounded-xl p-4 flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">→</div>
+          <div className="w-10 h-10 bg-[var(--color-info)] rounded-full flex items-center justify-center text-white flex-shrink-0">
+            <ArrowRight className="w-5 h-5" strokeWidth={2} />
+          </div>
           <div className="flex-1">
             <div className="text-xs font-semibold text-[var(--color-info)] uppercase tracking-wide mb-0.5">Next Action</div>
             <div className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{nextTask.task}</div>
@@ -200,7 +208,7 @@ export default function ChecklistPage() {
             onClick={() => handleToggle(nextTask.id, true)}
             className="bg-blue-600 hover:opacity-90 text-white text-xs px-4 py-2 rounded-lg font-semibold transition flex-shrink-0"
           >
-            Mark Done ✓
+            <span className="inline-flex items-center gap-1.5">Mark Done <Check className="w-3.5 h-3.5" strokeWidth={2.5}/></span>
           </button>
         </div>
       )}

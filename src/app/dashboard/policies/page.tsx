@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from "react";
 import { mockPolicies } from "@/lib/mock-data";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
+import { ShieldCheck, KeyRound, AlertOctagon, FolderTree, GitBranch, Handshake, Lock, Shield as ShieldIcon, FileText, Scale, Check } from "lucide-react";
+
+type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 interface Ack {
   user_id: string;
@@ -10,10 +13,17 @@ interface Ack {
   acknowledged_at: string;
 }
 
-const typeIcons: Record<string, string> = {
-  information_security: "", access_control: "", incident_response: "",
-  data_classification: "", change_management: "", vendor_management: "",
-  encryption: "", bcp_dr: "", acceptable_use: "", other: "",
+const typeIcons: Record<string, LucideIcon> = {
+  information_security: ShieldCheck,
+  access_control: KeyRound,
+  incident_response: AlertOctagon,
+  data_classification: FolderTree,
+  change_management: GitBranch,
+  vendor_management: Handshake,
+  encryption: Lock,
+  bcp_dr: ShieldIcon,
+  acceptable_use: Scale,
+  other: FileText,
 };
 
 const statusConfig = {
@@ -175,7 +185,7 @@ export default function PoliciesPage() {
         <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
           <div className="flex items-center justify-between p-6 border-b border-[var(--color-border)]">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{typeIcons[selectedPolicy.type] || ""}</span>
+              {(() => { const Icon = typeIcons[selectedPolicy.type] || FileText; return <div className="w-9 h-9 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-foreground-subtle)]"><Icon className="w-[18px] h-[18px]" strokeWidth={1.6} /></div>; })()}
               <div>
                 <h1 className="text-xl font-bold text-[var(--color-foreground)]">{selectedPolicy.title}</h1>
                 <p className="text-sm text-[var(--color-muted)] mt-0.5">Last updated {selectedPolicy.updated}</p>
@@ -272,7 +282,7 @@ export default function PoliciesPage() {
             return (
               <button key={policy.id} onClick={() => setSelected(policy.id)}
                 className="w-full flex items-center gap-4 p-4 hover:bg-[var(--color-surface)] transition text-left">
-                <span className="text-2xl flex-shrink-0">{typeIcons[policy.type] || ""}</span>
+                {(() => { const Icon = typeIcons[policy.type] || FileText; return <div className="w-9 h-9 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-foreground-subtle)] flex-shrink-0"><Icon className="w-[18px] h-[18px]" strokeWidth={1.6} /></div>; })()}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold text-[var(--color-foreground)]">{policy.title}</div>
                   <div className="text-xs text-[var(--color-muted)] mt-0.5">Updated {policy.updated}</div>

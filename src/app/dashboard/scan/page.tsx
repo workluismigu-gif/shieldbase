@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
+import { AlertTriangle, CheckCircle2, FileText, UploadCloud } from "lucide-react";
 
 const PROWLER_INSTALL = `pip install prowler`;
 
@@ -69,7 +70,7 @@ export default function ScanPage() {
 
       {!roleArn && (
         <div className="bg-[var(--color-warning-bg)] border border-[var(--color-warning)] rounded-xl p-4 flex items-start gap-3">
-          <span className="text-yellow-500 text-lg flex-shrink-0"></span>
+          <AlertTriangle className="w-5 h-5 text-[var(--color-warning)] flex-shrink-0 mt-0.5" strokeWidth={1.8} />
           <div>
             <p className="text-sm font-semibold text-[var(--color-warning)]">AWS not connected yet</p>
             <p className="text-xs text-[var(--color-warning)] mt-0.5">Connect your AWS account first so we can pre-fill your role ARN in the scan command. <a href="/dashboard/settings" className="underline font-medium">Connect AWS →</a></p>
@@ -79,9 +80,9 @@ export default function ScanPage() {
 
       {roleArn && (
         <div className="bg-[var(--color-success-bg)] border border-[var(--color-success)] rounded-xl p-4 flex items-center gap-3">
-          <span className="text-[var(--color-success)]"></span>
+          <CheckCircle2 className="w-5 h-5 text-[var(--color-success)] flex-shrink-0" strokeWidth={1.8} />
           <div>
-            <p className="text-sm font-semibold text-green-800">AWS connected — role ARN pre-filled in scan command</p>
+            <p className="text-sm font-semibold text-[var(--color-success)]">AWS connected — role ARN pre-filled in scan command</p>
             <p className="text-xs text-[var(--color-success)] font-mono mt-0.5 truncate">{roleArn}</p>
           </div>
         </div>
@@ -165,8 +166,8 @@ export default function ScanPage() {
 
         {status === "success" && result ? (
           <div className="bg-[var(--color-success-bg)] border border-[var(--color-success)] rounded-xl p-6 text-center">
-            <div className="text-3xl mb-3"></div>
-            <h3 className="text-lg font-bold text-green-800 mb-1">Scan uploaded successfully!</h3>
+            <CheckCircle2 className="w-10 h-10 text-[var(--color-success)] mx-auto mb-3" strokeWidth={1.6} />
+            <h3 className="text-lg font-bold text-[var(--color-success)] mb-1">Scan uploaded successfully!</h3>
             <p className="text-[var(--color-success)] text-sm mb-4">{result.controls_mapped} controls mapped to SOC 2 criteria</p>
             <div className="grid grid-cols-4 gap-3 mb-4">
               {result.summary && Object.entries(result.summary).map(([k, v]) => (
@@ -187,14 +188,14 @@ export default function ScanPage() {
               onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f?.name.endsWith(".json")) setFile(f); }}>
               {file ? (
                 <div>
-                  <div className="text-2xl mb-2"></div>
-                  <p className="text-sm font-medium text-[var(--color-foreground-subtle)]">{file.name}</p>
+                  <FileText className="w-7 h-7 text-[var(--color-foreground-subtle)] mx-auto mb-2" strokeWidth={1.6} />
+                  <p className="text-sm font-medium text-[var(--color-foreground)]">{file.name}</p>
                   <p className="text-xs text-[var(--color-muted)] mt-1">{(file.size / 1024).toFixed(1)} KB</p>
                   <button onClick={() => setFile(null)} className="text-xs text-[var(--color-danger)] mt-2 hover:underline">Remove</button>
                 </div>
               ) : (
                 <div>
-                  <div className="text-3xl mb-2"></div>
+                  <UploadCloud className="w-9 h-9 text-[var(--color-muted)] mx-auto mb-2" strokeWidth={1.4} />
                   <p className="text-sm text-[var(--color-muted)] mb-2">Drag & drop your Prowler JSON file here</p>
                   <label className="cursor-pointer text-sm text-[var(--color-info)] font-medium hover:underline">
                     or browse to select

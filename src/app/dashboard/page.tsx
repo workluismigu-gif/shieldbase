@@ -1,6 +1,14 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useOrg, type ControlRow, type RawFinding, type TimelineEvent, type TaskRow, type PolicyRow } from "@/lib/org-context";
+import {
+  Shield, Eye, Lock, HardDrive, GitBranch, Gauge, AlertTriangle, Circle,
+  GitPullRequest, Search, FolderTree, Building2, Cloud, ChevronDown, ChevronUp,
+  PlugZap, ListChecks, CheckCircle2
+} from "lucide-react";
+import { Github } from "@/components/icons/GithubIcon";
+
+type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 function ScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * 54;
@@ -34,22 +42,22 @@ function StatCard({ label, value, sub, color = "text-[var(--color-foreground)]" 
 
 // ─── SCAN CATEGORY MAPS ─────────────────────────────────────────────────────
 
-const AWS_CATS: Record<string, { label: string; icon: string; desc: string; controls: string[] }> = {
-  CC6: { label: "Access Controls", icon: "", desc: "IAM, MFA, public exposure", controls: ["CC6","CC.6"] },
-  CC7: { label: "Monitoring", icon: "", desc: "CloudTrail, GuardDuty, logs", controls: ["CC7","CC.7"] },
-  C1:  { label: "Encryption", icon: "", desc: "S3, RDS, EBS, KMS", controls: ["C1","CC.C.1"] },
-  A1:  { label: "Availability", icon: "", desc: "Backups, recovery, uptime", controls: ["A1","CC.A.1"] },
-  CC8: { label: "Change Mgmt", icon: "", desc: "Infra change pipelines", controls: ["CC8","CC.8"] },
-  PI1: { label: "Processing", icon: "", desc: "Audit logging, data integrity", controls: ["PI1","PI.1"] },
-  CC3: { label: "Risk Assessment", icon: "", desc: "AWS Config, drift detection", controls: ["CC3","CC.3"] },
-  OTHER: { label: "Other", icon: "", desc: "Additional checks", controls: [] },
+const AWS_CATS: Record<string, { label: string; Icon: LucideIcon; desc: string; controls: string[] }> = {
+  CC6: { label: "Access Controls", Icon: Lock, desc: "IAM, MFA, public exposure", controls: ["CC6","CC.6"] },
+  CC7: { label: "Monitoring", Icon: Eye, desc: "CloudTrail, GuardDuty, logs", controls: ["CC7","CC.7"] },
+  C1:  { label: "Encryption", Icon: Shield, desc: "S3, RDS, EBS, KMS", controls: ["C1","CC.C.1"] },
+  A1:  { label: "Availability", Icon: HardDrive, desc: "Backups, recovery, uptime", controls: ["A1","CC.A.1"] },
+  CC8: { label: "Change Mgmt", Icon: GitBranch, desc: "Infra change pipelines", controls: ["CC8","CC.8"] },
+  PI1: { label: "Processing", Icon: Gauge, desc: "Audit logging, data integrity", controls: ["PI1","PI.1"] },
+  CC3: { label: "Risk Assessment", Icon: AlertTriangle, desc: "AWS Config, drift detection", controls: ["CC3","CC.3"] },
+  OTHER: { label: "Other", Icon: Circle, desc: "Additional checks", controls: [] },
 };
 
-const GITHUB_CATS: Record<string, { label: string; icon: string; desc: string; checks: string[] }> = {
-  branch: { label: "Branch Protection", icon: "", desc: "Force push, deletion, PRs", checks: ["repository_default_branch"] },
-  scanning: { label: "Secret Scanning", icon: "", desc: "Secrets, Dependabot", checks: ["repository_secret","repository_dependency"] },
-  hygiene: { label: "Repo Hygiene", icon: "", desc: "Signed commits, SECURITY.md", checks: ["repository_branch_delete","repository_default_branch_requires_signed","repository_public_has_securitymd","repository_inactive","repository_immutable"] },
-  org: { label: "Org Security", icon: "", desc: "Verified badge, org settings", checks: ["organization"] },
+const GITHUB_CATS: Record<string, { label: string; Icon: LucideIcon; desc: string; checks: string[] }> = {
+  branch: { label: "Branch Protection", Icon: GitPullRequest, desc: "Force push, deletion, PRs", checks: ["repository_default_branch"] },
+  scanning: { label: "Secret Scanning", Icon: Search, desc: "Secrets, Dependabot", checks: ["repository_secret","repository_dependency"] },
+  hygiene: { label: "Repo Hygiene", Icon: FolderTree, desc: "Signed commits, SECURITY.md", checks: ["repository_branch_delete","repository_default_branch_requires_signed","repository_public_has_securitymd","repository_inactive","repository_immutable"] },
+  org: { label: "Org Security", Icon: Building2, desc: "Verified badge, org settings", checks: ["organization"] },
 };
 
 function getAwsCat(controlId: string) {
@@ -68,8 +76,8 @@ function getGithubCat(checkId: string) {
   return "branch";
 }
 
-function QuestCard({ icon, label, desc, passing, total, allPass, children }: {
-  icon: string; label: string; desc: string;
+function QuestCard({ Icon, label, desc, passing, total, allPass, children }: {
+  Icon: LucideIcon; label: string; desc: string;
   passing: number; total: number; allPass: boolean;
   children?: React.ReactNode;
 }) {
@@ -78,35 +86,37 @@ function QuestCard({ icon, label, desc, passing, total, allPass, children }: {
   const failing = total - passing;
 
   return (
-    <div className={`rounded-xl border-2 overflow-hidden transition-all ${
-      allPass ? "border-green-300 bg-gradient-to-br from-green-50 to-emerald-50"
-              : failing > 0 ? "border-[var(--color-danger)] bg-gradient-to-br from-red-50 to-orange-50"
-              : "border-[var(--color-warning)] bg-gradient-to-br from-yellow-50 to-amber-50"
-    }`}>
-      <button onClick={() => setOpen(!open)} className="w-full p-4 flex items-center gap-3 text-left">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
-          allPass ? "bg-[var(--color-success-bg)]" : failing > 0 ? "bg-[var(--color-danger-bg)]" : "bg-yellow-100"
-        }`}>{icon}</div>
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] overflow-hidden transition-all">
+      <button onClick={() => setOpen(!open)} className="w-full p-4 flex items-center gap-3 text-left hover:bg-[var(--color-surface)] transition">
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]"
+                  : failing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]"
+                  : "bg-[var(--color-warning-bg)] text-[var(--color-warning)]"
+        }`}>
+          <Icon className="w-[18px] h-[18px]" strokeWidth={1.6} />
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-bold text-[var(--color-foreground)]">{label}</span>
+            <span className="text-[13px] font-semibold text-[var(--color-foreground)]">{label}</span>
             {allPass
-              ? <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full font-bold">✓ CLEARED</span>
-              : <span className="text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold animate-pulse">{failing} OPEN</span>}
+              ? <span className="inline-flex items-center gap-1 text-[10px] text-[var(--color-success)] bg-[var(--color-success-bg)] px-1.5 py-0.5 rounded font-medium">Cleared</span>
+              : <span className="inline-flex items-center text-[10px] text-[var(--color-danger)] bg-[var(--color-danger-bg)] px-1.5 py-0.5 rounded font-medium">{failing} open</span>}
           </div>
           <div className="text-xs text-[var(--color-muted)] mt-0.5">{desc}</div>
           <div className="flex items-center gap-2 mt-1.5">
-            <div className="flex-1 bg-[var(--color-bg)]/70 rounded-full h-1.5 overflow-hidden">
+            <div className="flex-1 bg-[var(--color-surface-2)] rounded-full h-1 overflow-hidden">
               <div className={`h-full rounded-full transition-all duration-700 ${
-                allPass ? "bg-green-500" : failing > 0 ? "bg-gradient-to-r from-red-400 to-orange-400" : "bg-yellow-400"
+                allPass ? "bg-[var(--color-success)]" : failing > 0 ? "bg-[var(--color-danger)]" : "bg-[var(--color-warning)]"
               }`} style={{ width: `${pct}%` }} />
             </div>
-            <span className="text-xs font-bold text-[var(--color-muted)] flex-shrink-0">{pct}%</span>
+            <span className="text-[11px] font-semibold text-[var(--color-muted)] flex-shrink-0 tabular-nums">{pct}%</span>
           </div>
         </div>
-        <span className="text-[var(--color-muted)] text-xs flex-shrink-0">{open ? "▲" : "▼"}</span>
+        {open
+          ? <ChevronUp className="w-4 h-4 text-[var(--color-muted)] flex-shrink-0" strokeWidth={1.8} />
+          : <ChevronDown className="w-4 h-4 text-[var(--color-muted)] flex-shrink-0" strokeWidth={1.8} />}
       </button>
-      {open && <div className="border-t border-white/60">{children}</div>}
+      {open && <div className="border-t border-[var(--color-border)]">{children}</div>}
     </div>
   );
 }
@@ -160,9 +170,9 @@ function ScanResultsTabs({
       <div className="flex border-b border-[var(--color-border)] bg-[var(--color-surface)]">
         <button onClick={() => setTab("aws")}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
-            tab === "aws" ? "border-orange-500 text-[var(--color-warning)] bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-muted)]"
+            tab === "aws" ? "border-[var(--color-warning)] text-[var(--color-warning)] bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
           }`}>
-           AWS
+          <Cloud className="w-4 h-4" strokeWidth={1.8} /> AWS
           {hasRealData && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
               awsFailing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"
@@ -173,9 +183,9 @@ function ScanResultsTabs({
         </button>
         <button onClick={() => setTab("github")}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
-            tab === "github" ? "border-gray-900 text-[var(--color-foreground)] bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-muted)]"
+            tab === "github" ? "border-[var(--color-foreground)] text-[var(--color-foreground)] bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
           }`}>
-           GitHub
+          <Github className="w-4 h-4" strokeWidth={1.8} /> GitHub
           {hasGithubData && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
               ghFailing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"
@@ -195,13 +205,13 @@ function ScanResultsTabs({
         <div className="p-5">
           {!awsConnected ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3"></div>
+              <Cloud className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3" strokeWidth={1.4} />
               <p className="text-[var(--color-muted)] text-sm mb-4">Connect AWS to start scanning your infrastructure</p>
-              <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
+              <a href="/dashboard/settings" className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] px-5 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition">Connect AWS</a>
             </div>
           ) : !hasRealData ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3 animate-pulse"></div>
+              <Search className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3 animate-pulse" strokeWidth={1.4} />
               <p className="text-[var(--color-muted)] text-sm">Scan in progress — results will appear here shortly</p>
             </div>
           ) : (
@@ -228,9 +238,9 @@ function ScanResultsTabs({
                   const passing = group.filter(c => c.status === "compliant").length;
                   const allPass = group.every(c => c.status === "compliant");
                   return (
-                    <QuestCard key={key} icon={cat.icon} label={cat.label} desc={cat.desc}
+                    <QuestCard key={key} Icon={cat.Icon} label={cat.label} desc={cat.desc}
                       passing={passing} total={group.length} allPass={allPass}>
-                      <div className="divide-y divide-white/60">
+                      <div className="divide-y divide-[var(--color-border)]">
                         {group.map(ctrl => (
                           <div key={ctrl.control_id} className={`flex items-center gap-3 px-4 py-2.5 ${
                             ctrl.status === "non_compliant" ? "bg-[var(--color-danger-bg)]/60" : ""
@@ -266,13 +276,13 @@ function ScanResultsTabs({
         <div className="p-5">
           {!githubConnected ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3"></div>
+              <Github className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3" strokeWidth={1.4} />
               <p className="text-[var(--color-muted)] text-sm mb-4">Connect GitHub to monitor your repos</p>
-              <a href="/dashboard/settings" className="inline-block bg-[var(--color-foreground)] hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
+              <a href="/dashboard/settings" className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] px-5 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition">Connect GitHub</a>
             </div>
           ) : !hasGithubData ? (
             <div className="text-center py-10">
-              <div className="text-4xl mb-3 animate-pulse"></div>
+              <Search className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3 animate-pulse" strokeWidth={1.4} />
               <p className="text-[var(--color-muted)] text-sm">Scan in progress — results will appear here shortly</p>
             </div>
           ) : (
@@ -299,9 +309,9 @@ function ScanResultsTabs({
                   const passing = group.filter(f => (f.status_code || f.status) === "PASS").length;
                   const allPass = group.every(f => (f.status_code || f.status) === "PASS");
                   return (
-                    <QuestCard key={key} icon={cat.icon} label={cat.label} desc={cat.desc}
+                    <QuestCard key={key} Icon={cat.Icon} label={cat.label} desc={cat.desc}
                       passing={passing} total={group.length} allPass={allPass}>
-                      <div className="divide-y divide-white/60">
+                      <div className="divide-y divide-[var(--color-border)]">
                         {group.map((f, i) => {
                           const pass = (f.status_code || f.status) === "PASS";
                           return (
@@ -345,7 +355,7 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
     let level: CliLine["level"] = "info";
     let prefix = "[SYS]";
     if (e.type === "scan") {
-      const isGh = e.title.includes("GitHub") || e.title.includes("");
+      const isGh = e.title.toLowerCase().includes("github");
       prefix = isGh ? "[GH] " : "[AWS]";
       if (e.title.toLowerCase().includes("initiated") || e.title.toLowerCase().includes("auto-scan")) level = "warn";
       else level = "success";
@@ -353,8 +363,9 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
     if (e.type === "integration") { level = "system"; prefix = "[INT]"; }
     if (e.type === "control_change") {
       prefix = "[CTL]";
-      if (e.title.includes("?")) level = "success";
-      else if (e.title.includes("?")) level = "error";
+      const t = e.title.toLowerCase();
+      if (t.includes("approved") || t.includes("compliant")) level = "success";
+      else if (t.includes("non_compliant") || t.includes("failed")) level = "error";
       else level = "warn";
     }
     if (e.detail?.toLowerCase().includes("fail") || e.detail?.toLowerCase().includes("error") || e.title.toLowerCase().includes("error")) level = "error";
@@ -386,7 +397,7 @@ function useGithubAutoPoll(
   const trigger = useCallback(async () => {
     if (!orgId) return;
     const ts = new Date().toISOString();
-    pushActivityEvent({ type: "scan", title: " GitHub auto-scan initiated", detail: "Scheduled 15-min poll", timestamp: ts });
+    pushActivityEvent({ type: "scan", title: "GitHub auto-scan initiated", detail: "Scheduled 15-min poll", timestamp: ts });
     try {
       const res = await fetch("/api/scan/trigger", {
         method: "POST",
@@ -394,10 +405,10 @@ function useGithubAutoPoll(
         body: JSON.stringify({ org_id: orgId, provider: "github" }),
       });
       if (!res.ok) {
-        pushActivityEvent({ type: "scan", title: " GitHub auto-scan error", detail: "Trigger failed", timestamp: new Date().toISOString() });
+        pushActivityEvent({ type: "scan", title: "GitHub auto-scan error", detail: "Trigger failed", timestamp: new Date().toISOString() });
       }
     } catch {
-      pushActivityEvent({ type: "scan", title: " GitHub auto-scan error", detail: "Network error", timestamp: new Date().toISOString() });
+      pushActivityEvent({ type: "scan", title: "GitHub auto-scan error", detail: "Network error", timestamp: new Date().toISOString() });
     }
   }, [orgId, pushActivityEvent]);
 
@@ -545,9 +556,14 @@ export default function DashboardPage() {
         {/* Track 1: Automated */}
         <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5">
           <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-sm font-semibold text-[var(--color-foreground-subtle)]">Automated Checks</div>
-              <div className="text-xs text-[var(--color-muted)]">Prowler security scans</div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-foreground-subtle)]">
+                <PlugZap className="w-4 h-4" strokeWidth={1.8} />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-[var(--color-foreground)]">Automated Checks</div>
+                <div className="text-xs text-[var(--color-muted)]">Prowler security scans</div>
+              </div>
             </div>
             {realtimeConnected && (
               <span className="flex items-center gap-1 text-xs text-[var(--color-success)] font-medium">
@@ -561,7 +577,7 @@ export default function DashboardPage() {
           <div className="space-y-2 mb-3">
             {awsConnected && (
               <div className="flex items-center gap-2">
-                <span className="text-sm"></span>
+                <Cloud className="w-3.5 h-3.5 text-[var(--color-muted)]" strokeWidth={1.8} />
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-0.5">
                     <span className="text-[var(--color-muted)]">AWS</span>
@@ -576,7 +592,7 @@ export default function DashboardPage() {
             )}
             {githubConnected && (
               <div className="flex items-center gap-2">
-                <span className="text-sm"></span>
+                <Github className="w-3.5 h-3.5 text-[var(--color-muted)]" strokeWidth={1.8} />
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-0.5">
                     <span className="text-[var(--color-muted)]">GitHub</span>
@@ -611,11 +627,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Track 2: Manual Evidence */}
-        <a href="/dashboard/checklist" className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5 hover:border-blue-300 transition block">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg"></span>
+        <a href="/dashboard/checklist" className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5 hover:border-[var(--color-border-strong)] transition block">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center text-[var(--color-foreground-subtle)]">
+              <ListChecks className="w-4 h-4" strokeWidth={1.8} />
+            </div>
             <div>
-              <div className="text-sm font-semibold text-[var(--color-foreground-subtle)]">Manual Evidence</div>
+              <div className="text-sm font-semibold text-[var(--color-foreground)]">Manual Evidence</div>
               <div className="text-xs text-[var(--color-muted)]">Policies, training, procedures</div>
             </div>
           </div>
@@ -631,26 +649,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Integrations bar */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-[var(--color-muted)] font-medium">Connected:</span>
         {awsConnected ? (
-          <a href="/dashboard/monitoring" className="flex items-center gap-1.5 text-xs bg-orange-50 text-[var(--color-warning)] border border-orange-200 px-3 py-1.5 rounded-full font-medium hover:bg-orange-100 transition cursor-pointer">
-             AWS
-            <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
+          <a href="/dashboard/monitoring" className="inline-flex items-center gap-1.5 text-xs bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border border-[var(--color-border)] px-2.5 py-1 rounded-md font-medium hover:border-[var(--color-border-strong)] transition">
+            <Cloud className="w-3.5 h-3.5" strokeWidth={1.8} /> AWS
+            <span className={`w-1.5 h-1.5 rounded-full ${hasRealData ? "bg-[var(--color-success)] animate-pulse" : "bg-[var(--color-warning)]"}`} />
           </a>
         ) : (
-          <a href="/dashboard/settings" className="text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-3 py-1.5 rounded-full hover:text-[var(--color-warning)] hover:border-orange-300 transition">
-            + AWS
+          <a href="/dashboard/settings" className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-2.5 py-1 rounded-md hover:text-[var(--color-foreground)] transition">
+            <Cloud className="w-3.5 h-3.5" strokeWidth={1.8} /> Connect AWS
           </a>
         )}
         {githubConnected ? (
-          <a href="/dashboard/monitoring?provider=github" className="flex items-center gap-1.5 text-xs bg-[var(--color-foreground)] text-white px-3 py-1.5 rounded-full font-medium hover:bg-gray-700 transition cursor-pointer">
-             GitHub
-            <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
+          <a href="/dashboard/monitoring?provider=github" className="inline-flex items-center gap-1.5 text-xs bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border border-[var(--color-border)] px-2.5 py-1 rounded-md font-medium hover:border-[var(--color-border-strong)] transition">
+            <Github className="w-3.5 h-3.5" strokeWidth={1.8} /> GitHub
+            <span className={`w-1.5 h-1.5 rounded-full ${hasGithubData ? "bg-[var(--color-success)] animate-pulse" : "bg-[var(--color-warning)]"}`} />
           </a>
         ) : (
-          <a href="/dashboard/settings" className="text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-3 py-1.5 rounded-full hover:text-[var(--color-foreground-subtle)] hover:border-gray-400 transition">
-            + GitHub
+          <a href="/dashboard/settings" className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-2.5 py-1 rounded-md hover:text-[var(--color-foreground)] transition">
+            <Github className="w-3.5 h-3.5" strokeWidth={1.8} /> Connect GitHub
           </a>
         )}
       </div>
@@ -667,10 +685,10 @@ export default function DashboardPage() {
           )}
           <div className="mt-3 text-sm font-medium text-[var(--color-muted)]">Overall Readiness</div>
           {scores.length > 1 && (
-            <div className="mt-1 text-xs text-[var(--color-muted)] text-center space-y-0.5">
-              {awsScore !== null && <div> AWS: {awsScore}%</div>}
-              {githubScore !== null && <div> GitHub: {githubScore}%</div>}
-              {manualScore !== null && <div> Tasks: {manualScore}%</div>}
+            <div className="mt-2 text-xs text-[var(--color-muted)] text-center space-y-1">
+              {awsScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><Cloud className="w-3 h-3" strokeWidth={1.8} /> AWS: {awsScore}%</div>}
+              {githubScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><Github className="w-3 h-3" strokeWidth={1.8} /> GitHub: {githubScore}%</div>}
+              {manualScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><ListChecks className="w-3 h-3" strokeWidth={1.8} /> Tasks: {manualScore}%</div>}
             </div>
           )}
         </div>

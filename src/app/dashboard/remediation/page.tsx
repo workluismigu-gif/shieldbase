@@ -2,19 +2,22 @@
 import { useState, useEffect, useCallback } from "react";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
+import { Building2, FileText, Wrench, GraduationCap, User, CalendarDays, Check, Circle } from "lucide-react";
+
+type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 const PHASE_COLORS: Record<string, string> = {
-  Foundation: "bg-orange-100 text-[var(--color-warning)]",
-  Policies: "bg-purple-100 text-purple-700",
+  Foundation: "bg-[var(--color-warning-bg)] text-[var(--color-warning)]",
+  Policies: "bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)]",
   Remediation: "bg-[var(--color-danger-bg)] text-[var(--color-danger)]",
   "Audit Prep": "bg-[var(--color-info-bg)] text-[var(--color-info)]",
 };
 
-const PHASE_ICONS: Record<string, string> = {
-  Foundation: "",
-  Policies: "",
-  Remediation: "",
-  "Audit Prep": "",
+const PHASE_ICONS: Record<string, LucideIcon> = {
+  Foundation: Building2,
+  Policies: FileText,
+  Remediation: Wrench,
+  "Audit Prep": GraduationCap,
 };
 
 type Status = "open" | "in_progress" | "done" | "blocked";
@@ -100,7 +103,7 @@ export default function RemediationPage() {
   if (tasks.length === 0) {
     return (
       <div className="text-center py-16 text-[var(--color-muted)]">
-        <div className="text-4xl mb-3"></div>
+        <Wrench className="w-10 h-10 mx-auto mb-3" strokeWidth={1.4} />
         <p className="text-sm">No tasks yet. Connect AWS to get your remediation list.</p>
       </div>
     );
@@ -139,9 +142,9 @@ export default function RemediationPage() {
           return (
             <div key={phase}>
               <div className="flex items-center gap-2 mb-3">
-                <span>{PHASE_ICONS[phase] ?? ""}</span>
-                <h2 className="text-sm font-bold text-[var(--color-foreground-subtle)] uppercase tracking-wide">{phase}</h2>
-                <span className="text-xs text-[var(--color-muted)]">{phaseTasks.filter(t => t.completed).length}/{phaseTasks.length}</span>
+                {(() => { const Icon = PHASE_ICONS[phase] ?? Circle; return <Icon className="w-4 h-4 text-[var(--color-foreground-subtle)]" strokeWidth={1.8} />; })()}
+                <h2 className="text-[11px] font-semibold text-[var(--color-muted)] uppercase tracking-wider">{phase}</h2>
+                <span className="text-xs text-[var(--color-muted)] tabular-nums">{phaseTasks.filter(t => t.completed).length}/{phaseTasks.length}</span>
               </div>
               <div className="space-y-2">
                 {phaseTasks.sort((a, b) => a.order - b.order).map(task => {
@@ -156,7 +159,7 @@ export default function RemediationPage() {
                           className={`w-6 h-6 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center transition ${
                             task.completed ? "bg-green-500 border-green-500 text-white" : "border-[var(--color-border-strong)] hover:border-blue-400"
                           }`}>
-                          {task.completed && <span className="text-xs">✓</span>}
+                          {task.completed && <Check className="w-3.5 h-3.5" strokeWidth={2.5} />}
                         </button>
                         <div className="flex-1 min-w-0">
                           <div className={`text-sm font-medium ${task.completed ? "line-through text-[var(--color-muted)]" : "text-[var(--color-foreground-subtle)]"}`}>{task.task}</div>
@@ -168,15 +171,15 @@ export default function RemediationPage() {
                               </span>
                             )}
                             {owner && (
-                              <span className="text-[var(--color-muted)]"> {owner.email}</span>
+                              <span className="inline-flex items-center gap-1 text-[var(--color-muted)]"><User className="w-3 h-3" strokeWidth={1.8}/> {owner.email}</span>
                             )}
                             {task.due_date && (
-                              <span className={overdue(task) ? "text-[var(--color-danger)] font-medium" : "text-[var(--color-muted)]"}>
-                                 Due {new Date(task.due_date).toLocaleDateString()}{overdue(task) ? " (overdue)" : ""}
+                              <span className={`inline-flex items-center gap-1 ${overdue(task) ? "text-[var(--color-danger)] font-medium" : "text-[var(--color-muted)]"}`}>
+                                <CalendarDays className="w-3 h-3" strokeWidth={1.8}/> Due {new Date(task.due_date).toLocaleDateString()}{overdue(task) ? " (overdue)" : ""}
                               </span>
                             )}
                             {task.completed && task.completed_at && (
-                              <span className="text-[var(--color-success)]">✓ {new Date(task.completed_at).toLocaleDateString()}</span>
+                              <span className="inline-flex items-center gap-1 text-[var(--color-success)]"><Check className="w-3 h-3" strokeWidth={2}/> {new Date(task.completed_at).toLocaleDateString()}</span>
                             )}
                           </div>
                         </div>

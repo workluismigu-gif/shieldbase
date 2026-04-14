@@ -4,83 +4,51 @@ import { useOrg, type ControlRow, type RawFinding } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
 import { generateEvidencePackage, downloadEvidencePackage, generateBulkEvidencePackage } from "@/lib/evidence-package";
+import {
+  Lock, Eye, GitBranch, Shield, HardDrive, Gauge, AlertTriangle, Radio,
+  Users, MessageSquare, GitPullRequest, ShieldCheck, Search, FolderTree,
+  Building2, Cloud, ChevronDown, ChevronUp, Download, RefreshCw, Info
+} from "lucide-react";
+import { Github } from "@/components/icons/GithubIcon";
+
+type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
 // ─── AWS CATEGORIES ───────────────────────────────────────────────────────────
 
 const AWS_CATEGORIES: Record<string, {
-  label: string; icon: string; soc2: string;
+  label: string; Icon: LucideIcon; soc2: string;
   howToFix: string; controls: string[];
 }> = {
-  CC6: {
-    label: "Logical Access Controls",
-    icon: "",
-    soc2: "CC6 — Logical & Physical Access",
+  CC6: { label: "Logical Access Controls", Icon: Lock, soc2: "CC6 — Logical & Physical Access",
     howToFix: "Enable MFA for all IAM users, remove unused access keys, restrict public S3 access, close SSH/RDP ports from internet, and enforce least-privilege IAM policies.",
-    controls: ["CC6.1", "CC6.2", "CC6.3", "CC6.6", "CC.6.1", "CC.6.3", "CC.6.6"],
-  },
-  CC7: {
-    label: "System Monitoring & Operations",
-    icon: "",
-    soc2: "CC7 — System Operations",
+    controls: ["CC6.1", "CC6.2", "CC6.3", "CC6.6", "CC.6.1", "CC.6.3", "CC.6.6"] },
+  CC7: { label: "System Monitoring & Operations", Icon: Eye, soc2: "CC7 — System Operations",
     howToFix: "Enable CloudTrail in all regions with log validation, enable GuardDuty, enable VPC Flow Logs, configure CloudWatch log retention, and enable AWS Security Hub.",
-    controls: ["CC7.1", "CC7.2", "CC7.3", "CC7.4", "CC.7.2", "CC.7.3", "CC.7.4"],
-  },
-  CC8: {
-    label: "Change Management",
-    icon: "",
-    soc2: "CC8 — Change Management",
+    controls: ["CC7.1", "CC7.2", "CC7.3", "CC7.4", "CC.7.2", "CC.7.3", "CC.7.4"] },
+  CC8: { label: "Change Management", Icon: GitBranch, soc2: "CC8 — Change Management",
     howToFix: "Implement change control processes. Ensure all infrastructure changes go through approved pipelines with review and testing before deployment.",
-    controls: ["CC8.1", "CC.8.1"],
-  },
-  C1: {
-    label: "Confidentiality & Encryption",
-    icon: "",
-    soc2: "C1 — Confidentiality",
+    controls: ["CC8.1", "CC.8.1"] },
+  C1: { label: "Confidentiality & Encryption", Icon: Shield, soc2: "C1 — Confidentiality",
     howToFix: "Enable encryption at rest for all S3 buckets, RDS instances, and EBS volumes. Enable KMS key rotation. Enforce TLS 1.2+ on all load balancers.",
-    controls: ["C1.1", "C1.2", "CC.C.1.2"],
-  },
-  A1: {
-    label: "Availability",
-    icon: "",
-    soc2: "A1 — Availability",
+    controls: ["C1.1", "C1.2", "CC.C.1.2"] },
+  A1: { label: "Availability", Icon: HardDrive, soc2: "A1 — Availability",
     howToFix: "Enable automated backups for RDS with multi-region retention. Enable DynamoDB point-in-time recovery. Test backup restoration quarterly.",
-    controls: ["A1.1", "A1.2", "CC.A.1.1"],
-  },
-  PI1: {
-    label: "Processing Integrity",
-    icon: "",
-    soc2: "PI1 — Processing Integrity",
+    controls: ["A1.1", "A1.2", "CC.A.1.1"] },
+  PI1: { label: "Processing Integrity", Icon: Gauge, soc2: "PI1 — Processing Integrity",
     howToFix: "Enable CloudTrail object-level logging for S3, configure CloudWatch alerts, and ensure data processing pipelines have audit logging.",
-    controls: ["PI.1.2", "PI.1.3", "PI.1.4", "PI.1.5"],
-  },
-  CC3: {
-    label: "Risk Assessment",
-    icon: "",
-    soc2: "CC3 — Risk Assessment",
+    controls: ["PI.1.2", "PI.1.3", "PI.1.4", "PI.1.5"] },
+  CC3: { label: "Risk Assessment", Icon: AlertTriangle, soc2: "CC3 — Risk Assessment",
     howToFix: "Enable AWS Config in all regions to track configuration changes and compliance drift. Conduct periodic risk assessments.",
-    controls: ["CC.3.1", "CC.3.3", "CC.3.4"],
-  },
-  CC2: {
-    label: "Communication",
-    icon: "",
-    soc2: "CC2 — Communication",
+    controls: ["CC.3.1", "CC.3.3", "CC.3.4"] },
+  CC2: { label: "Communication", Icon: MessageSquare, soc2: "CC2 — Communication",
     howToFix: "Ensure CloudTrail is logging across all regions and delivering to a centralized S3 bucket with access controls.",
-    controls: ["CC.2.1"],
-  },
-  CC1: {
-    label: "Control Environment",
-    icon: "",
-    soc2: "CC1 — Control Environment",
+    controls: ["CC.2.1"] },
+  CC1: { label: "Control Environment", Icon: Users, soc2: "CC1 — Control Environment",
     howToFix: "Remove overly permissive IAM policies. No IAM policy should grant full admin (*:*) access. Use permission boundaries and SCPs.",
-    controls: ["CC.1.3"],
-  },
-  CC5: {
-    label: "Control Activities",
-    icon: "",
-    soc2: "CC5 — Control Activities",
+    controls: ["CC.1.3"] },
+  CC5: { label: "Control Activities", Icon: Radio, soc2: "CC5 — Control Activities",
     howToFix: "Set up CloudWatch metric filters and alarms for NACL changes, security group changes, and IAM policy changes.",
-    controls: ["CC.5.2"],
-  },
+    controls: ["CC.5.2"] },
 };
 
 function getControlCategory(controlId: string): string {
@@ -109,7 +77,7 @@ const impactConfig: Record<string, string> = {
 
 function AWSCategoryCard({ catKey, controls }: { catKey: string; controls: ControlRow[] }) {
   const [expanded, setExpanded] = useState(false);
-  const cat = AWS_CATEGORIES[catKey] ?? { label: catKey, icon: "", soc2: catKey, howToFix: "", controls: [] };
+  const cat = AWS_CATEGORIES[catKey] ?? { label: catKey, Icon: Shield as LucideIcon, soc2: catKey, howToFix: "", controls: [] };
 
   const passing = controls.filter(c => c.status === "compliant").length;
   const failing = controls.filter(c => c.status === "non_compliant").length;
@@ -119,35 +87,37 @@ function AWSCategoryCard({ catKey, controls }: { catKey: string; controls: Contr
   return (
     <div className={`bg-[var(--color-bg)] rounded-xl border ${allPass ? "border-[var(--color-success)]" : failing > 0 ? "border-[var(--color-danger)]" : "border-[var(--color-warning)]"} overflow-hidden`}>
       <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-[var(--color-surface)] transition">
-        <span className="text-xl">{cat.icon}</span>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : failing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-warning-bg)] text-[var(--color-warning)]"}`}>
+          <cat.Icon className="w-[18px] h-[18px]" strokeWidth={1.6} />
+        </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{cat.label}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : failing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-yellow-100 text-[var(--color-warning)]"}`}>
-              {allPass ? "✓ All passing" : failing > 0 ? `${failing} failing` : `${partial} partial`}
+            <span className="text-[13px] font-semibold text-[var(--color-foreground)]">{cat.label}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : failing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-warning-bg)] text-[var(--color-warning)]"}`}>
+              {allPass ? "All passing" : failing > 0 ? `${failing} failing` : `${partial} partial`}
             </span>
           </div>
           <div className="text-xs text-[var(--color-muted)] mt-0.5">SOC 2: {cat.soc2}</div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-xs text-[var(--color-muted)]">{passing}/{controls.length}</div>
-          <div className="w-20 bg-[var(--color-surface-2)] rounded-full h-1.5">
-            <div className={`h-full rounded-full transition-all duration-500 ${allPass ? "bg-green-500" : failing > 0 ? "bg-red-400" : "bg-yellow-400"}`}
+          <div className="text-xs text-[var(--color-muted)] tabular-nums">{passing}/{controls.length}</div>
+          <div className="w-20 bg-[var(--color-surface-2)] rounded-full h-1 overflow-hidden">
+            <div className={`h-full rounded-full transition-all duration-500 ${allPass ? "bg-[var(--color-success)]" : failing > 0 ? "bg-[var(--color-danger)]" : "bg-[var(--color-warning)]"}`}
               style={{ width: `${controls.length > 0 ? (passing / controls.length) * 100 : 0}%` }} />
           </div>
-          <span className="text-[var(--color-muted)] text-xs">{expanded ? "▲" : "▼"}</span>
+          {expanded ? <ChevronUp className="w-4 h-4 text-[var(--color-muted)]" strokeWidth={1.8} /> : <ChevronDown className="w-4 h-4 text-[var(--color-muted)]" strokeWidth={1.8} />}
         </div>
       </button>
 
       {expanded && (
         <div className="border-t border-[var(--color-border)]">
           {(failing > 0 || partial > 0) && cat.howToFix && (
-            <div className="mx-4 my-3 bg-[var(--color-info-bg)] border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-[var(--color-info)] mb-1"> How to fix</p>
+            <div className="mx-4 my-3 bg-[var(--color-info-bg)] border border-[var(--color-info)]/30 rounded-lg p-3">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-info)] mb-1"><Info className="w-3.5 h-3.5" strokeWidth={1.8} /> How to fix</p>
               <p className="text-xs text-[var(--color-info)]">{cat.howToFix}</p>
             </div>
           )}
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[var(--color-border)]">
             {controls.map(ctrl => {
               const s = statusConfig[ctrl.status] ?? statusConfig.not_assessed;
               return (
@@ -198,9 +168,9 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
   if (controls.length === 0) {
     return (
       <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-12 text-center">
-        <div className="text-4xl mb-4"></div>
-        <h2 className="text-lg font-semibold text-[var(--color-foreground-subtle)] mb-2">No AWS scan data yet</h2>
-        <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition mt-2">Connect AWS →</a>
+        <Cloud className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-4" strokeWidth={1.4} />
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No AWS scan data yet</h2>
+        <a href="/dashboard/settings" className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] px-6 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition mt-2">Connect AWS</a>
       </div>
     );
   }
@@ -235,42 +205,22 @@ function AWSMonitoring({ controls, lastScan, realtimeConnected }: { controls: Co
 
 // ─── GITHUB ───────────────────────────────────────────────────────────────────
 
-const GITHUB_CATEGORIES: Record<string, { label: string; icon: string; soc2: string; checks: string[]; howToFix: string }> = {
-  branch_protection: {
-    label: "Branch Protection",
-    icon: "",
-    soc2: "CC8.1 — Change Management",
+const GITHUB_CATEGORIES: Record<string, { label: string; Icon: LucideIcon; soc2: string; checks: string[]; howToFix: string }> = {
+  branch_protection: { label: "Branch Protection", Icon: GitPullRequest, soc2: "CC8.1 — Change Management",
     howToFix: "Go to each repo → Settings → Branches → Add branch protection rule for 'main'. Enable: Require PR reviews, Restrict force pushes, Restrict deletions, Apply to admins, Require status checks, Require linear history, Require conversation resolution.",
-    checks: ["repository_default_branch_protection_enabled","repository_default_branch_disallows_force_push","repository_default_branch_deletion_disabled","repository_default_branch_protection_applies_to_admins","repository_default_branch_status_checks_required","repository_default_branch_requires_linear_history","repository_default_branch_requires_conversation_resolution"],
-  },
-  code_review: {
-    label: "Code Review",
-    icon: "",
-    soc2: "CC8.1 — Change Management",
+    checks: ["repository_default_branch_protection_enabled","repository_default_branch_disallows_force_push","repository_default_branch_deletion_disabled","repository_default_branch_protection_applies_to_admins","repository_default_branch_status_checks_required","repository_default_branch_requires_linear_history","repository_default_branch_requires_conversation_resolution"] },
+  code_review: { label: "Code Review", Icon: ShieldCheck, soc2: "CC8.1 — Change Management",
     howToFix: "In branch protection rules, enable 'Require approvals' (min 2). Enable 'Require review from Code Owners'. Create a CODEOWNERS file in the root of each repo.",
-    checks: ["repository_default_branch_requires_multiple_approvals","repository_default_branch_requires_codeowners_review","repository_has_codeowners_file"],
-  },
-  secret_scanning: {
-    label: "Secret & Vulnerability Scanning",
-    icon: "",
-    soc2: "CC7.1 — System Monitoring",
+    checks: ["repository_default_branch_requires_multiple_approvals","repository_default_branch_requires_codeowners_review","repository_has_codeowners_file"] },
+  secret_scanning: { label: "Secret & Vulnerability Scanning", Icon: Search, soc2: "CC7.1 — System Monitoring",
     howToFix: "Go to each repo → Settings → Code security → Enable 'Secret scanning' and 'Dependabot alerts'. For org-wide: Org Settings → Code security → enable for all repos.",
-    checks: ["repository_secret_scanning_enabled","repository_dependency_scanning_enabled"],
-  },
-  repo_hygiene: {
-    label: "Repository Hygiene",
-    icon: "",
-    soc2: "CC6.1 — Access Control",
+    checks: ["repository_secret_scanning_enabled","repository_dependency_scanning_enabled"] },
+  repo_hygiene: { label: "Repository Hygiene", Icon: FolderTree, soc2: "CC6.1 — Access Control",
     howToFix: "Enable 'Automatically delete head branches' in repo Settings → General. Enable 'Require signed commits' in branch protection. Add a SECURITY.md with your vulnerability disclosure policy.",
-    checks: ["repository_branch_delete_on_merge_enabled","repository_default_branch_requires_signed_commits","repository_immutable_releases_enabled","repository_public_has_securitymd_file","repository_inactive_not_archived"],
-  },
-  org_security: {
-    label: "Organization Security",
-    icon: "",
-    soc2: "CC1.2 — Organization",
+    checks: ["repository_branch_delete_on_merge_enabled","repository_default_branch_requires_signed_commits","repository_immutable_releases_enabled","repository_public_has_securitymd_file","repository_inactive_not_archived"] },
+  org_security: { label: "Organization Security", Icon: Building2, soc2: "CC1.2 — Organization",
     howToFix: "Apply for a GitHub Verified badge via Org Settings → Profile → Verified domains.",
-    checks: ["organization_verified_badge"],
-  },
+    checks: ["organization_verified_badge"] },
 };
 
 function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CATEGORIES[string]; findings: RawFinding[] }) {
@@ -285,33 +235,35 @@ function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CA
   return (
     <div className={`bg-[var(--color-bg)] rounded-xl border ${allPass ? "border-[var(--color-success)]" : "border-[var(--color-danger)]"} overflow-hidden`}>
       <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left hover:bg-[var(--color-surface)] transition">
-        <span className="text-xl">{category.icon}</span>
+        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : "bg-[var(--color-danger-bg)] text-[var(--color-danger)]"}`}>
+          <category.Icon className="w-[18px] h-[18px]" strokeWidth={1.6} />
+        </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{category.label}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : "bg-[var(--color-danger-bg)] text-[var(--color-danger)]"}`}>
-              {allPass ? "✓ All passing" : `${failing} failing`}
+            <span className="text-[13px] font-semibold text-[var(--color-foreground)]">{category.label}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${allPass ? "bg-[var(--color-success-bg)] text-[var(--color-success)]" : "bg-[var(--color-danger-bg)] text-[var(--color-danger)]"}`}>
+              {allPass ? "All passing" : `${failing} failing`}
             </span>
           </div>
           <div className="text-xs text-[var(--color-muted)] mt-0.5">SOC 2: {category.soc2}</div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <div className="text-xs text-[var(--color-muted)]">{passing}/{catFindings.length}</div>
-          <div className="w-20 bg-[var(--color-surface-2)] rounded-full h-1.5">
-            <div className={`h-full rounded-full ${allPass ? "bg-green-500" : "bg-red-400"}`} style={{ width: `${catFindings.length > 0 ? (passing / catFindings.length) * 100 : 0}%` }} />
+          <div className="text-xs text-[var(--color-muted)] tabular-nums">{passing}/{catFindings.length}</div>
+          <div className="w-20 bg-[var(--color-surface-2)] rounded-full h-1 overflow-hidden">
+            <div className={`h-full rounded-full ${allPass ? "bg-[var(--color-success)]" : "bg-[var(--color-danger)]"}`} style={{ width: `${catFindings.length > 0 ? (passing / catFindings.length) * 100 : 0}%` }} />
           </div>
-          <span className="text-[var(--color-muted)] text-xs">{expanded ? "▲" : "▼"}</span>
+          {expanded ? <ChevronUp className="w-4 h-4 text-[var(--color-muted)]" strokeWidth={1.8} /> : <ChevronDown className="w-4 h-4 text-[var(--color-muted)]" strokeWidth={1.8} />}
         </div>
       </button>
       {expanded && (
         <div className="border-t border-[var(--color-border)]">
           {failing > 0 && (
-            <div className="mx-4 my-3 bg-[var(--color-info-bg)] border border-blue-100 rounded-lg p-3">
-              <p className="text-xs font-semibold text-[var(--color-info)] mb-1"> How to fix</p>
+            <div className="mx-4 my-3 bg-[var(--color-info-bg)] border border-[var(--color-info)]/30 rounded-lg p-3">
+              <p className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-info)] mb-1"><Info className="w-3.5 h-3.5" strokeWidth={1.8} /> How to fix</p>
               <p className="text-xs text-[var(--color-info)]">{category.howToFix}</p>
             </div>
           )}
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-[var(--color-border)]">
             {catFindings.map((f, i) => {
               const sCode = f.status_code || f.status || "PASS";
               const pass = sCode === "PASS";
@@ -336,10 +288,10 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
   if (findings.length === 0) {
     return (
       <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-12 text-center">
-        <div className="text-4xl mb-4"></div>
-        <h2 className="text-lg font-semibold text-[var(--color-foreground-subtle)] mb-2">No GitHub scan data yet</h2>
+        <Github className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-4" strokeWidth={1.4} />
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No GitHub scan data yet</h2>
         <p className="text-sm text-[var(--color-muted)] mb-4">GitHub is connected. A scan will run automatically within 15 minutes, or trigger one manually.</p>
-        <button className="inline-block bg-[var(--color-foreground)] hover:bg-[var(--color-foreground)] text-white px-6 py-2.5 rounded-lg font-semibold text-sm transition" disabled>
+        <button className="inline-flex items-center gap-2 bg-[var(--color-surface-2)] text-[var(--color-muted)] px-6 py-2.5 rounded-lg font-semibold text-sm" disabled>
           Scan pending...
         </button>
       </div>
@@ -411,7 +363,7 @@ function MonitoringPage() {
   const triggerScan = async () => {
     setScanning(true);
     setScanMsg("");
-    const providerLabel = provider === "github" ? " GitHub" : " AWS";
+    const providerLabel = provider === "github" ? "GitHub" : "AWS";
     // Log initiation immediately to activity center
     pushActivityEvent({
       type: "scan",
@@ -466,12 +418,13 @@ function MonitoringPage() {
             </span>
           )}
           <button onClick={handleExportEvidence} disabled={exporting || !org?.id}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
-             {exporting ? "Exporting..." : "Export Evidence"}
+            className="inline-flex items-center gap-2 bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-foreground)] hover:bg-[var(--color-surface-2)] disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
+            <Download className="w-4 h-4" strokeWidth={1.8} />
+            {exporting ? "Exporting..." : "Export Evidence"}
           </button>
           <button onClick={triggerScan} disabled={scanning || !org?.id}
-            className="flex items-center gap-2 bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg font-medium transition">
-            <span className={scanning ? "animate-spin" : ""}></span>
+            className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
+            <RefreshCw className={`w-4 h-4 ${scanning ? "animate-spin" : ""}`} strokeWidth={1.8} />
             {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
           </button>
         </div>
@@ -487,17 +440,17 @@ function MonitoringPage() {
       <div className="flex gap-2 border-b border-[var(--color-border)] pb-1">
         <button onClick={() => setProvider("aws")}
           className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
-            provider === "aws" ? "border-orange-500 text-[var(--color-warning)] bg-orange-50" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
+            provider === "aws" ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
           }`}>
-           AWS
-          {scanning && provider === "aws" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
-          <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-orange-100 text-[var(--color-warning)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{controls.length}</span>
+          <Cloud className="w-4 h-4" strokeWidth={1.8} /> AWS
+          {scanning && provider === "aws" && <span className="w-2 h-2 rounded-full bg-[var(--color-warning)] animate-pulse" />}
+          <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-[var(--color-surface-2)] text-[var(--color-foreground)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{controls.length}</span>
         </button>
         <button onClick={() => setProvider("github")}
           className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
-            provider === "github" ? "border-gray-900 text-[var(--color-foreground)] bg-[var(--color-surface)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
+            provider === "github" ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
           }`}>
-           GitHub
+          <Github className="w-4 h-4" strokeWidth={1.8} /> GitHub
           {scanning && provider === "github" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
           {!scanning && githubFindings.length > 0 && <span className="w-2 h-2 rounded-full bg-green-500" />}
           {githubFindings.length > 0

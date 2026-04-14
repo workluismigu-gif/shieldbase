@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       await supabase.from("activity_events").insert({
         org_id: org.id,
         type: "scan",
-        title: " GitHub auto-scan initiated",
+        title: "GitHub auto-scan initiated",
         detail: "GitHub Actions cron poll",
         timestamp: now,
       });
