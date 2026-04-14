@@ -39,7 +39,8 @@
       "Bash(ls src/lib/crosswalk*)",
       "Bash(git commit -m 'feat: two-step sign-off + evidence date range filter:*)",
       "Bash(git commit -m 'feat: PBC file upload + engagement milestones on audit shell:*)",
-      "Bash(git commit -m 'feat\\(access-reviews\\): /dashboard/access-reviews — quarterly reviews, privileged access, terminations:*)"
+      "Bash(git commit -m 'feat\\(access-reviews\\): /dashboard/access-reviews — quarterly reviews, privileged access, terminations:*)",
+      "Bash(git commit -m 'feat\\(vendors\\): /dashboard/vendors — vendor risk register for CC9.2:*)"
     ]
   }
 }

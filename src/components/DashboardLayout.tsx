@@ -6,7 +6,7 @@ import { useOrg } from "@/lib/org-context";
 import { signOut } from "@/lib/supabase";
 import {
   LayoutDashboard, Activity, FileText, Target, SlidersHorizontal,
-  ShieldCheck, Folder, Wrench, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck
+  ShieldCheck, Folder, Wrench, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string };
@@ -28,6 +28,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/dashboard/pbc", label: "PBC Requests", Icon: ClipboardList },
       { href: "/dashboard/scope", label: "Audit Scope", Icon: SlidersHorizontal },
       { href: "/dashboard/access-reviews", label: "Access Reviews", Icon: UserCheck },
+      { href: "/dashboard/vendors", label: "Vendor Risk", Icon: Building2 },
       { href: "/dashboard/policies", label: "Policies", Icon: ShieldCheck },
       { href: "/dashboard/evidence", label: "Evidence", Icon: Folder },
       { href: "/dashboard/remediation", label: "Remediation", Icon: Wrench },
