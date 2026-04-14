@@ -72,7 +72,7 @@ export default function ScanPage() {
           <span className="text-yellow-500 text-lg flex-shrink-0">⚠️</span>
           <div>
             <p className="text-sm font-semibold text-yellow-800">AWS not connected yet</p>
-            <p className="text-xs text-yellow-700 mt-0.5">Connect your AWS account first so we can pre-fill your role ARN in the scan command. <a href="/dashboard/connect" className="underline font-medium">Connect AWS →</a></p>
+            <p className="text-xs text-yellow-700 mt-0.5">Connect your AWS account first so we can pre-fill your role ARN in the scan command. <a href="/dashboard/settings" className="underline font-medium">Connect AWS →</a></p>
           </div>
         </div>
       )}
