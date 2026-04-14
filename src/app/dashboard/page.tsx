@@ -197,7 +197,7 @@ function ScanResultsTabs({
             <div className="text-center py-10">
               <div className="text-4xl mb-3">☁️</div>
               <p className="text-gray-500 text-sm mb-4">Connect AWS to start scanning your infrastructure</p>
-              <a href="/dashboard/connect" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
+              <a href="/dashboard/settings" className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect AWS →</a>
             </div>
           ) : !hasRealData ? (
             <div className="text-center py-10">
@@ -268,7 +268,7 @@ function ScanResultsTabs({
             <div className="text-center py-10">
               <div className="text-4xl mb-3">🐙</div>
               <p className="text-gray-500 text-sm mb-4">Connect GitHub to monitor your repos</p>
-              <a href="/dashboard/connect" className="inline-block bg-gray-900 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
+              <a href="/dashboard/settings" className="inline-block bg-gray-900 hover:bg-gray-700 text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition">Connect GitHub →</a>
             </div>
           ) : !hasGithubData ? (
             <div className="text-center py-10">
@@ -634,7 +634,7 @@ export default function DashboardPage() {
             <span className={`w-2 h-2 rounded-full inline-block ${hasRealData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
           </a>
         ) : (
-          <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-orange-600 hover:border-orange-300 transition">
+          <a href="/dashboard/settings" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-orange-600 hover:border-orange-300 transition">
             + AWS
           </a>
         )}
@@ -644,7 +644,7 @@ export default function DashboardPage() {
             <span className={`w-2 h-2 rounded-full inline-block ${hasGithubData ? "bg-green-500 animate-pulse" : "bg-yellow-400"}`} />
           </a>
         ) : (
-          <a href="/dashboard/connect" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-gray-700 hover:border-gray-400 transition">
+          <a href="/dashboard/settings" className="text-xs text-gray-400 border border-dashed border-gray-300 px-3 py-1.5 rounded-full hover:text-gray-700 hover:border-gray-400 transition">
             + GitHub
           </a>
         )}
