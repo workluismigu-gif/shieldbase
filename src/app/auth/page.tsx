@@ -1,4 +1,5 @@
 "use client";
+import { Shield } from "lucide-react";
 import { useState, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -74,7 +75,7 @@ function AuthForm() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <a href="/" className="text-2xl font-extrabold text-navy"> ShieldBase</a>
+          <a href="/" className="text-2xl font-extrabold text-navy"><span className="inline-flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[var(--color-foreground)]/10 flex items-center justify-center"><Shield className="w-4 h-4" strokeWidth={2}/></span>ShieldBase</span></a>
           <p className="text-slate text-sm mt-2">
             {mode === "login" ? "Welcome back" : "Start your SOC 2 journey"}
           </p>

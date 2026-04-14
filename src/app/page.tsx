@@ -1,6 +1,10 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { saveLead } from "@/lib/supabase";
+import {
+  Shield, ClipboardList, Sparkles, Package, GraduationCap,
+  FileSearch, FileText, Camera, Map, Handshake, LineChart
+} from "lucide-react";
 
 /* ─── SCROLL REVEAL HOOK ─── */
 function useReveal() {
@@ -67,8 +71,11 @@ function Header() {
   return (
     <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-[var(--color-bg)]/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
       <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-        <a href="#" className={`text-xl font-extrabold tracking-tight transition-colors ${scrolled ? "text-navy" : "text-white"}`}>
-           ShieldBase
+        <a href="#" className={`inline-flex items-center gap-2 text-[17px] font-semibold tracking-tight transition-colors ${scrolled ? "text-[var(--color-foreground)]" : "text-white"}`}>
+          <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${scrolled ? "bg-[var(--color-foreground)]/10" : "bg-white/10"}`}>
+            <Shield className="w-4 h-4" strokeWidth={2} />
+          </span>
+          ShieldBase
         </a>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
           {["How It Works", "Pricing", "FAQ"].map((item) => (
@@ -368,10 +375,10 @@ function Problem() {
 /* ─── HOW IT WORKS ─── */
 function HowItWorks() {
   const steps = [
-    { num: "01", title: "Free Assessment", desc: "Take a 5-minute readiness quiz. We identify where you stand against SOC 2 requirements — no commitment needed.", icon: "", color: "from-blue/10 to-purple/10" },
-    { num: "02", title: "AI Gap Analysis", desc: "Our AI analyzes your tech stack against all 5 Trust Services Criteria and generates a comprehensive gap report with severity ratings.", icon: "", color: "from-purple/10 to-blue/10" },
-    { num: "03", title: "Custom Deliverables", desc: "Receive 15–25 security policies written for your stack, an evidence collection runbook, and a prioritized remediation roadmap.", icon: "", color: "from-blue/10 to-green/10" },
-    { num: "04", title: "Audit Ready", desc: "We connect you with a vetted CPA firm and hand off everything they need. You walk into your audit fully prepared.", icon: "", color: "from-green/10 to-blue/10" },
+    { num: "01", title: "Free Assessment", desc: "Take a 5-minute readiness quiz. We identify where you stand against SOC 2 requirements — no commitment needed.", Icon: ClipboardList },
+    { num: "02", title: "AI Gap Analysis", desc: "Our AI analyzes your tech stack against all 5 Trust Services Criteria and generates a comprehensive gap report with severity ratings.", Icon: Sparkles },
+    { num: "03", title: "Custom Deliverables", desc: "Receive 15–25 security policies written for your stack, an evidence collection runbook, and a prioritized remediation roadmap.", Icon: Package },
+    { num: "04", title: "Audit Ready", desc: "We connect you with a vetted CPA firm and hand off everything they need. You walk into your audit fully prepared.", Icon: GraduationCap },
   ];
 
   return (
@@ -400,8 +407,8 @@ function HowItWorks() {
                     <p className="text-slate leading-relaxed">{step.desc}</p>
                   </div>
                   <div className={`${i % 2 === 1 ? "md:order-1" : ""} flex justify-center`}>
-                    <div className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${step.color} flex items-center justify-center text-5xl shadow-sm border border-[var(--color-border)] card-hover`}>
-                      {step.icon}
+                    <div className="w-32 h-32 rounded-2xl bg-[var(--color-surface-2)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-foreground-subtle)] card-hover">
+                      <step.Icon className="w-10 h-10" strokeWidth={1.4} />
                     </div>
                   </div>
                 </div>
@@ -490,12 +497,12 @@ function Pricing() {
 /* ─── DELIVERABLES ─── */
 function Deliverables() {
   const items = [
-    { icon: "", title: "Gap Analysis Report", desc: "20–30 page assessment against all 5 Trust Services Criteria with severity ratings and prioritized findings." },
-    { icon: "", title: "Custom Policy Package", desc: "15–25 security policies (InfoSec, Access Control, IR, Data Classification) tailored to your tech stack." },
-    { icon: "", title: "Evidence Runbook", desc: "Step-by-step evidence collection guide for your actual tools — AWS, GitHub, Slack, Okta, and more." },
-    { icon: "", title: "Remediation Roadmap", desc: "Prioritized action plan with timelines, config templates, and implementation guidance for every gap." },
-    { icon: "", title: "Auditor Connection", desc: "Matched with a vetted CPA firm. We coordinate so you go straight to audit — no shopping around." },
-    { icon: "", title: "Readiness Dashboard", desc: "Track your compliance progress with clear percentage scores across all control areas." },
+    { Icon: FileSearch, title: "Gap Analysis Report", desc: "20–30 page assessment against all 5 Trust Services Criteria with severity ratings and prioritized findings." },
+    { Icon: FileText, title: "Custom Policy Package", desc: "15–25 security policies (InfoSec, Access Control, IR, Data Classification) tailored to your tech stack." },
+    { Icon: Camera, title: "Evidence Runbook", desc: "Step-by-step evidence collection guide for your actual tools — AWS, GitHub, Slack, Okta, and more." },
+    { Icon: Map, title: "Remediation Roadmap", desc: "Prioritized action plan with timelines, config templates, and implementation guidance for every gap." },
+    { Icon: Handshake, title: "Auditor Connection", desc: "Matched with a vetted CPA firm. We coordinate so you go straight to audit — no shopping around." },
+    { Icon: LineChart, title: "Readiness Dashboard", desc: "Track your compliance progress with clear percentage scores across all control areas." },
   ];
 
   return (
@@ -511,9 +518,11 @@ function Deliverables() {
           <div className="grid md:grid-cols-3 gap-6">
             {items.map((item, i) => (
               <div key={i} className="bg-[var(--color-surface)] rounded-2xl p-6 card-hover border border-[var(--color-border)]">
-                <div className="text-3xl mb-3">{item.icon}</div>
-                <h3 className="text-lg font-bold text-navy mb-2">{item.title}</h3>
-                <p className="text-sm text-slate leading-relaxed">{item.desc}</p>
+                <div className="w-10 h-10 rounded-lg bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center text-[var(--color-foreground-subtle)] mb-4">
+                  <item.Icon className="w-5 h-5" strokeWidth={1.6} />
+                </div>
+                <h3 className="text-[15px] font-semibold text-[var(--color-foreground)] mb-2 tracking-tight">{item.title}</h3>
+                <p className="text-sm text-[var(--color-muted)] leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -682,7 +691,12 @@ function Footer() {
     <footer className="bg-navy border-t border-white/5 py-12">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-lg font-extrabold text-white"> ShieldBase</div>
+          <div className="inline-flex items-center gap-2 text-[15px] font-semibold text-white">
+            <span className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center">
+              <Shield className="w-3.5 h-3.5" strokeWidth={2} />
+            </span>
+            ShieldBase
+          </div>
           <div className="flex gap-8 text-sm text-slate">
             <a href="#how-it-works" className="hover:text-white transition">How It Works</a>
             <a href="#pricing" className="hover:text-white transition">Pricing</a>

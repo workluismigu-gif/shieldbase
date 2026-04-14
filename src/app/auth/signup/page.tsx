@@ -1,4 +1,5 @@
 "use client";
+import { Shield } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -31,7 +32,7 @@ export default function SignupPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-extrabold text-gray-900"> ShieldBase</Link>
+          <Link href="/" className="text-2xl font-extrabold text-gray-900"><span className="inline-flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[var(--color-foreground)]/10 flex items-center justify-center"><Shield className="w-4 h-4" strokeWidth={2}/></span>ShieldBase</span></Link>
           <p className="text-sm text-gray-500 mt-2">Start your free SOC 2 readiness assessment</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">

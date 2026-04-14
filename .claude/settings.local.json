@@ -11,7 +11,8 @@
       "Bash(npm audit:*)",
       "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(0\\)\\);for\\(const[k,v]of Object.entries\\(d.vulnerabilities||{}\\)\\)console.log\\(v.severity,k,v.via.map\\(x=>x.title||x\\).join\\('|'\\)\\)\")",
       "Bash(node:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(git commit -m 'style: apple-like icon system — landing, trust, dashboard shell:*)"
     ]
   }
 }
