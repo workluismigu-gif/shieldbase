@@ -14,7 +14,9 @@
       "Bash(npm run:*)",
       "Bash(git commit -m 'style: apple-like icon system — landing, trust, dashboard shell:*)",
       "Bash(git commit -m 'fix\\(dashboard\\): correct source count, weighted overall readiness, dark-theme sweep:*)",
-      "Bash(git commit -m 'style\\(dashboard\\): lucide icon pass across inner pages:*)"
+      "Bash(git commit -m 'style\\(dashboard\\): lucide icon pass across inner pages:*)",
+      "mcp__supabase__list_tables",
+      "Bash(git commit -m 'fix\\(invite\\): accept-invite flow creates accounts inline:*)"
     ]
   }
 }
