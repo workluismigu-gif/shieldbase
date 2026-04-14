@@ -9,6 +9,7 @@ export interface ControlRow {
   status: "compliant" | "non_compliant" | "partial" | "not_assessed";
   severity: "critical" | "high" | "medium" | "low";
   updated_at?: string;
+  in_sample?: boolean;
 }
 
 export interface TaskRow {

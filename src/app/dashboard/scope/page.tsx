@@ -17,7 +17,7 @@ interface ScopeConfig {
 const ENV_OPTIONS = ["production", "staging", "development"];
 
 export default function ScopePage() {
-  const { org } = useOrg();
+  const { org, canWrite } = useOrg();
   const [cfg, setCfg] = useState<ScopeConfig>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -209,13 +209,17 @@ export default function ScopePage() {
           className="w-full border border-[var(--color-border-strong)] rounded-lg px-3 py-2 text-sm" />
       </section>
 
-      <div className="sticky bottom-4 flex justify-end gap-2">
-        {saved && <span className="text-sm text-[var(--color-success)] self-center">✓ Saved</span>}
-        <button onClick={handleSave} disabled={saving}
-          className="bg-blue-600 hover:opacity-90 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg font-semibold text-sm shadow">
-          {saving ? "Saving…" : "Save scope"}
-        </button>
-      </div>
+      {canWrite ? (
+        <div className="sticky bottom-4 flex justify-end gap-2">
+          {saved && <span className="text-sm text-[var(--color-success)] self-center">✓ Saved</span>}
+          <button onClick={handleSave} disabled={saving}
+            className="bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 px-6 py-2.5 rounded-lg font-semibold text-sm">
+            {saving ? "Saving…" : "Save scope"}
+          </button>
+        </div>
+      ) : (
+        <div className="text-xs text-[var(--color-muted)] italic text-right">View only — owner/admin can edit scope</div>
+      )}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import {
   Gavel, ClipboardList, AlertOctagon, ShieldCheck, Activity, ArrowUpRight,
-  CheckCircle2, AlertCircle, Clock, X, FileSearch
+  CheckCircle2, AlertCircle, Clock, X, FileSearch, Beaker
 } from "lucide-react";
 import { formatDateOnly, isPast, formatDateRange } from "@/lib/dates";
 
@@ -41,7 +41,8 @@ export default function AuditPage() {
     const failing = controls.filter(c => c.status === "non_compliant").length;
     const partial = controls.filter(c => c.status === "partial").length;
     const notAssessed = controls.filter(c => c.status === "not_assessed").length;
-    return { compliant, failing, partial, notAssessed, total: controls.length };
+    const inSample = controls.filter(c => c.in_sample).length;
+    return { compliant, failing, partial, notAssessed, total: controls.length, inSample };
   }, [controls]);
 
   const pbcStats = useMemo(() => {
@@ -92,10 +93,13 @@ export default function AuditPage() {
       </Section>
 
       {/* Top-level metrics */}
-      <div className="grid md:grid-cols-4 gap-3">
+      <div className="grid md:grid-cols-5 gap-3">
         <MetricCard label="Controls compliant" value={`${stats.compliant}/${stats.total}`}
           sub={stats.total > 0 ? `${Math.round((stats.compliant / stats.total) * 100)}%` : "—"}
           tone="success" Icon={ShieldCheck} href="/dashboard/controls" />
+        <MetricCard label="In sample" value={String(stats.inSample)}
+          sub={stats.inSample === 0 ? "none selected" : `of ${stats.total} total`}
+          tone="info" Icon={Beaker} href="/dashboard/controls" />
         <MetricCard label="Exceptions" value={String(stats.failing + stats.partial)}
           sub={stats.failing > 0 ? `${stats.failing} failing` : "all passing"}
           tone={stats.failing > 0 ? "danger" : stats.partial > 0 ? "warning" : "success"}

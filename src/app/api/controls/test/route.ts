@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { control_id, test_notes, approve, override_status, auth_token } = await req.json();
+    const { control_id, test_notes, approve, override_status, test_attributes, auth_token } = await req.json();
     if (!control_id || !auth_token) {
       return NextResponse.json({ error: "Missing params" }, { status: 400 });
     }
@@ -29,6 +29,17 @@ export async function POST(req: NextRequest) {
       tested_at: new Date().toISOString(),
       test_notes: test_notes ?? null,
     };
+    if (test_attributes && typeof test_attributes === "object") {
+      // Accept only the four known attribute keys with valid values.
+      const allowed = ["pass", "fail", "na"] as const;
+      const keys = ["complete", "accurate", "authorized", "timely"] as const;
+      const sanitized: Record<string, string> = {};
+      for (const k of keys) {
+        const v = (test_attributes as Record<string, unknown>)[k];
+        if (typeof v === "string" && (allowed as readonly string[]).includes(v)) sanitized[k] = v;
+      }
+      update.test_attributes = Object.keys(sanitized).length > 0 ? sanitized : null;
+    }
     if (approve) {
       update.approved_by = user.id;
       update.approved_at = new Date().toISOString();

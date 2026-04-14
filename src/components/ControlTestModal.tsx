@@ -21,11 +21,29 @@ interface Comment {
   created_at: string;
 }
 
+type AttrValue = "pass" | "fail" | "na" | "";
+const ATTR_KEYS = ["complete", "accurate", "authorized", "timely"] as const;
+const ATTR_LABELS: Record<typeof ATTR_KEYS[number], string> = {
+  complete: "Complete",
+  accurate: "Accurate",
+  authorized: "Authorized",
+  timely: "Timely",
+};
+const ATTR_HINTS: Record<typeof ATTR_KEYS[number], string> = {
+  complete: "All required items in scope are present (no gaps in the population).",
+  accurate: "Values are correct — no transcription or calculation errors.",
+  authorized: "Each action was approved by someone with the right authority.",
+  timely: "Performed within the required timeframe (e.g. quarterly).",
+};
+
 export default function ControlTestModal({ controlId, controlTitle, currentStatus, onClose, onSaved }: Props) {
   const { org, canWrite, role, userEmail } = useOrg();
   const [notes, setNotes] = useState("");
   const [overrideStatus, setOverrideStatus] = useState("");
   const [approve, setApprove] = useState(false);
+  const [attributes, setAttributes] = useState<Record<string, AttrValue>>({
+    complete: "", accurate: "", authorized: "", timely: "",
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -57,6 +75,12 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData?.session) throw new Error("Not logged in");
 
+      // Only send attributes the user actually set.
+      const attrPayload: Record<string, string> = {};
+      for (const k of ATTR_KEYS) {
+        if (attributes[k]) attrPayload[k] = attributes[k] as string;
+      }
+
       const res = await fetch("/api/controls/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,6 +89,7 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
           test_notes: notes || null,
           approve,
           override_status: overrideStatus || null,
+          test_attributes: Object.keys(attrPayload).length > 0 ? attrPayload : null,
           auth_token: sessionData.session.access_token,
         }),
       });
@@ -141,6 +166,35 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
         {/* Test form — owners/admins only */}
         {canWrite && (
           <div className="p-6 space-y-4 border-b border-[var(--color-border)]">
+            <div>
+              <div className="flex items-baseline justify-between mb-2">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">Test attributes</label>
+                <span className="text-[10px] text-[var(--color-muted)]">Per AICPA testing standards</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {ATTR_KEYS.map(k => (
+                  <div key={k} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-2.5">
+                    <div className="text-xs font-medium text-[var(--color-foreground)] mb-1" title={ATTR_HINTS[k]}>{ATTR_LABELS[k]}</div>
+                    <div className="flex gap-1">
+                      {(["pass", "fail", "na"] as const).map(v => (
+                        <button key={v} type="button"
+                          onClick={() => setAttributes(a => ({ ...a, [k]: a[k] === v ? "" : v }))}
+                          className={`flex-1 text-[11px] font-medium px-1.5 py-1 rounded transition border ${
+                            attributes[k] === v
+                              ? v === "pass" ? "bg-[var(--color-success-bg)] text-[var(--color-success)] border-[var(--color-success)]"
+                              : v === "fail" ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)] border-[var(--color-danger)]"
+                              : "bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border-[var(--color-border-strong)]"
+                              : "bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] hover:text-[var(--color-foreground)]"
+                          }`}>
+                          {v === "pass" ? "Pass" : v === "fail" ? "Fail" : "N/A"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-1.5 block">Test notes (tester, date, method, result)</label>
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4}
