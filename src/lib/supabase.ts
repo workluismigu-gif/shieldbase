@@ -65,4 +65,5 @@ export type OrgRow = {
   employee_count: number | null;
   cloud_provider: string | null;
   frameworks: string[];
+  scope_config?: Record<string, unknown> | null;
 };

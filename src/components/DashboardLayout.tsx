@@ -11,6 +11,7 @@ const navItems: { href: string; label: string; icon: string; badge?: string }[] 
   { href: "/dashboard/monitoring", label: "Monitoring", icon: "📡" },
   { href: "/dashboard/gap-analysis", label: "Gap Analysis", icon: "📄" },
   { href: "/dashboard/controls", label: "Controls", icon: "🎯" },
+  { href: "/dashboard/scope", label: "Audit Scope", icon: "🎚️" },
   { href: "/dashboard/policies", label: "Policies", icon: "📋" },
   { href: "/dashboard/evidence", label: "Evidence", icon: "📁" },
   { href: "/dashboard/remediation", label: "Remediation", icon: "🔧" },
