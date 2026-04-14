@@ -38,7 +38,8 @@
       "Bash(git commit -m 'feat\\(audit\\): wishlist features — sample selection, test attributes, scope RBAC:*)",
       "Bash(ls src/lib/crosswalk*)",
       "Bash(git commit -m 'feat: two-step sign-off + evidence date range filter:*)",
-      "Bash(git commit -m 'feat: PBC file upload + engagement milestones on audit shell:*)"
+      "Bash(git commit -m 'feat: PBC file upload + engagement milestones on audit shell:*)",
+      "Bash(git commit -m 'feat\\(access-reviews\\): /dashboard/access-reviews — quarterly reviews, privileged access, terminations:*)"
     ]
   }
 }
