@@ -1,6 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { mockPolicies } from "@/lib/mock-data";
+import { supabase } from "@/lib/supabase";
+import { useOrg } from "@/lib/org-context";
+
+interface Ack {
+  user_id: string;
+  policy_key: string;
+  acknowledged_at: string;
+}
 
 const typeIcons: Record<string, string> = {
   information_security: "🔐", access_control: "🔑", incident_response: "🚨",
@@ -109,8 +117,39 @@ Establish requirements for managing access to information systems.
 };
 
 export default function PoliciesPage() {
+  const { org, userEmail } = useOrg();
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<string | null>(null);
+  const [acks, setAcks] = useState<Ack[]>([]);
+  const [acking, setAcking] = useState(false);
+
+  const loadAcks = useCallback(async () => {
+    if (!org?.id) return;
+    const { data } = await supabase
+      .from("policy_acknowledgements")
+      .select("user_id, policy_key, acknowledged_at")
+      .eq("org_id", org.id);
+    if (data) setAcks(data as Ack[]);
+  }, [org?.id]);
+
+  useEffect(() => { loadAcks(); }, [loadAcks]);
+
+  const acknowledge = async (policyKey: string) => {
+    setAcking(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) return;
+      const res = await fetch("/api/policies/acknowledge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ policy_key: policyKey, auth_token: sessionData.session.access_token }),
+      });
+      if (res.ok) await loadAcks();
+      else alert("Failed to acknowledge");
+    } finally {
+      setAcking(false);
+    }
+  };
 
   const filters = ["all", "approved", "review", "draft"];
   const filtered = filter === "all" ? mockPolicies : mockPolicies.filter(p => p.status === filter);
@@ -155,6 +194,44 @@ export default function PoliciesPage() {
                 {policyContent[selectedPolicy.id] || `# ${selectedPolicy.title}\n\nThis policy document will be generated based on your organization's tech stack and specific requirements.\n\nSchedule a call with your ShieldBase consultant to review and customize this policy.`}
               </pre>
             </div>
+          </div>
+
+          {/* Acknowledgement section */}
+          <div className="border-t border-gray-100 bg-gray-50 p-6">
+            {(() => {
+              const policyKey = selectedPolicy.id;
+              const policyAcks = acks.filter(a => a.policy_key === policyKey);
+              const myAck = policyAcks.find(a => a.user_id);
+              const hasAcked = !!myAck;
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900">Policy acknowledgement</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">{policyAcks.length} signature{policyAcks.length === 1 ? "" : "s"} on record</p>
+                    </div>
+                    <button
+                      onClick={() => acknowledge(policyKey)}
+                      disabled={acking || hasAcked}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                        hasAcked ? "bg-green-100 text-green-700 cursor-default" : "bg-blue-600 hover:bg-blue-700 text-white"
+                      }`}>
+                      {hasAcked ? "✓ Acknowledged" : acking ? "Signing…" : "Acknowledge policy"}
+                    </button>
+                  </div>
+                  {policyAcks.length > 0 && (
+                    <div className="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+                      {policyAcks.map(a => (
+                        <div key={`${a.user_id}-${a.policy_key}`} className="px-4 py-2 flex justify-between items-center text-xs">
+                          <span className="font-mono text-gray-600 truncate max-w-[300px]">{a.user_id === (userEmail ? a.user_id : "") ? userEmail : a.user_id}</span>
+                          <span className="text-gray-500">{new Date(a.acknowledged_at).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
