@@ -19,6 +19,7 @@ interface PbcRequest {
   status: Status;
   response_notes: string | null;
   response_url: string | null;
+  response_storage_path: string | null;
   rejection_reason: string | null;
   requested_by: string;
   due_date: string | null;
@@ -148,9 +149,55 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
   const [expanded, setExpanded] = useState(false);
   const [responseNotes, setResponseNotes] = useState(item.response_notes ?? "");
   const [responseUrl, setResponseUrl] = useState(item.response_url ?? "");
+  const [responseFile, setResponseFile] = useState<File | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const respondWithUpload = async (file: File | null) => {
+    setBusy(true); setError("");
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) throw new Error("Not authenticated");
+
+      let storagePath: string | null = null;
+      if (file) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("control_key", `pbc_${item.id}`);
+        form.append("category", "pbc");
+        form.append("auth_token", session.session.access_token);
+        const upRes = await fetch("/api/evidence/upload", { method: "POST", body: form });
+        const upJson = await upRes.json();
+        if (!upRes.ok) throw new Error(upJson.error || "Upload failed");
+        storagePath = upJson.storage_path ?? null;
+      }
+
+      await post({
+        action: "respond",
+        request_id: item.id,
+        response_notes: responseNotes,
+        response_url: responseUrl,
+        response_storage_path: storagePath,
+      });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Submit failed");
+      setBusy(false);
+    }
+  };
+
+  const downloadArtifact = async () => {
+    if (!item.response_storage_path) return;
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) return;
+    const res = await fetch("/api/evidence/signed-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ storage_path: item.response_storage_path, auth_token: session.session.access_token }),
+    });
+    const json = await res.json();
+    if (res.ok && json.url) window.open(json.url, "_blank");
+  };
 
   const meta = statusMeta[item.status];
   const isAuditor = role === "auditor_readonly";
@@ -237,7 +284,13 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
               <input type="url" value={responseUrl} onChange={e => setResponseUrl(e.target.value)}
                 placeholder="Link to the artifact (S3, Drive, GitHub, etc.) — optional"
                 className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-border-strong)]" />
-              <button onClick={() => post({ action: "respond", request_id: item.id, response_notes: responseNotes, response_url: responseUrl })}
+              <label className="block text-xs text-[var(--color-muted)]">
+                Or upload a file directly:
+                <input type="file" onChange={e => setResponseFile(e.target.files?.[0] ?? null)}
+                  className="block mt-1 text-xs file:mr-2 file:px-3 file:py-1.5 file:rounded-md file:border-0 file:bg-[var(--color-surface-2)] file:text-[var(--color-foreground-subtle)] file:cursor-pointer" />
+                {responseFile && <span className="text-[11px] text-[var(--color-foreground-subtle)] block mt-1">{responseFile.name} ({Math.round(responseFile.size / 1024)} KB)</span>}
+              </label>
+              <button onClick={() => respondWithUpload(responseFile)}
                 disabled={busy || !responseNotes.trim()}
                 className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
                 {busy ? "Submitting…" : "Submit response"}
@@ -245,7 +298,7 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
             </div>
           )}
 
-          {item.status !== "requested" && (item.response_notes || item.response_url) && (
+          {item.status !== "requested" && (item.response_notes || item.response_url || item.response_storage_path) && (
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] mb-1">Client response</div>
               {item.response_notes && (
@@ -253,9 +306,15 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
               )}
               {item.response_url && (
                 <a href={item.response_url} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-sm text-[var(--color-info)] hover:underline">
+                  className="inline-flex items-center gap-1 text-sm text-[var(--color-info)] hover:underline mr-3">
                   Open artifact <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.8} />
                 </a>
+              )}
+              {item.response_storage_path && (
+                <button onClick={downloadArtifact}
+                  className="inline-flex items-center gap-1 text-sm text-[var(--color-info)] hover:underline">
+                  Download attached file <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.8} />
+                </button>
               )}
             </div>
           )}

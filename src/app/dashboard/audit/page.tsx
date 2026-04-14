@@ -171,10 +171,109 @@ export default function AuditPage() {
         </Section>
       </div>
 
+      {/* Engagement milestones */}
+      <Section title="Engagement milestones">
+        <EngagementMilestones orgId={org?.id} canAdd={isAuditor} />
+      </Section>
+
       {/* Recent activity */}
       <Section title="Recent activity" actionLabel="Full overview" actionHref="/dashboard">
         <RecentActivity orgId={org?.id} />
       </Section>
+    </div>
+  );
+}
+
+function EngagementMilestones({ orgId, canAdd }: { orgId: string | undefined; canAdd: boolean }) {
+  const [events, setEvents] = useState<{ id: string; title: string; detail: string | null; timestamp: string }[] | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [detail, setDetail] = useState("");
+  const [date, setDate] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    if (!orgId) return;
+    supabase.from("activity_events").select("id, title, detail, timestamp")
+      .eq("org_id", orgId).eq("type", "engagement_milestone")
+      .order("timestamp", { ascending: false }).limit(20)
+      .then(({ data }) => setEvents(data ?? []));
+  }, [orgId]);
+  useEffect(() => { load(); }, [load]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+    setBusy(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) return;
+      await fetch("/api/audit/milestone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          detail: detail.trim() || null,
+          timestamp: date ? new Date(date + "T00:00:00").toISOString() : null,
+          auth_token: session.session.access_token,
+        }),
+      });
+      setTitle(""); setDetail(""); setDate(""); setShowForm(false);
+      await load();
+    } finally { setBusy(false); }
+  };
+
+  if (events === null) return <div className="text-sm text-[var(--color-muted)]">Loading…</div>;
+
+  return (
+    <div className="space-y-3">
+      {events.length === 0 ? (
+        <div className="text-sm text-[var(--color-muted)] italic">
+          No milestones recorded yet. Use this to log kickoff, walkthroughs, exit interviews, or subsequent events.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {events.map(e => (
+            <div key={e.id} className="flex items-start gap-3 px-3 py-2.5 rounded-lg bg-[var(--color-surface)]">
+              <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-info)] flex-shrink-0 mt-2" />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-[var(--color-foreground)]">{e.title}</div>
+                {e.detail && <div className="text-xs text-[var(--color-muted)] mt-0.5">{e.detail}</div>}
+              </div>
+              <time className="text-xs text-[var(--color-muted)] flex-shrink-0" dateTime={e.timestamp}>
+                {new Date(e.timestamp).toLocaleDateString()}
+              </time>
+            </div>
+          ))}
+        </div>
+      )}
+      {canAdd && !showForm && (
+        <button onClick={() => setShowForm(true)}
+          className="text-xs text-[var(--color-info)] hover:underline">
+          + Add milestone
+        </button>
+      )}
+      {canAdd && showForm && (
+        <form onSubmit={submit} className="space-y-2 bg-[var(--color-surface)] rounded-lg p-3 border border-[var(--color-border)]">
+          <input type="text" value={title} onChange={e => setTitle(e.target.value)} required
+            placeholder="e.g. Walkthrough of access provisioning held"
+            className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded px-2 py-1.5 text-sm text-[var(--color-foreground)]" />
+          <input type="text" value={detail} onChange={e => setDetail(e.target.value)}
+            placeholder="Optional detail (attendees, outcome, follow-ups)"
+            className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded px-2 py-1.5 text-xs text-[var(--color-foreground-subtle)]" />
+          <div className="flex items-center gap-2">
+            <input type="date" value={date} onChange={e => setDate(e.target.value)}
+              className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded px-2 py-1.5 text-xs text-[var(--color-foreground)]" />
+            <span className="text-[10px] text-[var(--color-muted)]">leave blank for today</span>
+            <div className="flex-1" />
+            <button type="button" onClick={() => setShowForm(false)} className="text-xs text-[var(--color-muted)] px-2 py-1">Cancel</button>
+            <button type="submit" disabled={busy || !title.trim()}
+              className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] px-3 py-1.5 rounded hover:opacity-90 disabled:opacity-50">
+              {busy ? "Saving…" : "Add"}
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

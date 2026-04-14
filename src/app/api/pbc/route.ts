@@ -15,6 +15,7 @@ interface Body {
   request_id?: string;
   response_notes?: string;
   response_url?: string;
+  response_storage_path?: string;
   // review
   decision?: "accepted" | "rejected";
   rejection_reason?: string;
@@ -111,6 +112,7 @@ export async function POST(req: NextRequest) {
           status: "provided",
           response_notes: body.response_notes ?? null,
           response_url: body.response_url ?? null,
+          response_storage_path: body.response_storage_path ?? null,
           provided_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
