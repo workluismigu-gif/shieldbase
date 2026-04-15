@@ -7,10 +7,11 @@ import { generateEvidencePackage, downloadEvidencePackage, generateBulkEvidenceP
 import {
   Lock, Eye, GitBranch, Shield, HardDrive, Gauge, AlertTriangle, Radio,
   Users, MessageSquare, GitPullRequest, ShieldCheck, Search, FolderTree,
-  Building2, Cloud, ChevronDown, ChevronUp, Download, RefreshCw, Info
+  Building2, Cloud, ChevronDown, ChevronUp, Download, RefreshCw, Info, Mail, Hexagon
 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
 import ActivityFeed from "@/components/ActivityFeed";
+import ProviderEmptyState from "@/components/ProviderEmptyState";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -330,11 +331,13 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
 function MonitoringPage() {
   const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org, pushActivityEvent, canWrite } = useOrg();
   const searchParams = useSearchParams();
-  const [provider, setProvider] = useState<"aws" | "github">(searchParams.get("provider") === "github" ? "github" : "aws");
+  type ProviderKey = "aws" | "github" | "slack" | "google_workspace" | "azure";
+  const initialProvider = (searchParams.get("provider") as ProviderKey) || "aws";
+  const [provider, setProvider] = useState<ProviderKey>(["aws", "github", "slack", "google_workspace", "azure"].includes(initialProvider) ? initialProvider : "aws");
 
   useEffect(() => {
     const p = searchParams.get("provider");
-    if (p === "github" || p === "aws") setProvider(p);
+    if (p && ["aws", "github", "slack", "google_workspace", "azure"].includes(p)) setProvider(p as ProviderKey);
   }, [searchParams]);
   const [scanning, setScanning] = useState(false);
   const [scanMsg, setScanMsg] = useState("");
@@ -439,31 +442,65 @@ function MonitoringPage() {
         </div>
       )}
 
-      {/* Provider tabs */}
-      <div className="flex gap-2 border-b border-[var(--color-border)] pb-1">
-        <button onClick={() => setProvider("aws")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
-            provider === "aws" ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
-          }`}>
-          <Cloud className="w-4 h-4" strokeWidth={1.8} /> AWS
-          {scanning && provider === "aws" && <span className="w-2 h-2 rounded-full bg-[var(--color-warning)] animate-pulse" />}
-          <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "aws" ? "bg-[var(--color-surface-2)] text-[var(--color-foreground)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{controls.length}</span>
-        </button>
-        <button onClick={() => setProvider("github")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px ${
-            provider === "github" ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
-          }`}>
-          <Github className="w-4 h-4" strokeWidth={1.8} /> GitHub
-          {scanning && provider === "github" && <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />}
-          {!scanning && githubFindings.length > 0 && <span className="w-2 h-2 rounded-full bg-green-500" />}
-          {githubFindings.length > 0
-            ? <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === "github" ? "bg-[var(--color-border)] text-[var(--color-foreground-subtle)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{githubFindings.length}</span>
-            : <span className="text-xs text-[var(--color-muted)] ml-1">not scanned</span>}
-        </button>
-      </div>
+      {(() => {
+        const tech = (org?.tech_stack ?? {}) as Record<string, unknown>;
+        const tabs: { key: ProviderKey; label: string; Icon: LucideIcon; connected: boolean; count?: number }[] = [
+          { key: "aws", label: "AWS", Icon: Cloud, connected: !!tech.aws_role_arn, count: controls.length },
+          { key: "github", label: "GitHub", Icon: Github, connected: !!tech.github_token, count: githubFindings.length },
+          { key: "slack", label: "Slack", Icon: MessageSquare, connected: !!tech.slack_access_token },
+          { key: "google_workspace", label: "Google", Icon: Mail, connected: !!tech.google_access_token },
+          { key: "azure", label: "Azure", Icon: Hexagon, connected: !!tech.azure_access_token || !!tech.azure_subscription_id },
+        ];
+        return (
+          <div className="flex gap-2 border-b border-[var(--color-border)] pb-1 overflow-x-auto">
+            {tabs.map(t => (
+              <button
+                key={t.key}
+                onClick={() => setProvider(t.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-t-lg text-sm font-medium transition border-b-2 -mb-px flex-shrink-0 ${
+                  provider === t.key ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
+                }`}>
+                <t.Icon className="w-4 h-4" strokeWidth={1.8} /> {t.label}
+                {scanning && provider === t.key && <span className="w-2 h-2 rounded-full bg-[var(--color-warning)] animate-pulse" />}
+                {t.connected && t.count !== undefined && t.count > 0 && (
+                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${provider === t.key ? "bg-[var(--color-surface-2)] text-[var(--color-foreground)]" : "bg-[var(--color-surface-2)] text-[var(--color-muted)]"}`}>{t.count}</span>
+                )}
+                {!t.connected && (
+                  <span className="text-[10px] text-[var(--color-muted)] ml-1">off</span>
+                )}
+              </button>
+            ))}
+          </div>
+        );
+      })()}
 
-      {provider === "aws" && <AWSMonitoring controls={controls} lastScan={lastScan} realtimeConnected={realtimeConnected} />}
-      {provider === "github" && <GitHubMonitoring findings={githubFindings} lastScan={lastGithubScan} />}
+      {(() => {
+        const tech = (org?.tech_stack ?? {}) as Record<string, unknown>;
+        if (provider === "aws") {
+          if (!tech.aws_role_arn) return <ProviderEmptyState Icon={Cloud} providerLabel="AWS" state="not_connected" />;
+          return <AWSMonitoring controls={controls} lastScan={lastScan} realtimeConnected={realtimeConnected} />;
+        }
+        if (provider === "github") {
+          if (!tech.github_token) return <ProviderEmptyState Icon={Github} providerLabel="GitHub" state="not_connected" />;
+          return <GitHubMonitoring findings={githubFindings} lastScan={lastGithubScan} />;
+        }
+        if (provider === "slack") {
+          if (!tech.slack_access_token) return <ProviderEmptyState Icon={MessageSquare} providerLabel="Slack" state="not_connected" />;
+          return <ProviderEmptyState Icon={MessageSquare} providerLabel="Slack" state="lambda_unsupported"
+            detail="Slack scanning is queued — your Lambda needs a `provider === 'slack'` handler that runs Prowler's Slack provider. Until then, the connection is saved and idle." />;
+        }
+        if (provider === "google_workspace") {
+          if (!tech.google_access_token) return <ProviderEmptyState Icon={Mail} providerLabel="Google Workspace" state="not_connected" />;
+          return <ProviderEmptyState Icon={Mail} providerLabel="Google Workspace" state="lambda_unsupported"
+            detail="Workspace scanning is queued — your Lambda needs a `provider === 'google_workspace'` handler. Connection saved and idle." />;
+        }
+        if (provider === "azure") {
+          if (!tech.azure_access_token && !tech.azure_subscription_id) return <ProviderEmptyState Icon={Hexagon} providerLabel="Azure" state="not_connected" />;
+          return <ProviderEmptyState Icon={Hexagon} providerLabel="Azure" state="lambda_unsupported"
+            detail="Azure scanning is queued — your Lambda needs a `provider === 'azure'` handler. Connection saved and idle." />;
+        }
+        return null;
+      })()}
 
       <ActivityFeed limit={20} />
     </div>

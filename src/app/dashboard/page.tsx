@@ -4,7 +4,7 @@ import { useOrg, type ControlRow, type RawFinding, type TimelineEvent, type Task
 import {
   Shield, Eye, Lock, HardDrive, GitBranch, Gauge, AlertTriangle, Circle,
   GitPullRequest, Search, FolderTree, Building2, Cloud, ChevronDown, ChevronUp,
-  PlugZap, ListChecks, CheckCircle2
+  PlugZap, ListChecks, CheckCircle2, MessageSquare, Mail, Hexagon
 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
 import NextBestActions from "@/components/NextBestActions";
@@ -504,6 +504,9 @@ export default function DashboardPage() {
   const techStack = (org?.tech_stack ?? {}) as Record<string, string>;
   const awsConnected = !!techStack.aws_role_arn;
   const githubConnected = !!techStack.github_token;
+  const slackConnected = !!techStack.slack_access_token;
+  const googleConnected = !!techStack.google_access_token;
+  const azureConnected = !!techStack.azure_access_token || !!techStack.azure_subscription_id;
   const hasRealData = controls.length > 0;
 
   const realCompliant = controls.filter(c => c.status === "compliant").length;
@@ -532,7 +535,7 @@ export default function DashboardPage() {
   const totalItems = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0) + totalTaskCount;
   const combinedScore = totalItems > 0 ? Math.round((totalPassing / totalItems) * 100) : 0;
   const score = combinedScore;
-  const connectedIntegrations = [awsConnected, githubConnected].filter(Boolean).length;
+  const connectedIntegrations = [awsConnected, githubConnected, slackConnected, googleConnected, azureConnected].filter(Boolean).length;
   // Evidence: count controls with evidence (compliant = evidence exists)
   const totalEvidence = hasRealData ? realTotal : 0;
   const collectedEvidence = hasRealData ? realCompliant : 0;
@@ -682,6 +685,28 @@ export default function DashboardPage() {
             <Github className="w-3.5 h-3.5" strokeWidth={1.8} /> Connect GitHub
           </a>
         )}
+        {slackConnected ? (
+          <a href="/dashboard/monitoring?provider=slack" className="inline-flex items-center gap-1.5 text-xs bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border border-[var(--color-border)] px-2.5 py-1 rounded-md font-medium hover:border-[var(--color-border-strong)] transition">
+            <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.8} /> Slack
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" title="Awaiting Lambda support" />
+          </a>
+        ) : (
+          <a href="/dashboard/settings" className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-2.5 py-1 rounded-md hover:text-[var(--color-foreground)] transition">
+            <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.8} /> Connect Slack
+          </a>
+        )}
+        {googleConnected ? (
+          <a href="/dashboard/monitoring?provider=google_workspace" className="inline-flex items-center gap-1.5 text-xs bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border border-[var(--color-border)] px-2.5 py-1 rounded-md font-medium hover:border-[var(--color-border-strong)] transition">
+            <Mail className="w-3.5 h-3.5" strokeWidth={1.8} /> Google
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" />
+          </a>
+        ) : null}
+        {azureConnected ? (
+          <a href="/dashboard/monitoring?provider=azure" className="inline-flex items-center gap-1.5 text-xs bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border border-[var(--color-border)] px-2.5 py-1 rounded-md font-medium hover:border-[var(--color-border-strong)] transition">
+            <Hexagon className="w-3.5 h-3.5" strokeWidth={1.8} /> Azure
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" />
+          </a>
+        ) : null}
       </div>
 
       {/* Score + Stats */}
