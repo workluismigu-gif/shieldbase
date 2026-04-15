@@ -22,13 +22,13 @@ const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/admin.reports.audit.readonly",
 ].join(" ");
 
+// Basic scopes only — admin.* scopes require Slack Enterprise Grid.
+// These cover what Prowler needs for SOC 2 audit: workspace info + member list + email
+// (so it can flag users without 2FA / unverified emails).
 const SLACK_SCOPES = [
   "team:read",
   "users:read",
   "users:read.email",
-  "admin.users:read",
-  "admin.teams:read",
-  "admin.conversations:read",
 ].join(",");
 
 type Step = "choose" | "aws" | "github" | "google" | "slack" | "azure" | "done";
