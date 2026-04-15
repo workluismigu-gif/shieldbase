@@ -2,7 +2,21 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
-import { MessageSquare, Trash2, Send, AlertOctagon } from "lucide-react";
+import { MessageSquare, Trash2, Send, AlertOctagon, History, Calendar } from "lucide-react";
+
+interface TestInstance {
+  id: string;
+  control_id: string;
+  period_start: string | null;
+  period_end: string | null;
+  tested_by_email: string | null;
+  tested_at: string;
+  test_procedure: string | null;
+  sample_ids: string | null;
+  sample_rationale: string | null;
+  conclusion: string | null;
+  status: string;
+}
 
 interface Props {
   controlId: string;
@@ -47,6 +61,11 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
   const [testProcedure, setTestProcedure] = useState("");
   const [sampleIdsInput, setSampleIdsInput] = useState("");
   const [sampleRationale, setSampleRationale] = useState("");
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
+  const [conclusion, setConclusion] = useState("");
+  const [instances, setInstances] = useState<TestInstance[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [signOffName, setSignOffName] = useState("");
@@ -67,10 +86,23 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
     setComments((data as Comment[]) ?? []);
   }, [org?.id, controlId]);
 
+  const loadInstances = useCallback(async () => {
+    if (!org?.id) return;
+    const { data: s } = await supabase.auth.getSession();
+    const token = s?.session?.access_token;
+    if (!token) return;
+    const res = await fetch(`/api/test-instances?org_id=${org.id}&control_id=${encodeURIComponent(controlId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const j = await res.json();
+    setInstances(j.instances ?? []);
+  }, [org?.id, controlId]);
+
   useEffect(() => {
     loadComments();
+    loadInstances();
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
-  }, [loadComments]);
+  }, [loadComments, loadInstances]);
 
   const handleSave = async () => {
     if (approve) {
@@ -114,6 +146,26 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Save failed");
+
+      // Snapshot a test_instance so Type II period coverage is provable.
+      if (org?.id) {
+        await fetch("/api/test-instances", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionData.session.access_token}` },
+          body: JSON.stringify({
+            org_id: org.id,
+            control_id: controlId,
+            period_start: periodStart || null,
+            period_end: periodEnd || null,
+            test_procedure: testProcedure || null,
+            sample_ids: sampleIdsInput || null,
+            sample_rationale: sampleRationale || null,
+            conclusion: conclusion || null,
+            test_attributes: Object.keys(attrPayload).length > 0 ? attrPayload : null,
+          }),
+        }).catch(() => { /* non-fatal — controls row still updated */ });
+      }
+
       onSaved?.();
       onClose();
     } catch (err: unknown) {
@@ -182,9 +234,57 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
           </p>
         </div>
 
+        {/* Test history — visible to all org members */}
+        {instances.length > 0 && (
+          <div className="border-b border-[var(--color-border)]">
+            <button type="button" onClick={() => setShowHistory(v => !v)}
+              className="w-full flex items-center justify-between px-6 py-3 text-left hover:bg-[var(--color-surface)]">
+              <span className="flex items-center gap-2 text-sm font-medium text-[var(--color-foreground-subtle)]">
+                <History className="w-4 h-4" /> Test history ({instances.length})
+              </span>
+              <span className="text-xs text-[var(--color-muted)]">{showHistory ? "hide" : "show"}</span>
+            </button>
+            {showHistory && (
+              <div className="px-6 pb-4 space-y-2">
+                {instances.map(inst => {
+                  const periodLabel = inst.period_start && inst.period_end
+                    ? `${inst.period_start} → ${inst.period_end}`
+                    : inst.period_start || inst.period_end || "No period set";
+                  return (
+                    <div key={inst.id} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-3 text-xs">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-[var(--color-foreground)]">{periodLabel}</span>
+                        <span className="text-[var(--color-muted)]">{new Date(inst.tested_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="text-[var(--color-muted)] space-y-0.5">
+                        <div>{inst.tested_by_email ?? "—"}{inst.test_procedure ? ` · ${inst.test_procedure}` : ""}</div>
+                        {inst.sample_ids && <div className="font-mono">samples: {inst.sample_ids}</div>}
+                        {inst.conclusion && <div className="mt-1 text-[var(--color-foreground-subtle)] whitespace-pre-wrap">{inst.conclusion}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Test form — owners/admins only */}
         {canWrite && (
           <div className="p-6 space-y-4 border-b border-[var(--color-border)]">
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-2 flex items-center gap-1">
+                <Calendar className="w-3 h-3" /> Period tested
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)}
+                  className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)]" />
+                <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)}
+                  className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)]" />
+              </div>
+              <p className="text-[10px] text-[var(--color-muted)] mt-1">e.g. Q1 start → Q1 end. Used to prove period coverage in Type II reports.</p>
+            </div>
+
             <div>
               <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-2">Test procedure</label>
               <div className="grid grid-cols-3 gap-2">
@@ -223,6 +323,15 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
                 rows={2}
                 placeholder="e.g. n=3 of 12 monthly access reviews, random selection seeded AUDIT-2026-X7F9Q2."
                 className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)] resize-y" />
+            </div>
+
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-2">Test conclusion</label>
+              <textarea value={conclusion} onChange={e => setConclusion(e.target.value)}
+                rows={2}
+                placeholder="Based on inspection of X and reperformance of Y, the control was operating effectively during the period tested."
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)] resize-y" />
+              <p className="text-[10px] text-[var(--color-muted)] mt-1">Flows into the workpaper as the test iteration's audit conclusion.</p>
             </div>
 
             <div>
