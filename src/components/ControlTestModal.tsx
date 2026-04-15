@@ -149,7 +149,7 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
 
       // Snapshot a test_instance so Type II period coverage is provable.
       if (org?.id) {
-        await fetch("/api/test-instances", {
+        const tiRes = await fetch("/api/test-instances", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${sessionData.session.access_token}` },
           body: JSON.stringify({
@@ -163,7 +163,11 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
             conclusion: conclusion || null,
             test_attributes: Object.keys(attrPayload).length > 0 ? attrPayload : null,
           }),
-        }).catch(() => { /* non-fatal — controls row still updated */ });
+        });
+        if (!tiRes.ok) {
+          const tiJson = await tiRes.json().catch(() => ({}));
+          throw new Error(`Test instance snapshot failed: ${tiJson.error ?? tiRes.statusText}. Control row was updated.`);
+        }
       }
 
       onSaved?.();
@@ -417,7 +421,7 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
         {/* Log-as-finding shortcut — visible to any org member on failing controls,
             even if they don't have canWrite (auditor_readonly is the PRIMARY author
             of findings). */}
-        {role && currentStatus === "non_compliant" && (
+        {role && (currentStatus === "non_compliant" || currentStatus === "partial") && (
           <div className="px-6 pt-4 pb-2">
             <button
               onClick={async () => {

@@ -23,7 +23,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
   {
     label: "Compliance",
     items: [
-      { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel, badge: "New" },
+      { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel },
       { href: "/dashboard/engagements", label: "Engagements", Icon: Briefcase },
       { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon },
       { href: "/dashboard/ipe", label: "IPE Walkthroughs", Icon: FileSearch },
@@ -159,8 +159,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="hidden md:block" />
           <div className="flex items-center gap-2">
             {role === "auditor_readonly" && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-info)] bg-[var(--color-info-bg)] px-2.5 py-1 rounded-md" title="You have read-only access to this organization">
-                Auditor · Read-only
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-info)] bg-[var(--color-info-bg)] px-2.5 py-1 rounded-md" title="You sign off on this engagement">
+                Lead Auditor
+              </span>
+            )}
+            {role === "auditor_staff" && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md" title="Per-control assignments — cannot sign off">
+                Auditor Staff
               </span>
             )}
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--color-success)] bg-[var(--color-success-bg)] px-2.5 py-1 rounded-md">

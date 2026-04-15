@@ -36,8 +36,10 @@ export async function POST(req: NextRequest) {
       orgId = member.org_id;
       role = member.role as "admin" | "auditor_readonly";
     }
-    if (role !== "auditor_readonly") {
-      return NextResponse.json({ error: "Only the auditor can select the sample" }, { status: 403 });
+    // Owner (doing self-attestation) and lead auditor can both run selection.
+    // Admins and staff cannot — sample selection is a judgment call.
+    if (role !== "auditor_readonly" && role !== "owner") {
+      return NextResponse.json({ error: "Only the owner or lead auditor can run sample selection" }, { status: 403 });
     }
 
     // Pull controls for scope

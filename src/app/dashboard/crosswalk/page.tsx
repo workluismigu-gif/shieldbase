@@ -29,12 +29,13 @@ export default function CrosswalkPage() {
   }, [q]);
 
   const downloadCsv = () => {
-    const csv = crosswalkToCsv(filtered);
+    const csv = crosswalkToCsv(filtered, active);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `shieldbase-crosswalk-${new Date().toISOString().slice(0,10)}.csv`;
+    const orgSlug = (typeof window !== "undefined" ? window.location.hostname.split(".")[0] : "shieldbase");
+    a.download = `${orgSlug}-crosswalk-${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };

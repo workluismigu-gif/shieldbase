@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useOrg } from "@/lib/org-context";
 import ControlTestModal from "@/components/ControlTestModal";
 import { supabase } from "@/lib/supabase";
-import { Beaker, Users as UsersIcon, X } from "lucide-react";
+import { Beaker, Users as UsersIcon, X, AlertOctagon } from "lucide-react";
 
 type FilterStatus = "all" | "compliant" | "partial" | "non_compliant" | "not_assessed";
 
@@ -238,10 +238,38 @@ export default function ControlsPage() {
                       </td>
                     )}
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
-                        className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
-                        {canWrite ? "Test & sign off" : "Open"}
-                      </button>
+                      <div className="inline-flex items-center gap-1">
+                        {(isAuditor || isStaff) && (c.status === "non_compliant" || c.status === "partial") && (
+                          <button title="Flag as finding"
+                            onClick={async () => {
+                              if (!org?.id) return;
+                              const { data: sess } = await supabase.auth.getSession();
+                              const token = sess?.session?.access_token;
+                              if (!token) return;
+                              const res = await fetch("/api/findings", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                body: JSON.stringify({
+                                  org_id: org.id,
+                                  control_id: c.control_id,
+                                  title: `${c.control_id}: ${c.title}`,
+                                  description: `Flagged from Controls list on ${new Date().toLocaleDateString()} (status: ${c.status}).`,
+                                  severity: c.severity === "critical" ? "critical" : c.severity === "high" ? "high" : "medium",
+                                  disposition: "deficiency",
+                                }),
+                              });
+                              const j = await res.json();
+                              if (res.ok && j.finding?.id) window.location.href = `/dashboard/findings/${j.finding.id}`;
+                            }}
+                            className="p-1.5 text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-md">
+                            <AlertOctagon className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
+                          className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
+                          {canWrite ? "Test & sign off" : "Open"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

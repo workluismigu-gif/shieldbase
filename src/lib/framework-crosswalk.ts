@@ -112,19 +112,23 @@ export const CROSSWALK: CrosswalkRow[] = [
     iso27001: ["A.8.10","A.8.13"], hipaa: ["§164.316(b)(2)(i)"], pci_dss: ["3.2"], nist_csf: ["PR.DS-04"] },
 ];
 
-export function crosswalkToCsv(rows: CrosswalkRow[]): string {
-  const head = ["TSC","Title","ISO 27001 Annex A","HIPAA","PCI DSS 4.0","NIST CSF 2.0"];
+export type FrameworkKey = "iso27001" | "hipaa" | "pci_dss" | "nist_csf";
+
+export function crosswalkToCsv(rows: CrosswalkRow[], columns?: FrameworkKey[]): string {
+  const cols = columns ?? (["iso27001","hipaa","pci_dss","nist_csf"] as FrameworkKey[]);
+  const labels: Record<FrameworkKey, string> = {
+    iso27001: "ISO 27001 Annex A",
+    hipaa: "HIPAA",
+    pci_dss: "PCI DSS 4.0",
+    nist_csf: "NIST CSF 2.0",
+  };
+  const head = ["TSC","Title", ...cols.map(c => labels[c])];
   const esc = (s: string) => /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   const lines = [head.join(",")];
   for (const r of rows) {
-    lines.push([
-      r.tsc,
-      esc(r.tsc_title),
-      esc((r.iso27001 ?? []).join("; ")),
-      esc((r.hipaa ?? []).join("; ")),
-      esc((r.pci_dss ?? []).join("; ")),
-      esc((r.nist_csf ?? []).join("; ")),
-    ].join(","));
+    const out = [r.tsc, esc(r.tsc_title)];
+    for (const c of cols) out.push(esc((r[c] ?? []).join("; ")));
+    lines.push(out.join(","));
   }
   return lines.join("\n");
 }

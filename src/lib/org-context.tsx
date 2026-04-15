@@ -195,7 +195,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           // Initial fetch
           const { data: controlData } = await supabase
             .from("controls")
-            .select("control_id, category, title, status, severity, updated_at")
+            .select("control_id, category, title, status, severity, updated_at, in_sample, test_procedure, sample_ids, sample_rationale, tested_by_email, tested_at")
             .eq("org_id", orgId);
           if (controlData) setControls(controlData as ControlRow[]);
 
@@ -311,7 +311,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
           async () => {
             const { data } = await supabase
               .from("controls")
-              .select("control_id, category, title, status, severity, updated_at")
+              .select("control_id, category, title, status, severity, updated_at, in_sample, test_procedure, sample_ids, sample_rationale, tested_by_email, tested_at")
               .eq("org_id", orgId);
             if (data) setControls(data as ControlRow[]);
           }

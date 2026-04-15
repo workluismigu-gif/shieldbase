@@ -41,14 +41,17 @@ export async function POST(req: NextRequest) {
   if (tplErr) return NextResponse.json({ error: tplErr.message }, { status: 500 });
   if (!templates || templates.length === 0) return NextResponse.json({ ok: true, created: 0 });
 
+  // Default due_date = 14 days from creation if caller didn't supply one — saves
+  // the auditor from hand-picking a date on every row.
+  const defaultDue = due_date ?? new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const rows = templates.map(t => ({
     org_id,
     title: t.title,
     description: t.description,
     control_id: t.control_id,
-    due_date: due_date || null,
+    due_date: defaultDue,
     requested_by: userId,
-    status: "pending",
+    status: "requested",
   }));
 
   const { error: insErr, count } = await s

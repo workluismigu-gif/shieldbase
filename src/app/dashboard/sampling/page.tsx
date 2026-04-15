@@ -8,7 +8,7 @@ import { FREQUENCY_GUIDE, sampleSizeFor, generateSeed, type ControlFrequency } f
 
 export default function SamplingPage() {
   const { org, role } = useOrg();
-  const isAuditor = role === "auditor_readonly";
+  const canSelect = role === "auditor_readonly" || role === "owner";
 
   const [seed, setSeed] = useState<string>("");
   const [seedDirty, setSeedDirty] = useState(false);
@@ -69,7 +69,7 @@ export default function SamplingPage() {
   };
 
   const runSelect = async () => {
-    if (!isAuditor) { setErr("Only the auditor can run sample selection."); return; }
+    if (!canSelect) { setErr("Only the owner or lead auditor can run sample selection."); return; }
     if (!seed) { setErr("Set an engagement seed first."); return; }
     setSelecting(true); setErr(""); setSelectResult(null);
     const { data: s } = await supabase.auth.getSession();
@@ -203,13 +203,13 @@ export default function SamplingPage() {
           </div>
         </div>
 
-        {!isAuditor && (
+        {!canSelect && (
           <div className="bg-[var(--color-info-bg)] border border-[var(--color-info)]/30 rounded-lg p-3 text-sm text-[var(--color-info)]">
-            Only the auditor role can run sample selection. This page is read-only for owners/admins.
+            Only the owner or lead auditor can run sample selection. This page is read-only for admins and staff.
           </div>
         )}
 
-        <button onClick={runSelect} disabled={!isAuditor || selecting}
+        <button onClick={runSelect} disabled={!canSelect || selecting}
           className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-40 text-sm px-4 py-2 rounded-lg font-medium">
           <Dices className="w-4 h-4" />
           {selecting ? "Selecting..." : "Run selection"}
