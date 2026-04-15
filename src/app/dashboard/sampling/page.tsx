@@ -25,12 +25,26 @@ export default function SamplingPage() {
   const [n, setN] = useState<number>(calc.n);
   const [selecting, setSelecting] = useState(false);
   const [selectResult, setSelectResult] = useState<{ selected: string[]; total_population: number } | null>(null);
+  const [currentSample, setCurrentSample] = useState<string[]>([]);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     if (org?.sample_seed) setSeed(org.sample_seed);
     else if (!seed && org) setSeed(generateSeed());
   }, [org]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadCurrent = async () => {
+    if (!org?.id) return;
+    const { data } = await supabase
+      .from("controls")
+      .select("control_id")
+      .eq("org_id", org.id)
+      .eq("in_sample", true)
+      .order("control_id");
+    setCurrentSample((data ?? []).map(r => r.control_id as string));
+  };
+
+  useEffect(() => { loadCurrent(); }, [org?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setN(calc.n); }, [calc.n]);
 
@@ -70,6 +84,7 @@ export default function SamplingPage() {
     setSelecting(false);
     if (!res.ok) { setErr(j.error || "Selection failed"); return; }
     setSelectResult({ selected: j.selected ?? [], total_population: j.total_population ?? 0 });
+    await loadCurrent();
   };
 
   return (
@@ -81,6 +96,27 @@ export default function SamplingPage() {
         </h1>
         <p className="text-sm text-[var(--color-muted)] mt-1">AICPA-aligned sample size guidance + deterministic random selection. Seed reproducibility keeps Year-2 walkthroughs honest.</p>
       </div>
+
+      {/* Current sample */}
+      <section className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-6 space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-[var(--color-foreground)]">Current sample</h2>
+          <Link href="/dashboard/controls" className="text-sm text-[var(--color-info)] hover:underline">View on controls page →</Link>
+        </div>
+        {currentSample.length === 0 ? (
+          <p className="text-sm text-[var(--color-muted)]">No controls are currently flagged as in-sample. Run a selection below.</p>
+        ) : (
+          <>
+            <p className="text-sm text-[var(--color-muted)]">
+              <span className="font-bold text-[var(--color-foreground)]">{currentSample.length}</span> control{currentSample.length === 1 ? "" : "s"} flagged as in-sample right now.
+              {org?.sample_seed && <> Seed on file: <span className="font-mono text-[var(--color-foreground-subtle)]">{org.sample_seed}</span>.</>}
+            </p>
+            <div className="bg-[var(--color-surface-2)] rounded-lg p-3 font-mono text-xs text-[var(--color-foreground-subtle)] leading-relaxed">
+              {currentSample.join(", ")}
+            </div>
+          </>
+        )}
+      </section>
 
       {/* Engagement seed */}
       <section className="bg-[var(--color-bg)] border border-[var(--color-border)] rounded-2xl p-6 space-y-3">

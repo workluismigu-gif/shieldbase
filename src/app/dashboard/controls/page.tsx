@@ -96,13 +96,21 @@ export default function ControlsPage() {
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <button onClick={() => setSampleFilter(sampleFilter === "all" ? "in_sample" : "all")}
+          title={sampleFilter === "in_sample" ? "Click to show all controls" : "Click to show only in-sample controls"}
           className={`inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border transition ${
             sampleFilter === "in_sample"
               ? "bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]"
               : "bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] hover:text-[var(--color-foreground)]"
           }`}>
           <Beaker className="w-3.5 h-3.5" strokeWidth={1.8} />
-          {sampleFilter === "in_sample" ? `Sample (${sampleCount})` : `Sample only`}
+          {sampleFilter === "in_sample" ? "In-sample only" : "All controls"}
+          {sampleCount > 0 && (
+            <span className={`ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+              sampleFilter === "in_sample"
+                ? "bg-[var(--color-info)] text-white"
+                : "bg-[var(--color-info-bg)] text-[var(--color-info)]"
+            }`}>{sampleCount}</span>
+          )}
         </button>
       </div>
 
