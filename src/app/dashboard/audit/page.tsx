@@ -21,10 +21,64 @@ interface PbcRequest {
 
 export default function AuditPage() {
   const { org, role, controls, scanHistory, userEmail } = useOrg();
+  const isAuditor = role === "auditor_readonly";
   const [pbc, setPbc] = useState<PbcRequest[] | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
-  const isAuditor = role === "auditor_readonly";
+  const handleBulkSignoff = useCallback(async () => {
+    if (!org?.id) return;
+    if (!isAuditor) return;
+    if (!userEmail) { alert("No user email on record."); return; }
+    if (!confirm(
+      `Auto sign-off will approve every currently compliant control with evidence from the last 45 days. ` +
+      `Partial and failing controls are skipped. Continue as ${userEmail}?`
+    )) return;
+    setBulkBusy(true);
+    try {
+      // Pull compliant controls with their latest evidence
+      const { data: evRows } = await supabase
+        .from("control_evidence")
+        .select("control_id, collected_at")
+        .eq("org_id", org.id)
+        .order("collected_at", { ascending: false });
+      const latestByControl = new Map<string, string>();
+      for (const r of evRows ?? []) {
+        if (!latestByControl.has(r.control_id)) latestByControl.set(r.control_id, r.collected_at);
+      }
+      const freshCutoff = Date.now() - 45 * 86400000;
+      const eligible = controls.filter(c => {
+        if (c.status !== "compliant") return false;
+        const latest = latestByControl.get(c.control_id);
+        if (!latest) return false;
+        return new Date(latest).getTime() >= freshCutoff;
+      });
+      if (eligible.length === 0) { alert("No eligible controls (compliant + evidence < 45d old)."); return; }
+
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token;
+      if (!token) { alert("Not signed in."); return; }
+
+      let signed = 0;
+      for (const ctrl of eligible) {
+        const res = await fetch("/api/controls/test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            control_id: ctrl.control_id,
+            test_notes: `Auto sign-off: evidence within 45 days of ${new Date().toISOString().slice(0, 10)}`,
+            approve: true,
+            auth_token: token,
+          }),
+        });
+        if (res.ok) signed += 1;
+      }
+      alert(`Signed off ${signed} of ${eligible.length} eligible controls.`);
+      if (typeof window !== "undefined") window.location.reload();
+    } finally {
+      setBulkBusy(false);
+    }
+  }, [org?.id, isAuditor, userEmail, controls]);
 
   const loadPbc = useCallback(async () => {
     if (!org?.id) return;
@@ -88,6 +142,18 @@ export default function AuditPage() {
         commentsBy.set(c.control_id, arr);
       }
 
+      // New: findings + test iterations for Type II defensibility
+      const { data: findingsRows } = await supabase
+        .from("findings")
+        .select("control_id, title, severity, disposition, status, management_response, remediation_owner_email, remediation_target_date, auditor_conclusion")
+        .eq("org_id", org.id)
+        .order("created_at", { ascending: true });
+      const { data: instanceRows } = await supabase
+        .from("test_instances")
+        .select("control_id, period_start, period_end, tested_by_email, tested_at, test_procedure, sample_ids, conclusion")
+        .eq("org_id", org.id)
+        .order("tested_at", { ascending: true });
+
       const scope = (org.scope_config ?? {}) as Record<string, unknown>;
       const data: WorkpaperData = {
         org_name: org.name ?? "Organization",
@@ -122,6 +188,8 @@ export default function AuditPage() {
           reviewed_at: null,
           control_id: p.control_id,
         })),
+        findings: (findingsRows ?? []) as WorkpaperData["findings"],
+        test_instances: (instanceRows ?? []) as WorkpaperData["test_instances"],
       };
 
       const blob = generateWorkpaperPdf(data);
@@ -162,15 +230,24 @@ export default function AuditPage() {
               : "What your auditor sees. Use this to track readiness and respond to outstanding requests."}
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          disabled={exporting || !org?.id}
-          className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium px-4 py-2 rounded-lg transition flex-shrink-0"
-          title={stats.inSample === 0 ? "Mark controls as in-sample first" : "Download a PDF workpaper of the engagement"}
-        >
-          <Download className="w-4 h-4" strokeWidth={1.8} />
-          {exporting ? "Generating…" : "Export workpaper"}
-        </button>
+        <div className="flex gap-2 flex-shrink-0">
+          {isAuditor && (
+            <button onClick={handleBulkSignoff} disabled={bulkBusy}
+              title="Sign off all compliant controls whose most recent evidence is < 45 days old. Skips partials/failures. Sign-off is typed-email-authenticated in bulk."
+              className="inline-flex items-center gap-2 bg-[var(--color-bg)] text-[var(--color-foreground)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] disabled:opacity-50 text-sm font-medium px-4 py-2 rounded-lg transition">
+              {bulkBusy ? "Signing…" : "Auto sign-off fresh compliant"}
+            </button>
+          )}
+          <button
+            onClick={handleExport}
+            disabled={exporting || !org?.id}
+            className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium px-4 py-2 rounded-lg transition"
+            title={stats.inSample === 0 ? "Mark controls as in-sample first" : "Download a PDF workpaper of the engagement"}
+          >
+            <Download className="w-4 h-4" strokeWidth={1.8} />
+            {exporting ? "Generating…" : "Export workpaper"}
+          </button>
+        </div>
       </div>
 
       {/* Engagement scope */}

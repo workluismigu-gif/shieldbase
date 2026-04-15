@@ -22,6 +22,27 @@ export interface WorkpaperData {
   }[];
   exceptions: { control_id: string; title: string; status: string; severity: string | null }[];
   pbc: { title: string; status: string; created_at: string; provided_at: string | null; reviewed_at: string | null; control_id: string | null }[];
+  findings?: {
+    control_id: string | null;
+    title: string;
+    severity: string;
+    disposition: string;
+    status: string;
+    management_response: string | null;
+    remediation_owner_email: string | null;
+    remediation_target_date: string | null;
+    auditor_conclusion: string | null;
+  }[];
+  test_instances?: {
+    control_id: string;
+    period_start: string | null;
+    period_end: string | null;
+    tested_by_email: string | null;
+    tested_at: string;
+    test_procedure: string | null;
+    sample_ids: string | null;
+    conclusion: string | null;
+  }[];
 }
 
 const NAVY = [15, 23, 42] as [number, number, number];
@@ -341,6 +362,83 @@ export function generateWorkpaperPdf(data: WorkpaperData): Blob {
       ]),
       styles: { fontSize: 8 },
       headStyles: { fillColor: NAVY, textColor: 255 },
+    });
+  }
+
+  // ---------- Findings & Exceptions Log ----------
+  if ((data.findings ?? []).length > 0) {
+    doc.addPage();
+    header(doc, "Findings & Exceptions Log", data.org_name);
+    autoTable(doc, {
+      startY: 45,
+      head: [["Control", "Title", "Severity", "Disposition", "Status", "Target"]],
+      body: (data.findings ?? []).map(f => [
+        f.control_id ?? "—",
+        f.title.length > 40 ? f.title.slice(0, 37) + "…" : f.title,
+        f.severity,
+        f.disposition.replace(/_/g, " "),
+        f.status,
+        f.remediation_target_date ? fmtDate(f.remediation_target_date) : "—",
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: NAVY, textColor: 255 },
+      columnStyles: { 1: { cellWidth: 65 } },
+    });
+
+    // Per-finding detail (one per page for clarity)
+    for (const f of data.findings ?? []) {
+      doc.addPage();
+      header(doc, `Finding — ${f.control_id ?? "narrative"}`, data.org_name);
+      let y = 48;
+      doc.setFontSize(11);
+      doc.setTextColor(...NAVY);
+      doc.text(f.title, 14, y);
+      y += 8;
+      doc.setFontSize(9);
+      doc.setTextColor(...GREY);
+      doc.text(`Severity: ${f.severity} · Disposition: ${f.disposition.replace(/_/g, " ")} · Status: ${f.status}`, 14, y);
+      y += 8;
+      if (f.auditor_conclusion) {
+        doc.setTextColor(...NAVY); doc.text("Auditor conclusion", 14, y); y += 5;
+        doc.setTextColor(...GREY);
+        const wrapped = doc.splitTextToSize(f.auditor_conclusion, 180);
+        doc.text(wrapped, 14, y); y += wrapped.length * 5 + 3;
+      }
+      if (f.management_response) {
+        doc.setTextColor(...NAVY); doc.text("Management response", 14, y); y += 5;
+        doc.setTextColor(...GREY);
+        const wrapped = doc.splitTextToSize(f.management_response, 180);
+        doc.text(wrapped, 14, y); y += wrapped.length * 5 + 3;
+      }
+      if (f.remediation_owner_email || f.remediation_target_date) {
+        doc.setTextColor(...NAVY); doc.text("Remediation", 14, y); y += 5;
+        doc.setTextColor(...GREY);
+        doc.text(`${f.remediation_owner_email ?? "—"} · target ${f.remediation_target_date ?? "—"}`, 14, y);
+      }
+    }
+  }
+
+  // ---------- Test iterations (Type II period coverage proof) ----------
+  if ((data.test_instances ?? []).length > 0) {
+    doc.addPage();
+    header(doc, "Test iteration log", data.org_name);
+    doc.setFontSize(9);
+    doc.setTextColor(...GREY);
+    doc.text("One row per test run. Required for Type II to demonstrate control operated throughout the period.", 14, 45);
+    autoTable(doc, {
+      startY: 52,
+      head: [["Control", "Period", "Tester", "Date", "Procedure", "Conclusion"]],
+      body: (data.test_instances ?? []).map(t => [
+        t.control_id,
+        t.period_start && t.period_end ? `${t.period_start} → ${t.period_end}` : (t.period_start ?? t.period_end ?? "—"),
+        t.tested_by_email ?? "—",
+        fmtDate(t.tested_at),
+        t.test_procedure ?? "—",
+        (t.conclusion ?? "").length > 60 ? (t.conclusion ?? "").slice(0, 57) + "…" : (t.conclusion ?? "—"),
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: NAVY, textColor: 255 },
+      columnStyles: { 5: { cellWidth: 60 } },
     });
   }
 

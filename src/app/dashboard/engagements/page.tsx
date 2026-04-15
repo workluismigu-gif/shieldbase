@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
-import { Briefcase, Plus, Calendar, ArrowRight } from "lucide-react";
+import { Briefcase, Plus, Calendar, ArrowRight, Copy } from "lucide-react";
 
 interface Engagement {
   id: string;
@@ -31,6 +31,7 @@ export default function EngagementsPage() {
   const [items, setItems] = useState<Engagement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [preselectedPriorId, setPreselectedPriorId] = useState<string>("");
 
   const load = async () => {
     if (!org?.id) return;
@@ -76,6 +77,13 @@ export default function EngagementsPage() {
           {items.map((e, i) => (
             <div key={e.id} className={`px-5 py-4 ${i < items.length - 1 ? "border-b border-[var(--color-border)]" : ""}`}>
               <div className="flex items-start justify-between gap-4">
+                {canEdit && (e.status === "issued" || e.status === "closed") && (
+                  <button onClick={() => { setPreselectedPriorId(e.id); setShowCreate(true); }}
+                    title="Start next year's engagement carrying this one's scope and procedures forward"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] self-start flex-shrink-0">
+                    <Copy className="w-3.5 h-3.5" /> Carry forward
+                  </button>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <span className="font-semibold text-[var(--color-foreground)]">{e.name}</span>
@@ -104,18 +112,22 @@ export default function EngagementsPage() {
       )}
 
       {showCreate && org?.id && (
-        <CreateEngagement orgId={org.id} priorList={items} onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />
+        <CreateEngagement orgId={org.id} priorList={items} preselectedPriorId={preselectedPriorId}
+          onClose={() => { setShowCreate(false); setPreselectedPriorId(""); }}
+          onCreated={() => { setShowCreate(false); setPreselectedPriorId(""); load(); }} />
       )}
     </div>
   );
 }
 
-function CreateEngagement({ orgId, priorList, onClose, onCreated }: { orgId: string; priorList: Engagement[]; onClose: () => void; onCreated: () => void }) {
-  const [name, setName] = useState(`SOC 2 Type II ${new Date().getFullYear()}`);
+function CreateEngagement({ orgId, priorList, preselectedPriorId, onClose, onCreated }: { orgId: string; priorList: Engagement[]; preselectedPriorId?: string; onClose: () => void; onCreated: () => void }) {
+  const preselected = preselectedPriorId ? priorList.find(p => p.id === preselectedPriorId) : null;
+  const nextYear = new Date().getFullYear();
+  const [name, setName] = useState(preselected ? `SOC 2 Type II ${nextYear}` : `SOC 2 Type II ${nextYear}`);
   const [periodStart, setPeriodStart] = useState("");
   const [periodEnd, setPeriodEnd] = useState("");
-  const [framework, setFramework] = useState("soc2_type2");
-  const [priorId, setPriorId] = useState("");
+  const [framework, setFramework] = useState(preselected?.framework ?? "soc2_type2");
+  const [priorId, setPriorId] = useState(preselectedPriorId ?? "");
   const [clone, setClone] = useState(true);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
