@@ -153,6 +153,34 @@ export async function POST(req: NextRequest) {
         .eq("org_id", ctx.org_id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+      // When a PBC is accepted, the response becomes evidence. Mirror it into
+      // control_evidence so it appears on /dashboard/evidence without a second
+      // manual upload.
+      if (body.decision === "accepted") {
+        const { data: pbc } = await db
+          .from("pbc_requests")
+          .select("title, control_id, response_notes, response_url, response_storage_path, provided_at")
+          .eq("id", body.request_id)
+          .maybeSingle();
+        if (pbc?.control_id) {
+          await db.from("control_evidence").insert({
+            org_id: ctx.org_id,
+            control_id: pbc.control_id,
+            evidence_type: "pbc_response",
+            collected_at: pbc.provided_at ?? new Date().toISOString(),
+            evidence_data: {
+              source: "pbc",
+              pbc_request_id: body.request_id,
+              title: pbc.title,
+              notes: pbc.response_notes,
+              url: pbc.response_url,
+              storage_path: pbc.response_storage_path,
+              file_name: pbc.title,
+            },
+          });
+        }
+      }
+
       await db.from("activity_events").insert({
         org_id: ctx.org_id,
         type: "control_change",

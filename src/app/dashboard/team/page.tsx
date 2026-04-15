@@ -23,6 +23,7 @@ export default function TeamPage() {
   const { org, userEmail, canWrite } = useOrg();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"client" | "audit_firm">("client");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "auditor_readonly" | "auditor_staff">("auditor_readonly");
   const [inviting, setInviting] = useState(false);
@@ -158,8 +159,18 @@ export default function TeamPage() {
       )}
 
       <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] overflow-hidden">
-        <div className="px-6 py-4 border-b border-[var(--color-border)]">
-          <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Current members</h2>
+        <div className="px-6 pt-4 border-b border-[var(--color-border)]">
+          <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-3">Current members</h2>
+          <div className="flex gap-1 -mb-px">
+            <button onClick={() => setTab("client")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 ${tab === "client" ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"}`}>
+              Client team <span className="text-xs text-[var(--color-muted)]">({1 + members.filter(m => m.role === "admin").length})</span>
+            </button>
+            <button onClick={() => setTab("audit_firm")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 ${tab === "audit_firm" ? "border-[var(--color-foreground)] text-[var(--color-foreground)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"}`}>
+              Audit firm <span className="text-xs text-[var(--color-muted)]">({members.filter(m => m.role === "auditor_readonly" || m.role === "auditor_staff").length})</span>
+            </button>
+          </div>
         </div>
         {loading ? (
           <div className="p-6 text-sm text-[var(--color-muted)]">Loading…</div>
@@ -174,7 +185,7 @@ export default function TeamPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {ownerEmail && (
+              {tab === "client" && ownerEmail && (
                 <tr>
                   <td className="px-6 py-4 font-medium text-[var(--color-foreground)]">
                     {ownerEmail}
@@ -185,7 +196,9 @@ export default function TeamPage() {
                   <td className="px-6 py-4"></td>
                 </tr>
               )}
-              {members.map((m) => (
+              {members
+                .filter(m => tab === "client" ? (m.role === "admin") : (m.role === "auditor_readonly" || m.role === "auditor_staff"))
+                .map((m) => (
                 <tr key={m.id}>
                   <td className="px-6 py-4 font-medium text-[var(--color-foreground)]">{m.email}</td>
                   <td className="px-6 py-4">

@@ -6,37 +6,41 @@ import { useOrg } from "@/lib/org-context";
 import { signOut } from "@/lib/supabase";
 import {
   LayoutDashboard, Activity, FileText, Target, SlidersHorizontal,
-  ShieldCheck, Folder, Wrench, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2, AlertOctagon, Beaker, Grid3x3, Briefcase, FileSearch
+  ShieldCheck, Folder, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2, AlertOctagon, Beaker, Grid3x3, Briefcase, FileSearch
 } from "lucide-react";
 
-type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string };
+type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string; hideFromAuditors?: boolean };
 
 const navSections: { label: string; items: NavItem[] }[] = [
   {
-    label: "Workspace",
+    label: "Overview",
     items: [
-      { href: "/dashboard", label: "Overview", Icon: LayoutDashboard },
+      { href: "/dashboard", label: "Overview", Icon: LayoutDashboard, hideFromAuditors: true },
       { href: "/dashboard/monitoring", label: "Monitoring", Icon: Activity },
       { href: "/dashboard/gap-analysis", label: "Gap Analysis", Icon: FileText },
     ],
   },
   {
-    label: "Compliance",
+    label: "Fieldwork",
     items: [
       { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel },
       { href: "/dashboard/engagements", label: "Engagements", Icon: Briefcase },
-      { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon },
+      { href: "/dashboard/sampling", label: "Sampling", Icon: Beaker },
+      { href: "/dashboard/pbc", label: "PBC Requests", Icon: ClipboardList },
       { href: "/dashboard/ipe", label: "IPE Walkthroughs", Icon: FileSearch },
       { href: "/dashboard/controls", label: "Controls", Icon: Target },
-      { href: "/dashboard/sampling", label: "Sampling", Icon: Beaker },
-      { href: "/dashboard/crosswalk", label: "Crosswalk", Icon: Grid3x3 },
-      { href: "/dashboard/pbc", label: "PBC Requests", Icon: ClipboardList },
-      { href: "/dashboard/scope", label: "Audit Scope", Icon: SlidersHorizontal },
-      { href: "/dashboard/access-reviews", label: "Access Reviews", Icon: UserCheck },
-      { href: "/dashboard/vendors", label: "Vendor Risk", Icon: Building2 },
-      { href: "/dashboard/policies", label: "Policies", Icon: ShieldCheck },
+      { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon },
       { href: "/dashboard/evidence", label: "Evidence", Icon: Folder },
-      { href: "/dashboard/remediation", label: "Remediation", Icon: Wrench },
+    ],
+  },
+  {
+    label: "Reference",
+    items: [
+      { href: "/dashboard/crosswalk", label: "Crosswalk", Icon: Grid3x3 },
+      { href: "/dashboard/policies", label: "Policies", Icon: ShieldCheck },
+      { href: "/dashboard/scope", label: "Audit Scope", Icon: SlidersHorizontal },
+      { href: "/dashboard/vendors", label: "Vendor Risk", Icon: Building2 },
+      { href: "/dashboard/access-reviews", label: "Access Reviews", Icon: UserCheck },
     ],
   },
   {
@@ -108,11 +112,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
-          {navSections.map((section) => (
+          {navSections.map((section) => {
+            const isAuditor = role === "auditor_readonly" || role === "auditor_staff";
+            const items = section.items.filter(i => !(isAuditor && i.hideFromAuditors));
+            if (items.length === 0) return null;
+            return (
             <div key={section.label}>
               <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">{section.label}</div>
               <div className="space-y-0.5">
-                {section.items.map((item) => {
+                {items.map((item) => {
                   const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
                   return (
                     <Link key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}
@@ -131,7 +139,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 })}
               </div>
             </div>
-          ))}
+          );
+          })}
         </nav>
 
         {/* Bottom */}

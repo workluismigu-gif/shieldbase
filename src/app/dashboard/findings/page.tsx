@@ -93,7 +93,7 @@ export default function FindingsPage() {
             <AlertOctagon className="w-6 h-6 text-[var(--color-danger)]" strokeWidth={1.8} />
             Findings & Exceptions
           </h1>
-          <p className="text-sm text-[var(--color-muted)] mt-1">Formal record of deficiencies and exceptions identified during fieldwork.</p>
+          <p className="text-sm text-[var(--color-muted)] mt-1">Formal record of deficiencies and exceptions identified during fieldwork. Filter by <button onClick={() => setStatusFilter("remediating")} className="underline hover:text-[var(--color-foreground)]">remediating</button> to see items in active remediation.</p>
         </div>
         {canCreate && (
           <button onClick={() => setShowCreate(true)}
