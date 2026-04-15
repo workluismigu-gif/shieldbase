@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
-import { Building2, FileText, Wrench, GraduationCap, User, CalendarDays, Check, Circle } from "lucide-react";
+import { Building2, FileText, Wrench, GraduationCap, User, CalendarDays, Check, Circle, Filter } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import { formatDateOnly, isPast } from "@/lib/dates";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
@@ -103,10 +104,12 @@ export default function RemediationPage() {
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-16 text-[var(--color-muted)]">
-        <Wrench className="w-10 h-10 mx-auto mb-3" strokeWidth={1.4} />
-        <p className="text-sm">No tasks yet. Connect AWS to get your remediation list.</p>
-      </div>
+      <EmptyState
+        Icon={Wrench}
+        title="No remediation tasks yet"
+        description="Connect AWS or GitHub to surface failing checks. Each finding becomes a tracked task here with owner, due date, and audit trail."
+        cta={{ label: "Connect an integration", href: "/dashboard/settings" }}
+      />
     );
   }
 
@@ -135,7 +138,11 @@ export default function RemediationPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-[var(--color-muted)] text-sm">No tasks in this filter.</div>
+        <EmptyState
+          Icon={Filter}
+          title={filter === "done" ? "No completed tasks yet" : "No open tasks"}
+          description={filter === "done" ? "Mark tasks done as you remediate findings — they\u2019ll show up here." : "All open tasks are filtered out. Switch to All to see everything."}
+        />
       ) : (
         phases.map(phase => {
           const phaseTasks = filtered.filter(t => t.phase === phase);

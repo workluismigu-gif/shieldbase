@@ -123,7 +123,10 @@ export default function ControlsPage() {
             {loading ? (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">No controls match — run a scan or adjust filters.</td></tr>
+              <tr><td colSpan={7} className="px-4 py-12 text-center">
+                <div className="text-sm font-medium text-[var(--color-foreground)]">No controls match</div>
+                <div className="text-xs text-[var(--color-muted)] mt-1">Run a scan to populate findings, or clear filters above.</div>
+              </td></tr>
             ) : (
               filtered.map(c => {
                 const sampled = inSample(c.control_id, c.in_sample);

@@ -3,7 +3,8 @@ import { useState } from "react";
 import { mockControls } from "@/lib/mock-data";
 import { useOrg } from "@/lib/org-context";
 import { generateGapAnalysisPDF } from "@/lib/pdf";
-import { AlertOctagon } from "lucide-react";
+import { AlertOctagon, Filter } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 const criteriaInfo: Record<string, { name: string; description: string; color: string }> = {
   CC1: { name: "Control Environment", description: "Organization structure, oversight, accountability", color: "bg-[var(--color-info-bg)] border-[var(--color-info)] text-[var(--color-info)]" },
@@ -142,7 +143,11 @@ export default function GapAnalysisPage() {
       {/* Controls list */}
       <div className="space-y-2">
         {filtered.length === 0 && (
-          <div className="text-center py-12 text-[var(--color-muted)]">No controls match your filters.</div>
+          <EmptyState
+            Icon={Filter}
+            title="No controls match your filters"
+            description="Try clearing the status, category, or framework filter above to see your full gap analysis."
+          />
         )}
         {filtered.map(control => {
           const s = statusConfig[control.status as keyof typeof statusConfig];

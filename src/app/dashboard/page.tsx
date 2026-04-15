@@ -7,6 +7,7 @@ import {
   PlugZap, ListChecks, CheckCircle2
 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
+import NextBestActions from "@/components/NextBestActions";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -558,6 +559,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <NextBestActions />
 
       {/* Two-track progress */}
       <div className="grid md:grid-cols-2 gap-4">
