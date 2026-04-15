@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { encryptToken } from "@/lib/crypto";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -50,7 +51,7 @@ export async function GET(req: NextRequest) {
         .update({
           tech_stack: {
             ...existing,
-            github_token: accessToken,
+            github_token: encryptToken(accessToken),
             github_login: githubUser.login,
             github_connected_at: new Date().toISOString(),
           },

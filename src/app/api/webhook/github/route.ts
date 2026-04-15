@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { decryptToken } from "@/lib/crypto";
 
 /**
  * GitHub webhook receiver for real-time SOC 2 monitoring
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   if (event === "repository" || event === "organization" || event === "push" || event === "pull_request") {
     for (const org of orgs) {
       const tech = (org.tech_stack ?? {}) as Record<string, string>;
-      const githubToken = tech.github_token;
+      const githubToken = decryptToken(tech.github_token);
       if (!githubToken) continue;
 
       // Log webhook event for audit trail

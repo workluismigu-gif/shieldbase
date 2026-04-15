@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { encryptToken } from "@/lib/crypto";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://shieldbase.vercel.app";
 
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
     .update({
       tech_stack: {
         ...existing,
-        slack_access_token: accessToken,
+        slack_access_token: encryptToken(accessToken),
         slack_team_id: teamId,
         slack_team_name: teamName,
         slack_connected_at: new Date().toISOString(),

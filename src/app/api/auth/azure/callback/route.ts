@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { encryptToken } from "@/lib/crypto";
 
 const AZURE_CLIENT_ID = process.env.AZURE_CLIENT_ID || "10e95a0a-ac49-4a44-9fda-00b0d3b58c24";
 const AZURE_TENANT_ID = "common"; // Multi-tenant
@@ -72,8 +73,8 @@ export async function GET(req: NextRequest) {
     .update({
       tech_stack: {
         ...existing,
-        azure_access_token: tokenData.access_token,
-        azure_refresh_token: tokenData.refresh_token,
+        azure_access_token: encryptToken(tokenData.access_token),
+        azure_refresh_token: encryptToken(tokenData.refresh_token),
         azure_token_expiry: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
         azure_connected_at: new Date().toISOString(),
       },

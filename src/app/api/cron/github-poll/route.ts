@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { decryptToken } from "@/lib/crypto";
 
 // GitHub-only poll every 15 minutes via Vercel Cron
 // AWS scans stay on nightly schedule (cheaper)
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   for (const org of orgs) {
     const tech = (org.tech_stack ?? {}) as Record<string, string>;
-    const githubToken = tech.github_token;
+    const githubToken = decryptToken(tech.github_token);
     if (!githubToken) continue;
 
     await lambda.send(new InvokeCommand({

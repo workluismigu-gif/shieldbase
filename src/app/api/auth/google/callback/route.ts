@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { encryptToken } from "@/lib/crypto";
 
 /**
  * Google Workspace OAuth callback
@@ -68,8 +69,8 @@ export async function GET(req: NextRequest) {
     .update({
       tech_stack: {
         ...existing,
-        google_access_token: tokenData.access_token,
-        google_refresh_token: tokenData.refresh_token,
+        google_access_token: encryptToken(tokenData.access_token),
+        google_refresh_token: encryptToken(tokenData.refresh_token),
         google_token_expiry: new Date(Date.now() + tokenData.expires_in * 1000).toISOString(),
         google_domain: userInfo.hd,
         google_email: userInfo.email,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { decryptToken } from "@/lib/crypto";
 
 // Scheduled scan endpoint — runs daily at 06:00 UTC via Vercel cron.
 // Vercel cron invokes with GET + `Authorization: Bearer ${CRON_SECRET}`.
@@ -50,7 +51,7 @@ async function run(req: NextRequest) {
       await lambda.send(new InvokeCommand({
         FunctionName: "shieldbase-prowler-scanner",
         InvocationType: "Event",
-        Payload: Buffer.from(JSON.stringify({ org_id: org.id, provider: "github", github_token: tech.github_token, github_login: tech.github_login ?? "" })),
+        Payload: Buffer.from(JSON.stringify({ org_id: org.id, provider: "github", github_token: decryptToken(tech.github_token), github_login: tech.github_login ?? "" })),
       }));
       results.push({ org: org.name, provider: "github" });
     }
@@ -63,8 +64,8 @@ async function run(req: NextRequest) {
         Payload: Buffer.from(JSON.stringify({
           org_id: org.id,
           provider: "google_workspace",
-          google_access_token: tech.google_access_token,
-          google_refresh_token: tech.google_refresh_token ?? "",
+          google_access_token: decryptToken(tech.google_access_token),
+          google_refresh_token: decryptToken(tech.google_refresh_token) ?? "",
           google_domain: tech.google_domain ?? "",
         })),
       }));
@@ -79,7 +80,7 @@ async function run(req: NextRequest) {
         Payload: Buffer.from(JSON.stringify({
           org_id: org.id,
           provider: "slack",
-          slack_access_token: tech.slack_access_token,
+          slack_access_token: decryptToken(tech.slack_access_token),
           slack_team_id: tech.slack_team_id ?? "",
         })),
       }));

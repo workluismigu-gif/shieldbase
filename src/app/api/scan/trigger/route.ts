@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { decryptToken } from "@/lib/crypto";
 
 // Triggered by: onboarding (when ARN saved) or EventBridge nightly cron
 export async function POST(req: NextRequest) {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
       const payload: Record<string, string> = { org_id: org.id, provider };
 
       if (provider === "github") {
-        const githubToken = techStack.github_token;
+        const githubToken = decryptToken(techStack.github_token);
         if (!githubToken) continue;
         payload.github_token = githubToken;
         payload.github_login = techStack.github_login ?? "";
@@ -57,21 +58,21 @@ export async function POST(req: NextRequest) {
           payload.subscription_id = subId;
           payload.tenant_id = techStack.azure_tenant_id;
           payload.client_id = techStack.azure_client_id;
-          payload.client_secret = techStack.azure_client_secret;
+          payload.client_secret = decryptToken(techStack.azure_client_secret) ?? "";
         } else if (techStack.azure_access_token) {
-          payload.azure_access_token = techStack.azure_access_token;
-          payload.azure_refresh_token = techStack.azure_refresh_token ?? "";
+          payload.azure_access_token = decryptToken(techStack.azure_access_token) ?? "";
+          payload.azure_refresh_token = decryptToken(techStack.azure_refresh_token) ?? "";
         } else {
           continue;
         }
       } else if (provider === "google_workspace") {
-        const token = techStack.google_access_token;
+        const token = decryptToken(techStack.google_access_token);
         if (!token) continue;
         payload.google_access_token = token;
-        payload.google_refresh_token = techStack.google_refresh_token ?? "";
+        payload.google_refresh_token = decryptToken(techStack.google_refresh_token) ?? "";
         payload.google_domain = techStack.google_domain ?? "";
       } else if (provider === "slack") {
-        const token = techStack.slack_access_token;
+        const token = decryptToken(techStack.slack_access_token);
         if (!token) continue;
         payload.slack_access_token = token;
         payload.slack_team_id = techStack.slack_team_id ?? "";
