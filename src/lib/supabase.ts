@@ -42,7 +42,7 @@ export async function getSession() {
   return data.session;
 }
 
-export type OrgRole = "owner" | "admin" | "auditor_readonly";
+export type OrgRole = "owner" | "admin" | "auditor_readonly" | "auditor_staff";
 
 export type OrgRow = {
   id: string;

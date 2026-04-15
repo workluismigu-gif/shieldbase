@@ -6,7 +6,7 @@ import { useOrg } from "@/lib/org-context";
 interface Member {
   id: string;
   email: string;
-  role: "owner" | "admin" | "auditor_readonly";
+  role: "owner" | "admin" | "auditor_readonly" | "auditor_staff";
   invited_at: string;
   accepted_at: string | null;
   invite_token: string | null;
@@ -15,7 +15,8 @@ interface Member {
 const ROLE_LABELS: Record<string, string> = {
   owner: "Owner",
   admin: "Admin",
-  auditor_readonly: "Auditor (read-only)",
+  auditor_readonly: "Lead Auditor",
+  auditor_staff: "Auditor Staff",
 };
 
 export default function TeamPage() {
@@ -23,7 +24,7 @@ export default function TeamPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "auditor_readonly">("auditor_readonly");
+  const [role, setRole] = useState<"admin" | "auditor_readonly" | "auditor_staff">("auditor_readonly");
   const [inviting, setInviting] = useState(false);
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -128,10 +129,11 @@ export default function TeamPage() {
           />
           <select
             value={role}
-            onChange={(e) => setRole(e.target.value as "admin" | "auditor_readonly")}
+            onChange={(e) => setRole(e.target.value as "admin" | "auditor_readonly" | "auditor_staff")}
             className="border border-[var(--color-border-strong)] rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="auditor_readonly">Auditor (read-only)</option>
+            <option value="auditor_readonly">Lead Auditor</option>
+            <option value="auditor_staff">Auditor Staff (per-control assignments)</option>
             <option value="admin">Admin</option>
           </select>
           <button
@@ -188,7 +190,9 @@ export default function TeamPage() {
                   <td className="px-6 py-4 font-medium text-[var(--color-foreground)]">{m.email}</td>
                   <td className="px-6 py-4">
                     <span className={`text-xs font-medium px-2 py-1 rounded ${
-                      m.role === "auditor_readonly" ? "bg-purple-50 text-purple-700" : "bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)]"
+                      m.role === "auditor_readonly" ? "bg-purple-50 text-purple-700"
+                      : m.role === "auditor_staff" ? "bg-indigo-50 text-indigo-700"
+                      : "bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)]"
                     }`}>
                       {ROLE_LABELS[m.role] ?? m.role}
                     </span>

@@ -274,11 +274,13 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
             </div>
 
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-3 space-y-2">
-              <label className="flex items-center gap-2 text-sm text-[var(--color-foreground-subtle)] cursor-pointer">
-                <input type="checkbox" checked={approve} onChange={(e) => { setApprove(e.target.checked); if (!e.target.checked) setSignOffName(""); }} />
+              <label className={`flex items-center gap-2 text-sm ${role === "auditor_staff" ? "text-[var(--color-muted)] cursor-not-allowed" : "text-[var(--color-foreground-subtle)] cursor-pointer"}`}>
+                <input type="checkbox" checked={approve} disabled={role === "auditor_staff"}
+                  onChange={(e) => { setApprove(e.target.checked); if (!e.target.checked) setSignOffName(""); }} />
                 Sign off — approve this control
+                {role === "auditor_staff" && <span className="text-xs ml-1">(lead auditor only)</span>}
               </label>
-              {approve && (
+              {approve && role !== "auditor_staff" && (
                 <div className="pl-6 space-y-1.5">
                   <p className="text-xs text-[var(--color-muted)]">
                     Sign-off creates a permanent audit record. Type your email <span className="text-[var(--color-foreground-subtle)] font-medium">({userEmail})</span> to confirm.

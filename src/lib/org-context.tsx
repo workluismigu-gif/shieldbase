@@ -391,7 +391,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, role: org?.role ?? null, canWrite: (org?.role ?? "owner") !== "auditor_readonly", loading, controls, lastScan, lastGithubScan, lastSlackScan, scanHistory, timeline, tasks, policies, githubFindings, slackFindings, realtimeConnected, pushActivityEvent }}>
+    <OrgContext.Provider value={{ org, userEmail, role: org?.role ?? null, canWrite: (org?.role ?? "owner") !== "auditor_readonly" && (org?.role ?? "owner") !== "auditor_staff", loading, controls, lastScan, lastGithubScan, lastSlackScan, scanHistory, timeline, tasks, policies, githubFindings, slackFindings, realtimeConnected, pushActivityEvent }}>
       {children}
     </OrgContext.Provider>
   );

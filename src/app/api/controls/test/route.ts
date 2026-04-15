@@ -62,6 +62,12 @@ export async function POST(req: NextRequest) {
       update.test_attributes = Object.keys(sanitized).length > 0 ? sanitized : null;
     }
     if (approve) {
+      // Auditor staff cannot sign off — only leads/owners/admins.
+      const { data: membership } = await userClient
+        .from("org_members").select("role").eq("user_id", user.id).eq("org_id", orgId).maybeSingle();
+      if (membership?.role === "auditor_staff") {
+        return NextResponse.json({ error: "Staff auditors cannot sign off. Ask the lead auditor." }, { status: 403 });
+      }
       update.approved_by = user.id;
       update.approved_at = new Date().toISOString();
     }

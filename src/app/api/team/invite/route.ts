@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     if (!email || !role) {
       return NextResponse.json({ error: "email and role required" }, { status: 400 });
     }
-    if (!["admin", "auditor_readonly"].includes(role)) {
+    if (!["admin", "auditor_readonly", "auditor_staff"].includes(role)) {
       return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     }
 

@@ -1,23 +1,64 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useOrg } from "@/lib/org-context";
 import ControlTestModal from "@/components/ControlTestModal";
 import { supabase } from "@/lib/supabase";
-import { Beaker } from "lucide-react";
+import { Beaker, Users as UsersIcon, X } from "lucide-react";
 
 type FilterStatus = "all" | "compliant" | "partial" | "non_compliant" | "not_assessed";
 
+interface Assignment { id: string; control_id: string; assigned_to: string }
+interface StaffMember { user_id: string; email: string; role: string }
+
 export default function ControlsPage() {
-  const { controls, loading, canWrite, role } = useOrg();
+  const { org, controls, loading, canWrite, role } = useOrg();
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [sampleFilter, setSampleFilter] = useState<"all" | "in_sample">("all");
   const [selected, setSelected] = useState<{ id: string; title: string; status: string } | null>(null);
-  // Optimistic local override so the toggle feels instant.
   const [sampleOverrides, setSampleOverrides] = useState<Record<string, boolean>>({});
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [assignPickerFor, setAssignPickerFor] = useState<string | null>(null);
 
   const isAuditor = role === "auditor_readonly";
+  const isStaff = role === "auditor_staff";
+  const isLead = role === "owner" || role === "admin" || role === "auditor_readonly";
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+  }, []);
+
+  useEffect(() => {
+    if (!org?.id) return;
+    (async () => {
+      const { data: s } = await supabase.auth.getSession();
+      const token = s?.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`/api/control-assignments?org_id=${org.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const j = await res.json();
+      setAssignments(j.assignments ?? []);
+    })();
+    // Fetch staff list (members with auditor_staff role)
+    (async () => {
+      const { data } = await supabase
+        .from("org_members").select("user_id, email, role").eq("org_id", org.id);
+      setStaff((data ?? []).filter(m => m.role === "auditor_staff") as StaffMember[]);
+    })();
+  }, [org?.id]);
+
+  const assignmentsByControl = useMemo(() => {
+    const m: Record<string, Assignment[]> = {};
+    for (const a of assignments) (m[a.control_id] ||= []).push(a);
+    return m;
+  }, [assignments]);
+
+  const myAssignedControlIds = useMemo(() => {
+    if (!currentUserId) return new Set<string>();
+    return new Set(assignments.filter(a => a.assigned_to === currentUserId).map(a => a.control_id));
+  }, [assignments, currentUserId]);
 
   const categories = useMemo(() => {
     const set = new Set(controls.map(c => c.category));
@@ -36,6 +77,8 @@ export default function ControlsPage() {
 
   const filtered = useMemo(() => {
     return controls.filter(c => {
+      // Staff see only controls assigned to them.
+      if (isStaff && !myAssignedControlIds.has(c.control_id)) return false;
       if (filter !== "all" && c.status !== filter) return false;
       if (categoryFilter && c.category !== categoryFilter) return false;
       if (sampleFilter === "in_sample" && !inSample(c.control_id, c.in_sample)) return false;
@@ -43,7 +86,31 @@ export default function ControlsPage() {
       return true;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controls, filter, categoryFilter, search, sampleFilter, sampleOverrides]);
+  }, [controls, filter, categoryFilter, search, sampleFilter, sampleOverrides, isStaff, myAssignedControlIds]);
+
+  const toggleAssignment = async (control_id: string, assigned_to: string) => {
+    if (!org?.id) return;
+    const { data: s } = await supabase.auth.getSession();
+    const token = s?.session?.access_token;
+    if (!token) return;
+    const existing = assignments.find(a => a.control_id === control_id && a.assigned_to === assigned_to);
+    if (existing) {
+      const res = await fetch("/api/control-assignments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: existing.id }),
+      });
+      if (res.ok) setAssignments(a => a.filter(x => x.id !== existing.id));
+    } else {
+      const res = await fetch("/api/control-assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ org_id: org.id, control_id, assigned_to }),
+      });
+      const j = await res.json();
+      if (res.ok && j.assignment) setAssignments(a => [...a, j.assignment]);
+    }
+  };
 
   const toggleSample = async (control_id: string, current: boolean) => {
     const next = !current;
@@ -72,7 +139,9 @@ export default function ControlsPage() {
       <div>
         <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">Controls</h1>
         <p className="text-sm text-[var(--color-muted)] mt-1">
-          {isAuditor
+          {isStaff
+            ? `Showing ${myAssignedControlIds.size} control${myAssignedControlIds.size === 1 ? "" : "s"} assigned to you by the lead auditor.`
+            : isAuditor
             ? "View the client's SOC 2 controls. Mark items as in-sample to track which ones you'll test for this engagement."
             : "Test, annotate, and sign off on individual controls for SOC 2 audit."}
         </p>
@@ -124,16 +193,19 @@ export default function ControlsPage() {
               <th className="px-4 py-3">Title</th>
               <th className="px-4 py-3 w-[120px]">Status</th>
               <th className="px-4 py-3 w-[90px]">Severity</th>
+              {isLead && <th className="px-4 py-3 w-[130px]">Staff</th>}
               <th className="px-4 py-3 w-[140px]"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
             {loading ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
+              <tr><td colSpan={isLead ? 8 : 7} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-12 text-center">
+              <tr><td colSpan={isLead ? 8 : 7} className="px-4 py-12 text-center">
                 <div className="text-sm font-medium text-[var(--color-foreground)]">No controls match</div>
-                <div className="text-xs text-[var(--color-muted)] mt-1">Run a scan to populate findings, or clear filters above.</div>
+                <div className="text-xs text-[var(--color-muted)] mt-1">
+                  {isStaff ? "No controls are assigned to you yet — ask the lead auditor." : "Run a scan to populate findings, or clear filters above."}
+                </div>
               </td></tr>
             ) : (
               filtered.map(c => {
@@ -156,6 +228,15 @@ export default function ControlsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.severity ?? "-"}</td>
+                    {isLead && (
+                      <td className="px-4 py-3">
+                        <button onClick={() => setAssignPickerFor(c.control_id)}
+                          className="inline-flex items-center gap-1 text-xs text-[var(--color-muted)] hover:text-[var(--color-foreground)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-2 py-1">
+                          <UsersIcon className="w-3 h-3" />
+                          {(assignmentsByControl[c.control_id]?.length ?? 0) === 0 ? "Unassigned" : `${assignmentsByControl[c.control_id].length} assigned`}
+                        </button>
+                      </td>
+                    )}
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
                         className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
@@ -178,6 +259,38 @@ export default function ControlsPage() {
           onClose={() => setSelected(null)}
           onSaved={() => { setSelected(null); window.location.reload(); }}
         />
+      )}
+
+      {assignPickerFor && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setAssignPickerFor(null)}>
+          <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-[var(--color-foreground)]">Assign staff</h3>
+                <p className="text-xs text-[var(--color-muted)] font-mono mt-1">{assignPickerFor}</p>
+              </div>
+              <button onClick={() => setAssignPickerFor(null)} className="text-[var(--color-muted)] hover:text-[var(--color-foreground)]">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {staff.length === 0 ? (
+              <p className="text-sm text-[var(--color-muted)]">No auditor staff invited yet. Invite them from the Team page — assign controls afterward.</p>
+            ) : (
+              <div className="space-y-1 max-h-80 overflow-y-auto">
+                {staff.map(s => {
+                  const isAssigned = !!assignments.find(a => a.control_id === assignPickerFor && a.assigned_to === s.user_id);
+                  return (
+                    <label key={s.user_id} className="flex items-center gap-3 py-2 px-2 hover:bg-[var(--color-surface-2)] rounded-lg cursor-pointer">
+                      <input type="checkbox" checked={isAssigned} onChange={() => toggleAssignment(assignPickerFor, s.user_id)}
+                        className="accent-[var(--color-info)]" />
+                      <span className="text-sm text-[var(--color-foreground)]">{s.email}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
