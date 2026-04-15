@@ -46,7 +46,10 @@ const DISPOSITION_LABEL: Record<Finding["disposition"], string> = {
 };
 
 export default function FindingsPage() {
-  const { org, role, canWrite } = useOrg();
+  const { org, role } = useOrg();
+  // Findings are authored primarily by auditors. Any org member (owner/admin/auditor)
+  // can create — the RLS policy enforces the org scope.
+  const canCreate = !!role;
   const [findings, setFindings] = useState<Finding[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -92,7 +95,7 @@ export default function FindingsPage() {
           </h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">Formal record of deficiencies and exceptions identified during fieldwork.</p>
         </div>
-        {canWrite && (
+        {canCreate && (
           <button onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 text-sm px-4 py-2 rounded-lg font-medium transition">
             <Plus className="w-4 h-4" strokeWidth={2} />

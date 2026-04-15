@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { control_id, test_notes, approve, override_status, test_attributes, auth_token } = await req.json();
+    const { control_id, test_notes, approve, override_status, test_attributes, test_procedure, sample_ids, sample_rationale, auth_token } = await req.json();
     if (!control_id || !auth_token) {
       return NextResponse.json({ error: "Missing params" }, { status: 400 });
     }
@@ -17,18 +17,39 @@ export async function POST(req: NextRequest) {
     const user = userData?.user;
     if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
-    const { data: org } = await userClient
+    // Resolve org: owner first, then fall back to org_members for invited auditors/admins.
+    let orgId: string | null = null;
+    const { data: ownedOrg } = await userClient
       .from("organizations")
       .select("id")
       .eq("owner_id", user.id)
-      .single();
-    if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
+      .maybeSingle();
+    if (ownedOrg) {
+      orgId = ownedOrg.id;
+    } else {
+      const { data: membership } = await userClient
+        .from("org_members")
+        .select("org_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      orgId = membership?.org_id ?? null;
+    }
+    if (!orgId) return NextResponse.json({ error: "Org not found" }, { status: 404 });
 
     const update: Record<string, unknown> = {
       tested_by: user.id,
+      tested_by_email: user.email ?? null,
       tested_at: new Date().toISOString(),
       test_notes: test_notes ?? null,
     };
+    const allowedProcedures = ["inspection","observation","inquiry","reperformance","caat","other"] as const;
+    if (test_procedure && (allowedProcedures as readonly string[]).includes(test_procedure)) {
+      update.test_procedure = test_procedure;
+    } else if (test_procedure === null) {
+      update.test_procedure = null;
+    }
+    if (typeof sample_ids === "string") update.sample_ids = sample_ids.trim() || null;
+    if (typeof sample_rationale === "string") update.sample_rationale = sample_rationale.trim() || null;
     if (test_attributes && typeof test_attributes === "object") {
       // Accept only the four known attribute keys with valid values.
       const allowed = ["pass", "fail", "na"] as const;
@@ -51,14 +72,14 @@ export async function POST(req: NextRequest) {
     const { error } = await userClient
       .from("controls")
       .update(update)
-      .eq("org_id", org.id)
+      .eq("org_id", orgId)
       .eq("control_id", control_id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     // Audit log
     await userClient.from("activity_events").insert({
-      org_id: org.id,
+      org_id: orgId,
       type: "control_change",
       title: approve ? `Control ${control_id} approved` : `Control ${control_id} tested`,
       detail: `${user.email} ${approve ? "approved" : "recorded test"}${override_status ? ` • status → ${override_status}` : ""}${test_notes ? ` • ${test_notes.slice(0, 120)}` : ""}`,

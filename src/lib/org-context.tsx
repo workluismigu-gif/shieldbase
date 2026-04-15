@@ -10,6 +10,11 @@ export interface ControlRow {
   severity: "critical" | "high" | "medium" | "low";
   updated_at?: string;
   in_sample?: boolean;
+  test_procedure?: "inspection" | "observation" | "inquiry" | "reperformance" | "caat" | "other" | null;
+  sample_ids?: string | null;
+  sample_rationale?: string | null;
+  tested_by_email?: string | null;
+  tested_at?: string | null;
 }
 
 export interface TaskRow {

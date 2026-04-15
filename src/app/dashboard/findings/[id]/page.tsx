@@ -37,9 +37,12 @@ interface FindingEvent {
 export default function FindingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { role, canWrite } = useOrg();
+  const { role } = useOrg();
   const isAuditor = role === "auditor_readonly";
   const isOwner = role === "owner" || role === "admin";
+  // Any org member participates on findings. Auditors drive status/disposition/conclusion;
+  // owners drive management_response/remediation. Comments open to all.
+  const canParticipate = !!role;
 
   const [finding, setFinding] = useState<Finding | null>(null);
   const [events, setEvents] = useState<FindingEvent[]>([]);
@@ -134,7 +137,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
             <h1 className="text-xl font-semibold text-[var(--color-foreground)]">{finding.title}</h1>
             {finding.description && <p className="text-sm text-[var(--color-foreground-subtle)] mt-2 whitespace-pre-wrap">{finding.description}</p>}
           </div>
-          {canWrite && (
+          {canParticipate && (
             <button onClick={del} title="Delete finding"
               className="p-2 text-[var(--color-muted)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] rounded-lg transition">
               <Trash2 className="w-4 h-4" />
@@ -146,7 +149,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
           <div>
             <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Status</label>
             <select value={status} onChange={e => { setStatus(e.target.value as Finding["status"]); patch({ status: e.target.value as Finding["status"] }); }}
-              disabled={!canWrite || saving}
+              disabled={!canParticipate || saving}
               className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm disabled:opacity-60">
               <option value="open">Open</option>
               <option value="remediating">Remediating</option>
@@ -273,7 +276,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
           ))}
         </div>
 
-        {canWrite && (
+        {canParticipate && (
           <div className="mt-4 flex gap-2">
             <textarea value={comment} onChange={e => setComment(e.target.value)} rows={2}
               placeholder={isAuditor ? "Add an auditor note..." : "Add a comment..."}

@@ -44,6 +44,9 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
   const [attributes, setAttributes] = useState<Record<string, AttrValue>>({
     complete: "", accurate: "", authorized: "", timely: "",
   });
+  const [testProcedure, setTestProcedure] = useState("");
+  const [sampleIdsInput, setSampleIdsInput] = useState("");
+  const [sampleRationale, setSampleRationale] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [signOffName, setSignOffName] = useState("");
@@ -103,6 +106,9 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
           approve,
           override_status: overrideStatus || null,
           test_attributes: Object.keys(attrPayload).length > 0 ? attrPayload : null,
+          test_procedure: testProcedure || null,
+          sample_ids: sampleIdsInput,
+          sample_rationale: sampleRationale,
           auth_token: sessionData.session.access_token,
         }),
       });
@@ -180,6 +186,46 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
         {canWrite && (
           <div className="p-6 space-y-4 border-b border-[var(--color-border)]">
             <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-2">Test procedure</label>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { v: "inspection",    l: "Inspection" },
+                  { v: "observation",   l: "Observation" },
+                  { v: "inquiry",       l: "Inquiry" },
+                  { v: "reperformance", l: "Reperformance" },
+                  { v: "caat",          l: "CAAT" },
+                  { v: "other",         l: "Other" },
+                ] as const).map(p => (
+                  <button key={p.v} type="button"
+                    onClick={() => setTestProcedure(tp => tp === p.v ? "" : p.v)}
+                    className={`px-2 py-1.5 rounded-md text-xs font-medium border transition ${
+                      testProcedure === p.v
+                        ? "bg-[var(--color-foreground)] text-[var(--color-surface)] border-[var(--color-foreground)]"
+                        : "bg-[var(--color-surface)] text-[var(--color-foreground-subtle)] border-[var(--color-border)] hover:border-[var(--color-border-strong)]"
+                    }`}>
+                    {p.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-2">Sample IDs</label>
+              <input value={sampleIdsInput} onChange={e => setSampleIdsInput(e.target.value)}
+                placeholder="EMP-4491, EMP-5112, INC-2026-017 …"
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm font-mono text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)]" />
+              <p className="text-[10px] text-[var(--color-muted)] mt-1">Comma-separated identifiers of items tested. Paste from your sample selection.</p>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)] block mb-2">Sampling rationale</label>
+              <textarea value={sampleRationale} onChange={e => setSampleRationale(e.target.value)}
+                rows={2}
+                placeholder="e.g. n=3 of 12 monthly access reviews, random selection seeded AUDIT-2026-X7F9Q2."
+                className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)] resize-y" />
+            </div>
+
+            <div>
               <div className="flex items-baseline justify-between mb-2">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">Test attributes</label>
                 <span className="text-[10px] text-[var(--color-muted)]">Per AICPA testing standards</span>
@@ -254,32 +300,39 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
               </button>
             </div>
 
-            {role === "auditor_readonly" && currentStatus === "non_compliant" && (
-              <button
-                onClick={async () => {
-                  if (!org?.id) return;
-                  const { data: s } = await supabase.auth.getSession();
-                  const token = s?.session?.access_token;
-                  if (!token) return;
-                  const res = await fetch("/api/findings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({
-                      org_id: org.id,
-                      control_id: controlId,
-                      title: `${controlId}: ${controlTitle}`,
-                      description: `Failing control flagged during testing on ${new Date().toLocaleDateString()}.`,
-                      severity: "high",
-                      disposition: "deficiency",
-                    }),
-                  });
-                  const j = await res.json();
-                  if (res.ok && j.finding?.id) window.location.href = `/dashboard/findings/${j.finding.id}`;
-                }}
-                className="w-full mt-2 inline-flex items-center justify-center gap-2 border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] py-2 rounded-lg font-medium text-sm">
-                <AlertOctagon className="w-4 h-4" /> Log as finding
-              </button>
-            )}
+          </div>
+        )}
+
+        {/* Log-as-finding shortcut — visible to any org member on failing controls,
+            even if they don't have canWrite (auditor_readonly is the PRIMARY author
+            of findings). */}
+        {role && currentStatus === "non_compliant" && (
+          <div className="px-6 pt-4 pb-2">
+            <button
+              onClick={async () => {
+                if (!org?.id) return;
+                const { data: s } = await supabase.auth.getSession();
+                const token = s?.session?.access_token;
+                if (!token) return;
+                const res = await fetch("/api/findings", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({
+                    org_id: org.id,
+                    control_id: controlId,
+                    title: `${controlId}: ${controlTitle}`,
+                    description: `Failing control flagged during testing on ${new Date().toLocaleDateString()}.`,
+                    severity: "high",
+                    disposition: "deficiency",
+                  }),
+                });
+                const j = await res.json();
+                if (res.ok && j.finding?.id) window.location.href = `/dashboard/findings/${j.finding.id}`;
+                else setError(j.error || "Could not create finding");
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] py-2 rounded-lg font-medium text-sm">
+              <AlertOctagon className="w-4 h-4" /> Log as finding
+            </button>
           </div>
         )}
 

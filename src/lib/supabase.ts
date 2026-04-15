@@ -56,6 +56,7 @@ export type OrgRow = {
   cloud_provider: string | null;
   frameworks: string[];
   scope_config?: Record<string, unknown> | null;
+  sample_seed?: string | null;
   trust_slug?: string | null;
   trust_published?: boolean | null;
   trust_tagline?: string | null;
