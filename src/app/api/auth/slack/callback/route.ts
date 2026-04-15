@@ -33,8 +33,9 @@ export async function GET(req: NextRequest) {
   const tokenData = await tokenRes.json();
 
   if (!tokenData.ok) {
-    console.error("Slack token exchange failed:", tokenData);
-    return NextResponse.redirect(`${SITE_URL}/dashboard/settings?error=slack_token_exchange_failed`);
+    console.error("Slack token exchange failed:", JSON.stringify(tokenData));
+    const slackErr = tokenData.error ?? "unknown";
+    return NextResponse.redirect(`${SITE_URL}/dashboard/settings?error=slack_${slackErr}`);
   }
 
   const accessToken: string = tokenData.access_token;
