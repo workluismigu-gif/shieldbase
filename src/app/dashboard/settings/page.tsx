@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
 import { Cloud, Mail, MessageSquare, Shield as ShieldIcon, CheckCircle2, AlertTriangle, PartyPopper, Lock, ExternalLink } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
+import ConnectionHealthPanel from "@/components/ConnectionHealthPanel";
 
 const SHIELDBASE_AWS_ACCOUNT_ID = "886821787192";
 const CFN_TEMPLATE_URL = `https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=ShieldBaseReadOnly&templateURL=https://shieldbase-public-cfn.s3.amazonaws.com/cfn-shieldbase-readonly.json`;
@@ -136,6 +137,8 @@ export default function ConnectPage() {
           <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">Integrations</h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">Connect your cloud accounts and services so ShieldBase can automatically collect compliance evidence.</p>
         </div>
+
+        <ConnectionHealthPanel />
 
         <div className="grid md:grid-cols-2 gap-4">
 

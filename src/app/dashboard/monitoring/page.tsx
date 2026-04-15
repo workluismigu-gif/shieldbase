@@ -10,6 +10,7 @@ import {
   Building2, Cloud, ChevronDown, ChevronUp, Download, RefreshCw, Info
 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
+import ActivityFeed from "@/components/ActivityFeed";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -463,6 +464,8 @@ function MonitoringPage() {
 
       {provider === "aws" && <AWSMonitoring controls={controls} lastScan={lastScan} realtimeConnected={realtimeConnected} />}
       {provider === "github" && <GitHubMonitoring findings={githubFindings} lastScan={lastGithubScan} />}
+
+      <ActivityFeed limit={20} />
     </div>
   );
 }
