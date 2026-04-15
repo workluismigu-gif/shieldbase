@@ -130,19 +130,25 @@ const sevBadge: Record<string, string> = {
 };
 
 function ScanResultsTabs({
-  controls, githubFindings, hasRealData, hasGithubData, awsConnected, githubConnected
+  controls, githubFindings, slackFindings, hasRealData, hasGithubData, hasSlackData, awsConnected, githubConnected, slackConnected
 }: {
   controls: ControlRow[];
   githubFindings: RawFinding[];
+  slackFindings: RawFinding[];
   hasRealData: boolean;
   hasGithubData: boolean;
+  hasSlackData: boolean;
   awsConnected: boolean;
   githubConnected: boolean;
+  slackConnected: boolean;
 }) {
-  const [tab, setTab] = useState<"aws" | "github">("aws");
+  const [tab, setTab] = useState<"aws" | "github" | "slack">("aws");
 
   const awsFailing = controls.filter(c => c.status === "non_compliant").length;
   const ghFailing = githubFindings.filter(f => (f.status_code || f.status) === "FAIL").length;
+  const slFailing = slackFindings.filter(f => (f.status_code || f.status) === "FAIL").length;
+  const slPassing = slackFindings.filter(f => (f.status_code || f.status) === "PASS").length;
+  const slScore = slackFindings.length > 0 ? Math.round((slPassing / slackFindings.length) * 100) : 0;
 
   // Group AWS controls by category
   const awsGrouped: Record<string, ControlRow[]> = {};
@@ -192,6 +198,19 @@ function ScanResultsTabs({
               ghFailing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"
             }`}>
               {ghFailing > 0 ? `${ghFailing} ` : "✓"}
+            </span>
+          )}
+        </button>
+        <button onClick={() => setTab("slack")}
+          className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition border-b-2 ${
+            tab === "slack" ? "border-purple-500 text-purple-600 bg-[var(--color-bg)]" : "border-transparent text-[var(--color-muted)] hover:text-[var(--color-foreground-subtle)]"
+          }`}>
+          <MessageSquare className="w-4 h-4" strokeWidth={1.8} /> Slack
+          {hasSlackData && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+              slFailing > 0 ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"
+            }`}>
+              {slFailing > 0 ? `${slFailing} ` : "✓"}
             </span>
           )}
         </button>
@@ -335,6 +354,55 @@ function ScanResultsTabs({
           )}
         </div>
       )}
+
+      {tab === "slack" && (
+        <div className="p-5">
+          {!slackConnected ? (
+            <div className="text-center py-10">
+              <MessageSquare className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3" strokeWidth={1.4} />
+              <p className="text-[var(--color-muted)] text-sm mb-4">Connect Slack to monitor workspace security</p>
+              <a href="/dashboard/settings" className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] px-5 py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition">Connect Slack</a>
+            </div>
+          ) : !hasSlackData ? (
+            <div className="text-center py-10">
+              <Search className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-3 animate-pulse" strokeWidth={1.4} />
+              <p className="text-[var(--color-muted)] text-sm">Scan in progress — results will appear here shortly</p>
+            </div>
+          ) : (
+            <>
+              <div className="mb-5 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 flex items-center gap-4">
+                <div className="text-3xl font-black text-purple-600">{slScore}%</div>
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs text-[var(--color-muted)] mb-1">
+                    <span className="font-semibold text-[var(--color-foreground-subtle)]">Slack Security Score</span>
+                    <span>{slPassing}/{slackFindings.length} checks passing</span>
+                  </div>
+                  <div className="w-full bg-purple-100 rounded-full h-3 overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-purple-400 to-pink-500 rounded-full transition-all duration-1000" style={{ width: `${slScore}%` }} />
+                  </div>
+                </div>
+                {slFailing > 0 && <div className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold">{slFailing} to fix</div>}
+              </div>
+              <div className="divide-y divide-[var(--color-border)] border border-[var(--color-border)] rounded-xl overflow-hidden">
+                {slackFindings.map((f, i) => {
+                  const pass = (f.status_code || f.status) === "PASS";
+                  const title = (f as RawFinding & { check_title?: string }).check_title || f.check_id || "Check";
+                  const desc = (f as RawFinding & { description?: string }).description;
+                  return (
+                    <div key={i} className={`flex items-start gap-3 px-4 py-3 ${!pass ? "bg-[var(--color-danger-bg)]/60" : ""}`}>
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5 ${pass ? "bg-green-500" : "bg-red-500"}`}>{pass ? "✓" : "✗"}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-[var(--color-foreground-subtle)]">{title}</div>
+                        {desc && <div className="text-xs text-[var(--color-muted)] mt-0.5">{desc}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -356,9 +424,13 @@ function toCliLines(events: TimelineEvent[]): CliLine[] {
     let level: CliLine["level"] = "info";
     let prefix = "[SYS]";
     if (e.type === "scan") {
-      const isGh = e.title.toLowerCase().includes("github");
-      prefix = isGh ? "[GH] " : "[AWS]";
-      if (e.title.toLowerCase().includes("initiated") || e.title.toLowerCase().includes("auto-scan")) level = "warn";
+      const t = e.title.toLowerCase();
+      if (t.includes("github")) prefix = "[GH] ";
+      else if (t.includes("slack")) prefix = "[SLK]";
+      else if (t.includes("google")) prefix = "[GWS]";
+      else if (t.includes("azure")) prefix = "[AZ] ";
+      else prefix = "[AWS]";
+      if (t.includes("initiated") || t.includes("auto-scan")) level = "warn";
       else level = "success";
     }
     if (e.type === "integration") { level = "system"; prefix = "[INT]"; }
@@ -470,7 +542,7 @@ const statusLabel = { todo: "To Do", in_progress: "In Progress", done: "Done" };
 const policyStatusColor = { draft: "bg-yellow-100 text-[var(--color-warning)]", review: "bg-[var(--color-info-bg)] text-[var(--color-info)]", approved: "bg-[var(--color-success-bg)] text-[var(--color-success)]", needs_update: "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" };
 
 export default function DashboardPage() {
-  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings, role } = useOrg();
+  const { org, loading, controls, lastScan, scanHistory, timeline, tasks: realTasks, policies: realPolicies, realtimeConnected, githubFindings, slackFindings, role } = useOrg();
 
   // Auditors land here by default but the founder dashboard isn't framed
   // for them — send them to the audit workspace instead.
@@ -522,6 +594,7 @@ export default function DashboardPage() {
   const githubTotal = githubScans.length > 0 ? (githubScans[0].summary?.total ?? 0) : 0;
   const githubPct = githubTotal > 0 ? Math.round((githubCompliant / githubTotal) * 100) : 0;
   const hasGithubData = githubTotal > 0;
+  const hasSlackData = slackFindings.length > 0;
 
   // Combined score across all connected integrations + manual tasks
   const awsScore = hasRealData ? Math.round((realCompliant / realTotal) * 100) : null;
@@ -744,10 +817,13 @@ export default function DashboardPage() {
       <ScanResultsTabs
         controls={controls}
         githubFindings={githubFindings}
+        slackFindings={slackFindings}
         hasRealData={hasRealData}
         hasGithubData={hasGithubData}
+        hasSlackData={hasSlackData}
         awsConnected={awsConnected}
         githubConnected={githubConnected}
+        slackConnected={slackConnected}
       />
 
       {/* Tasks + Policies */}

@@ -40,7 +40,21 @@
       "Bash(git commit -m 'feat: two-step sign-off + evidence date range filter:*)",
       "Bash(git commit -m 'feat: PBC file upload + engagement milestones on audit shell:*)",
       "Bash(git commit -m 'feat\\(access-reviews\\): /dashboard/access-reviews — quarterly reviews, privileged access, terminations:*)",
-      "Bash(git commit -m 'feat\\(vendors\\): /dashboard/vendors — vendor risk register for CC9.2:*)"
+      "Bash(git commit -m 'feat\\(vendors\\): /dashboard/vendors — vendor risk register for CC9.2:*)",
+      "Bash(npx next:*)",
+      "Bash(xargs -I{} sed -n '{},+8p' src/app/dashboard/settings/page.tsx)",
+      "Bash(npx vercel:*)",
+      "mcp__vercel__deploy_to_vercel",
+      "mcp__vercel__get_runtime_logs",
+      "Bash(npx --yes tsx --env-file=.env.local scripts/encrypt-existing-tokens.ts)",
+      "Bash(grep -nE \"No items|No outstanding|No requests|No findings|No evidence|No tasks|No data|No controls|empty\" src/app/dashboard/**/page.tsx)",
+      "Bash(awk '/^export default function DashboardPage/,/^}$/' src/app/dashboard/page.tsx)",
+      "Bash(curl:*)",
+      "mcp__vercel__list_deployments",
+      "Bash(aws --version)",
+      "Bash(aws sts:*)",
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

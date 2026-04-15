@@ -76,11 +76,13 @@ interface OrgContextValue {
   controls: ControlRow[];
   lastScan: string | null;
   lastGithubScan: string | null;
+  lastSlackScan: string | null;
   scanHistory: ScanEvent[];
   timeline: TimelineEvent[];
   tasks: TaskRow[];
   policies: PolicyRow[];
   githubFindings: RawFinding[];
+  slackFindings: RawFinding[];
   realtimeConnected: boolean;
   pushActivityEvent: (event: Omit<TimelineEvent, "id">) => void;
 }
@@ -94,11 +96,13 @@ const OrgContext = createContext<OrgContextValue>({
   controls: [],
   lastScan: null,
   lastGithubScan: null,
+  lastSlackScan: null,
   scanHistory: [],
   timeline: [],
   tasks: [],
   policies: [],
   githubFindings: [],
+  slackFindings: [],
   realtimeConnected: false,
   pushActivityEvent: () => {},
 });
@@ -110,11 +114,13 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const [controls, setControls] = useState<ControlRow[]>([]);
   const [lastScan, setLastScan] = useState<string | null>(null); // AWS last scan
   const [lastGithubScan, setLastGithubScan] = useState<string | null>(null);
+  const [lastSlackScan, setLastSlackScan] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanEvent[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [policies, setPolicies] = useState<PolicyRow[]>([]);
   const [githubFindings, setGithubFindings] = useState<RawFinding[]>([]);
+  const [slackFindings, setSlackFindings] = useState<RawFinding[]>([]);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
 
   const pushActivityEvent = useCallback((event: Omit<TimelineEvent, "id">) => {
@@ -149,7 +155,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     }
 
     // Scans — label by provider
-    const providerLabels: Record<string, string> = { aws: "AWS", github: "GitHub", gcp: "GCP", azure: "Azure", kubernetes: "Kubernetes" };
+    const providerLabels: Record<string, string> = { aws: "AWS", github: "GitHub", slack: "Slack", google_workspace: "Google Workspace", gcp: "GCP", azure: "Azure", kubernetes: "Kubernetes" };
     for (const scan of scans) {
       const s = scan.summary ?? {};
       const scanProvider = scan.scan_type || "aws";
@@ -200,8 +206,10 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             // Set last scan per provider
             const lastAws = scans.find(s => s.scan_type === "aws" || !s.scan_type);
             const lastGh = scans.find(s => s.scan_type === "github");
+            const lastSl = scans.find(s => s.scan_type === "slack");
             if (lastAws) setLastScan(new Date(lastAws.created_at).toLocaleString());
             if (lastGh) setLastGithubScan(new Date(lastGh.created_at).toLocaleString());
+            if (lastSl) setLastSlackScan(new Date(lastSl.created_at).toLocaleString());
           }
           setTimeline(buildTimeline(orgData, scans));
 
@@ -250,21 +258,28 @@ export function OrgProvider({ children }: { children: ReactNode }) {
             .limit(5);
           console.log("[useOrg] All scans:", allScans, "error:", scansErr);
 
-          const { data: githubScan, error: ghErr } = await supabase
+          const { data: ghScan } = await supabase
             .from("scan_results")
-            .select("findings, scan_type, created_at")
+            .select("findings")
             .eq("org_id", orgId)
-            // .eq("scan_type", "github")  // TEMP: removed to debug
+            .eq("scan_type", "github")
             .order("created_at", { ascending: false })
             .limit(1)
-            .single();
-          console.log("[useOrg] Latest scan:", githubScan, "error:", ghErr);
+            .maybeSingle();
+          if (ghScan?.findings && Array.isArray(ghScan.findings) && ghScan.findings.length > 0) {
+            setGithubFindings(ghScan.findings as RawFinding[]);
+          }
 
-          if (githubScan?.findings && Array.isArray(githubScan.findings) && githubScan.findings.length > 0) {
-            console.log("[useOrg] GitHub findings loaded:", githubScan.findings.length, "items, scan_type:", githubScan.scan_type);
-            setGithubFindings(githubScan.findings as RawFinding[]);
-          } else {
-            console.log("[useOrg] No GitHub findings. scan_type:", githubScan?.scan_type, "has findings:", !!githubScan?.findings);
+          const { data: slScan } = await supabase
+            .from("scan_results")
+            .select("findings")
+            .eq("org_id", orgId)
+            .eq("scan_type", "slack")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (slScan?.findings && Array.isArray(slScan.findings) && slScan.findings.length > 0) {
+            setSlackFindings(slScan.findings as RawFinding[]);
           }
         }
       } catch (e) {
@@ -331,9 +346,23 @@ export function OrgProvider({ children }: { children: ReactNode }) {
               .eq("scan_type", "github")
               .order("created_at", { ascending: false })
               .limit(1)
-              .single();
+              .maybeSingle();
             if (ghScan?.findings && Array.isArray(ghScan.findings) && (ghScan.findings as unknown[]).length > 0) {
               setGithubFindings(ghScan.findings as RawFinding[]);
+            }
+
+            // Re-fetch Slack findings on new scan
+            const { data: slackScan } = await supabase
+              .from("scan_results")
+              .select("findings, created_at")
+              .eq("org_id", orgId)
+              .eq("scan_type", "slack")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (slackScan?.findings && Array.isArray(slackScan.findings) && (slackScan.findings as unknown[]).length > 0) {
+              setSlackFindings(slackScan.findings as RawFinding[]);
+              setLastSlackScan(new Date(slackScan.created_at).toLocaleString());
             }
           }
         )
@@ -357,7 +386,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <OrgContext.Provider value={{ org, userEmail, role: org?.role ?? null, canWrite: (org?.role ?? "owner") !== "auditor_readonly", loading, controls, lastScan, lastGithubScan, scanHistory, timeline, tasks, policies, githubFindings, realtimeConnected, pushActivityEvent }}>
+    <OrgContext.Provider value={{ org, userEmail, role: org?.role ?? null, canWrite: (org?.role ?? "owner") !== "auditor_readonly", loading, controls, lastScan, lastGithubScan, lastSlackScan, scanHistory, timeline, tasks, policies, githubFindings, slackFindings, realtimeConnected, pushActivityEvent }}>
       {children}
     </OrgContext.Provider>
   );

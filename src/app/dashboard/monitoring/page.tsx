@@ -286,6 +286,65 @@ function GithubCategoryCard({ category, findings }: { category: typeof GITHUB_CA
   );
 }
 
+function SlackMonitoring({ findings, lastScan }: { findings: RawFinding[]; lastScan: string | null }) {
+  if (findings.length === 0) {
+    return (
+      <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-12 text-center">
+        <MessageSquare className="w-10 h-10 text-[var(--color-muted)] mx-auto mb-4" strokeWidth={1.4} />
+        <h2 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No Slack scan data yet</h2>
+        <p className="text-sm text-[var(--color-muted)] mb-4">Slack is connected. A scan runs automatically on connect and nightly. Trigger one from the top-right if you want results now.</p>
+      </div>
+    );
+  }
+
+  const passing = findings.filter(f => (f.status_code || f.status) === "PASS").length;
+  const failing = findings.filter(f => (f.status_code || f.status) === "FAIL").length;
+  const score = Math.round((passing / findings.length) * 100);
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <div className="text-2xl font-black text-[var(--color-foreground)]">{score}%</div>
+            <div className="text-xs text-[var(--color-muted)]">{passing} passing · {failing} failing · {findings.length} total checks</div>
+          </div>
+          <div className="flex items-center gap-2">
+            {failing > 0 && <div className="bg-[var(--color-danger-bg)] border border-[var(--color-danger)] rounded-lg px-3 py-2 text-xs text-[var(--color-danger)] font-medium">{failing} to fix</div>}
+            {lastScan && <div className="text-xs text-[var(--color-muted)] text-right">Last scan: {lastScan}</div>}
+          </div>
+        </div>
+        <div className="w-full bg-[var(--color-surface-2)] rounded-full h-2 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style={{ width: `${score}%` }} />
+        </div>
+      </div>
+      <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] divide-y divide-[var(--color-border)]">
+        {findings.map((f, i) => {
+          const sCode = f.status_code || f.status || "PASS";
+          const pass = sCode === "PASS";
+          const title = (f as RawFinding & { check_title?: string; description?: string }).check_title
+            || f.finding_info?.title
+            || f.check_id
+            || "Slack check";
+          const desc = (f as RawFinding & { description?: string }).description || f.status_detail || f.message;
+          return (
+            <div key={i} className={`flex items-start gap-3 px-4 py-3 ${!pass ? "bg-[var(--color-danger-bg)]/40" : ""}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5 ${pass ? "bg-green-500" : "bg-red-500"}`}>{pass ? "✓" : "✗"}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-[var(--color-foreground-subtle)]">{title}</div>
+                {desc && <div className="text-xs text-[var(--color-muted)] mt-0.5">{desc}</div>}
+              </div>
+              {!pass && f.severity && (
+                <span className="text-xs px-1.5 py-0.5 rounded font-bold capitalize bg-[var(--color-danger-bg)] text-[var(--color-danger)]">{f.severity}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; lastScan: string | null }) {
   if (findings.length === 0) {
     return (
@@ -329,7 +388,7 @@ function GitHubMonitoring({ findings, lastScan }: { findings: RawFinding[]; last
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 function MonitoringPage() {
-  const { controls, lastScan, lastGithubScan, loading, realtimeConnected, githubFindings, org, pushActivityEvent, canWrite } = useOrg();
+  const { controls, lastScan, lastGithubScan, lastSlackScan, loading, realtimeConnected, githubFindings, slackFindings, org, pushActivityEvent, canWrite } = useOrg();
   const searchParams = useSearchParams();
   type ProviderKey = "aws" | "github" | "slack" | "google_workspace" | "azure";
   const initialProvider = (searchParams.get("provider") as ProviderKey) || "aws";
@@ -430,7 +489,7 @@ function MonitoringPage() {
             <button onClick={triggerScan} disabled={scanning || !org?.id}
               className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
               <RefreshCw className={`w-4 h-4 ${scanning ? "animate-spin" : ""}`} strokeWidth={1.8} />
-              {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : "AWS"} Now`}
+              {scanning ? "Scanning..." : `Scan ${provider === "github" ? "GitHub" : provider === "slack" ? "Slack" : provider === "google_workspace" ? "Google" : provider === "azure" ? "Azure" : "AWS"} Now`}
             </button>
           )}
         </div>
@@ -447,7 +506,7 @@ function MonitoringPage() {
         const tabs: { key: ProviderKey; label: string; Icon: LucideIcon; connected: boolean; count?: number }[] = [
           { key: "aws", label: "AWS", Icon: Cloud, connected: !!tech.aws_role_arn, count: controls.length },
           { key: "github", label: "GitHub", Icon: Github, connected: !!tech.github_token, count: githubFindings.length },
-          { key: "slack", label: "Slack", Icon: MessageSquare, connected: !!tech.slack_access_token },
+          { key: "slack", label: "Slack", Icon: MessageSquare, connected: !!tech.slack_access_token, count: slackFindings.length },
           { key: "google_workspace", label: "Google", Icon: Mail, connected: !!tech.google_access_token },
           { key: "azure", label: "Azure", Icon: Hexagon, connected: !!tech.azure_access_token || !!tech.azure_subscription_id },
         ];
@@ -486,8 +545,7 @@ function MonitoringPage() {
         }
         if (provider === "slack") {
           if (!tech.slack_access_token) return <ProviderEmptyState Icon={MessageSquare} providerLabel="Slack" state="not_connected" />;
-          return <ProviderEmptyState Icon={MessageSquare} providerLabel="Slack" state="lambda_unsupported"
-            detail="Slack scanning is queued — your Lambda needs a `provider === 'slack'` handler that runs Prowler's Slack provider. Until then, the connection is saved and idle." />;
+          return <SlackMonitoring findings={slackFindings} lastScan={lastSlackScan} />;
         }
         if (provider === "google_workspace") {
           if (!tech.google_access_token) return <ProviderEmptyState Icon={Mail} providerLabel="Google Workspace" state="not_connected" />;
