@@ -91,7 +91,13 @@ export async function POST(req: NextRequest) {
       });
 
       const response = await lambda.send(command);
-      results.push({ org_id: org.id, name: org.name, statusCode: response.StatusCode });
+      console.log(`Lambda ${provider} response: statusCode=${response.StatusCode} functionError=${response.FunctionError ?? "none"} logResult=${response.LogResult ?? ""}`);
+      results.push({
+        org_id: org.id,
+        name: org.name,
+        statusCode: response.StatusCode,
+        functionError: response.FunctionError,
+      });
     }
 
     return NextResponse.json({ ok: true, triggered: results.length, results });
