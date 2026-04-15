@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const { control_id, test_notes, approve, override_status, test_attributes, test_procedure, sample_ids, sample_rationale, auth_token } = await req.json();
+    const { control_id, test_notes, approve, override_status, test_attributes, test_procedure, sample_ids, sample_rationale, auth_token, _suppress_activity } = await req.json();
     if (!control_id || !auth_token) {
       return NextResponse.json({ error: "Missing params" }, { status: 400 });
     }
@@ -84,6 +84,9 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     // Audit log
+    if (_suppress_activity) {
+      return NextResponse.json({ ok: true });
+    }
     await userClient.from("activity_events").insert({
       org_id: orgId,
       type: "control_change",

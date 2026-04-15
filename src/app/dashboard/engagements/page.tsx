@@ -77,10 +77,16 @@ export default function EngagementsPage() {
           {items.map((e, i) => (
             <div key={e.id} className={`px-5 py-4 ${i < items.length - 1 ? "border-b border-[var(--color-border)]" : ""}`}>
               <div className="flex items-start justify-between gap-4">
-                {canEdit && (e.status === "issued" || e.status === "closed") && (
-                  <button onClick={() => { setPreselectedPriorId(e.id); setShowCreate(true); }}
-                    title="Start next year's engagement carrying this one's scope and procedures forward"
-                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] self-start flex-shrink-0">
+                {canEdit && (
+                  <button
+                    onClick={() => { if (e.status === "issued" || e.status === "closed") { setPreselectedPriorId(e.id); setShowCreate(true); } }}
+                    disabled={e.status !== "issued" && e.status !== "closed"}
+                    title={
+                      e.status === "issued" || e.status === "closed"
+                        ? "Start next year's engagement carrying this one's scope and procedures forward"
+                        : "Available once this engagement is issued or closed"
+                    }
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] disabled:opacity-40 disabled:cursor-not-allowed self-start flex-shrink-0">
                     <Copy className="w-3.5 h-3.5" /> Carry forward
                   </button>
                 )}

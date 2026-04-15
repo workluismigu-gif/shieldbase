@@ -42,6 +42,9 @@ export default function PbcPage() {
   const [items, setItems] = useState<PbcRequest[] | null>(null);
   const [filter, setFilter] = useState<"all" | Status>("all");
   const [showCreate, setShowCreate] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [libraryBusy, setLibraryBusy] = useState(false);
+  const [libraryError, setLibraryError] = useState("");
 
   const isAuditor = role === "auditor_readonly";
 
@@ -87,25 +90,7 @@ export default function PbcPage() {
           </div>
           {isAuditor && (
             <div className="flex gap-2 flex-shrink-0">
-              <button onClick={async () => {
-                if (!org?.id) return;
-                if (!confirm("Create standard SOC 2 PBC request list (~37 items)? You can edit or delete individually after.")) return;
-                const { data: s } = await supabase.auth.getSession();
-                const token = s?.session?.access_token;
-                if (!token) return;
-                const res = await fetch("/api/pbc/templates", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                  body: JSON.stringify({ org_id: org.id }),
-                });
-                const j = await res.json();
-                if (res.ok) {
-                  alert(`Created ${j.created} PBC requests from the standard library.`);
-                  load();
-                } else {
-                  alert(`Error: ${j.error}`);
-                }
-              }}
+              <button onClick={() => setShowLibrary(true)}
                 className="inline-flex items-center gap-2 bg-[var(--color-bg)] text-[var(--color-foreground)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-sm px-4 py-2 rounded-lg font-medium transition">
                 Load SOC 2 library
               </button>
@@ -158,6 +143,40 @@ export default function PbcPage() {
       {showCreate && (
         <CreateModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }}
           controls={controls} />
+      )}
+
+      {showLibrary && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !libraryBusy && setShowLibrary(false)}>
+          <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 max-w-md w-full space-y-4" onClick={e => e.stopPropagation()}>
+            <h3 className="font-semibold text-[var(--color-foreground)]">Load SOC 2 library</h3>
+            <p className="text-sm text-[var(--color-muted)]">Creates roughly 37 standard PBC requests covering CC1 through PI1, with each row due 14 days from today. You can edit, delete, or reassign any of them afterward.</p>
+            {libraryError && <div className="text-sm text-[var(--color-danger)] bg-[var(--color-danger-bg)] px-3 py-2 rounded-lg">{libraryError}</div>}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowLibrary(false)} disabled={libraryBusy}
+                className="px-4 py-2 text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-foreground)] disabled:opacity-50">Cancel</button>
+              <button onClick={async () => {
+                if (!org?.id) return;
+                setLibraryBusy(true); setLibraryError("");
+                const { data: s } = await supabase.auth.getSession();
+                const token = s?.session?.access_token;
+                if (!token) { setLibraryError("Not signed in"); setLibraryBusy(false); return; }
+                const res = await fetch("/api/pbc/templates", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ org_id: org.id }),
+                });
+                const j = await res.json();
+                setLibraryBusy(false);
+                if (!res.ok) { setLibraryError(j.error ?? "Failed"); return; }
+                setShowLibrary(false);
+                load();
+              }} disabled={libraryBusy}
+                className="bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium">
+                {libraryBusy ? "Creating…" : "Create 37 PBC requests"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -8,7 +8,7 @@ import {
   CheckCircle2, AlertCircle, Clock, X, FileSearch, Beaker, Download
 } from "lucide-react";
 import { formatDateOnly, isPast, formatDateRange } from "@/lib/dates";
-import { generateWorkpaperPdf, type WorkpaperData } from "@/lib/workpaper-pdf";
+import { generateWorkpaperPdf, generateFindingsLogPdf, type WorkpaperData } from "@/lib/workpaper-pdf";
 
 interface PbcRequest {
   id: string;
@@ -24,7 +24,44 @@ export default function AuditPage() {
   const isAuditor = role === "auditor_readonly";
   const [pbc, setPbc] = useState<PbcRequest[] | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportingFindings, setExportingFindings] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
+
+  const handleExportFindings = useCallback(async () => {
+    if (!org?.id || exportingFindings) return;
+    setExportingFindings(true);
+    try {
+      const { data: findingsRows } = await supabase
+        .from("findings")
+        .select("control_id, title, severity, disposition, status, management_response, remediation_owner_email, remediation_target_date, auditor_conclusion")
+        .eq("org_id", org.id)
+        .order("created_at", { ascending: true });
+      const scope = (org?.scope_config ?? {}) as Record<string, unknown>;
+      const data: WorkpaperData = {
+        org_name: org.name ?? "Organization",
+        generated_at: new Date().toISOString(),
+        generated_by: userEmail ?? "unknown",
+        frameworks: ((org?.frameworks ?? []) as string[]),
+        audit_period_start: (scope.audit_period_start as string) ?? null,
+        audit_period_end: (scope.audit_period_end as string) ?? null,
+        scope_notes: null,
+        sample_controls: [],
+        exceptions: [],
+        pbc: [],
+        findings: (findingsRows ?? []) as WorkpaperData["findings"],
+      };
+      const blob = generateFindingsLogPdf(data);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const slug = (org.name ?? "findings").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      a.download = `${slug}-findings-log-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExportingFindings(false);
+    }
+  }, [org, userEmail, exportingFindings]);
 
   const handleBulkSignoff = useCallback(async () => {
     if (!org?.id) return;
@@ -60,19 +97,32 @@ export default function AuditPage() {
       if (!token) { alert("Not signed in."); return; }
 
       let signed = 0;
+      const signedIds: string[] = [];
       for (const ctrl of eligible) {
         const res = await fetch("/api/controls/test", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             control_id: ctrl.control_id,
-            test_notes: `Auto sign-off: evidence within 45 days of ${new Date().toISOString().slice(0, 10)}`,
+            test_notes: `Auto sign-off batch: evidence within 45 days as of ${new Date().toISOString().slice(0, 10)}`,
             approve: true,
             auth_token: token,
+            _suppress_activity: true,
           }),
         });
-        if (res.ok) signed += 1;
+        if (res.ok) { signed += 1; signedIds.push(ctrl.control_id); }
       }
+
+      // Emit ONE summary activity event for the batch instead of N spam rows.
+      if (signed > 0 && org?.id) {
+        await supabase.from("activity_events").insert({
+          org_id: org.id,
+          type: "control_change",
+          title: `Bulk sign-off — ${signed} controls`,
+          detail: `${userEmail} auto-signed ${signed} compliant controls with fresh evidence (<45d): ${signedIds.slice(0, 8).join(", ")}${signedIds.length > 8 ? ` + ${signedIds.length - 8} more` : ""}`,
+        });
+      }
+
       alert(`Signed off ${signed} of ${eligible.length} eligible controls.`);
       if (typeof window !== "undefined") window.location.reload();
     } finally {
@@ -238,6 +288,11 @@ export default function AuditPage() {
               {bulkBusy ? "Signing…" : "Auto sign-off fresh compliant"}
             </button>
           )}
+          <button onClick={handleExportFindings} disabled={exportingFindings || !org?.id}
+            title="Download a standalone Findings & Exceptions Log PDF (no sample/PBC detail) — typical deliverable for management."
+            className="inline-flex items-center gap-2 bg-[var(--color-bg)] text-[var(--color-foreground)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] disabled:opacity-50 text-sm font-medium px-4 py-2 rounded-lg transition">
+            {exportingFindings ? "Generating…" : "Findings log PDF"}
+          </button>
           <button
             onClick={handleExport}
             disabled={exporting || !org?.id}

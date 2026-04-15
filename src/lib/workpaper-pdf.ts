@@ -451,3 +451,87 @@ export function generateWorkpaperPdf(data: WorkpaperData): Blob {
 
   return doc.output("blob");
 }
+
+// Standalone Findings & Exceptions Log — auditors often hand this to
+// management separately from the full workpaper. Reuses the same styling.
+export function generateFindingsLogPdf(data: WorkpaperData): Blob {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  doc.setFontSize(28);
+  doc.setTextColor(...NAVY);
+  doc.text("Findings & Exceptions Log", 14, 60);
+  doc.setFontSize(14);
+  doc.setTextColor(...GREY);
+  doc.text(data.org_name, 14, 72);
+  doc.setFontSize(10);
+  doc.text(`Frameworks: ${data.frameworks.join(", ") || "—"}`, 14, 86);
+  if (data.audit_period_start || data.audit_period_end) {
+    doc.text(`Period: ${fmtDate(data.audit_period_start)} → ${fmtDate(data.audit_period_end)}`, 14, 93);
+  }
+  doc.text(`Prepared by: ${data.generated_by}`, 14, 100);
+  doc.text(`Prepared at: ${data.generated_at}`, 14, 107);
+
+  doc.addPage();
+  header(doc, "Findings summary", data.org_name);
+  const findings = data.findings ?? [];
+  if (findings.length === 0) {
+    doc.setFontSize(10);
+    doc.setTextColor(...GREY);
+    doc.text("No findings were logged for this engagement.", 14, 50);
+  } else {
+    autoTable(doc, {
+      startY: 45,
+      head: [["Control", "Title", "Severity", "Disposition", "Status", "Target"]],
+      body: findings.map(f => [
+        f.control_id ?? "—",
+        f.title.length > 40 ? f.title.slice(0, 37) + "…" : f.title,
+        f.severity,
+        f.disposition.replace(/_/g, " "),
+        f.status,
+        f.remediation_target_date ? fmtDate(f.remediation_target_date) : "—",
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: NAVY, textColor: 255 },
+      columnStyles: { 1: { cellWidth: 65 } },
+    });
+
+    for (const f of findings) {
+      doc.addPage();
+      header(doc, `Finding — ${f.control_id ?? "narrative"}`, data.org_name);
+      let y = 48;
+      doc.setFontSize(11);
+      doc.setTextColor(...NAVY);
+      doc.text(f.title, 14, y);
+      y += 8;
+      doc.setFontSize(9);
+      doc.setTextColor(...GREY);
+      doc.text(`Severity: ${f.severity} · Disposition: ${f.disposition.replace(/_/g, " ")} · Status: ${f.status}`, 14, y);
+      y += 8;
+      if (f.auditor_conclusion) {
+        doc.setTextColor(...NAVY); doc.text("Auditor conclusion", 14, y); y += 5;
+        doc.setTextColor(...GREY);
+        const wrapped = doc.splitTextToSize(f.auditor_conclusion, 180);
+        doc.text(wrapped, 14, y); y += wrapped.length * 5 + 3;
+      }
+      if (f.management_response) {
+        doc.setTextColor(...NAVY); doc.text("Management response", 14, y); y += 5;
+        doc.setTextColor(...GREY);
+        const wrapped = doc.splitTextToSize(f.management_response, 180);
+        doc.text(wrapped, 14, y); y += wrapped.length * 5 + 3;
+      }
+      if (f.remediation_owner_email || f.remediation_target_date) {
+        doc.setTextColor(...NAVY); doc.text("Remediation", 14, y); y += 5;
+        doc.setTextColor(...GREY);
+        doc.text(`${f.remediation_owner_email ?? "—"} · target ${f.remediation_target_date ?? "—"}`, 14, y);
+      }
+    }
+  }
+
+  const total = doc.getNumberOfPages();
+  for (let i = 1; i <= total; i++) {
+    doc.setPage(i);
+    footer(doc, i, total, data.generated_by);
+  }
+
+  return doc.output("blob");
+}

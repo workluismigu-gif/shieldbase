@@ -21,6 +21,10 @@ interface EvidenceRecord {
     size?: number;
     notes?: string;
     category?: string;
+    source?: string;
+    pbc_request_id?: string;
+    title?: string;
+    url?: string;
   };
   collected_at: string;
 }
@@ -297,15 +301,23 @@ export default function EvidencePage() {
 
                       {evidenceRows.length > 0 && (
                         <div className="space-y-1 mb-2">
-                          {evidenceRows.map((r) => (
-                            <div key={r.id} className="flex items-center gap-2 text-xs">
-                              <span className="text-[var(--color-muted)]">{new Date(r.collected_at).toLocaleDateString()}</span>
-                              <span className="font-medium text-[var(--color-foreground-subtle)] truncate max-w-[240px]">{r.evidence_data?.file_name ?? r.evidence_type}</span>
-                              {r.evidence_data?.storage_path && (
-                                <button onClick={() => handleDownload(r.evidence_data.storage_path!)} className="text-[var(--color-info)] hover:underline">Download</button>
-                              )}
-                            </div>
-                          ))}
+                          {evidenceRows.map((r) => {
+                            const isPbc = r.evidence_type === "pbc_response" || r.evidence_data?.source === "pbc";
+                            return (
+                              <div key={r.id} className="flex items-center gap-2 text-xs">
+                                <span className="text-[var(--color-muted)]">{new Date(r.collected_at).toLocaleDateString()}</span>
+                                <span className="font-medium text-[var(--color-foreground-subtle)] truncate max-w-[240px]">{r.evidence_data?.file_name ?? r.evidence_type}</span>
+                                {isPbc && (
+                                  <span className="text-[10px] uppercase tracking-wider font-semibold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded">
+                                    PBC · synced {new Date(r.collected_at).toLocaleDateString()}
+                                  </span>
+                                )}
+                                {r.evidence_data?.storage_path && (
+                                  <button onClick={() => handleDownload(r.evidence_data.storage_path!)} className="text-[var(--color-info)] hover:underline">Download</button>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
 
