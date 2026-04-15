@@ -260,6 +260,26 @@ export default function EvidencePage() {
               const key = evidenceKey(selectedCategory, item.name);
               const hasEvidence = (recordsByKey[key]?.length ?? 0) > 0;
               const evidenceRows = recordsByKey[key] ?? [];
+              const freshest = evidenceRows.reduce<string | null>((max, r) => {
+                if (!r.collected_at) return max;
+                return !max || r.collected_at > max ? r.collected_at : max;
+              }, null);
+              const ageDays = freshest ? Math.floor((Date.now() - new Date(freshest).getTime()) / 86400000) : null;
+              const freshness: "green" | "amber" | "red" | "none" =
+                ageDays === null ? "none"
+                : ageDays <= 45 ? "green"
+                : ageDays <= 90 ? "amber"
+                : "red";
+              const freshLabel =
+                freshness === "green" ? `Fresh (${ageDays}d)`
+                : freshness === "amber" ? `Aging (${ageDays}d)`
+                : freshness === "red" ? `Stale (${ageDays}d)`
+                : "No evidence";
+              const freshClass =
+                freshness === "green" ? "bg-[var(--color-success-bg)] text-[var(--color-success)]"
+                : freshness === "amber" ? "bg-[var(--color-warning-bg)] text-[var(--color-warning)]"
+                : freshness === "red" ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]"
+                : "bg-[var(--color-surface-2)] text-[var(--color-muted)]";
               return (
                 <div key={idx} className={`p-4 rounded-xl border transition ${hasEvidence ? "bg-[var(--color-success-bg)] border-[var(--color-success)]" : "bg-[var(--color-surface)] border-[var(--color-border)]"}`}>
                   <div className="flex items-start gap-4">
@@ -271,6 +291,7 @@ export default function EvidencePage() {
                         <span className="text-sm font-semibold text-[var(--color-foreground-subtle)]">{item.name}</span>
                         <span className="text-xs bg-[var(--color-border)] text-[var(--color-muted)] px-2 py-0.5 rounded-full">{item.source}</span>
                         <span className="text-xs bg-[var(--color-info-bg)] text-[var(--color-info)] px-2 py-0.5 rounded-full">{item.frequency}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${freshClass}`}>{freshLabel}</span>
                       </div>
                       <p className="text-xs text-[var(--color-muted)] mb-2">{item.how}</p>
 

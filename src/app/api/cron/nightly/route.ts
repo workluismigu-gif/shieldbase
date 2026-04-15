@@ -103,7 +103,43 @@ async function run(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ ok: true, triggered: results });
+  // Overdue PBC surfacing: for each request past due date and still pending, emit an
+  // activity_events row so the UI shows a nag line. (Email wiring comes when the env
+  // has a Resend/SendGrid key configured — for now we surface on-dashboard.)
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: overdueItems } = await supabase
+    .from("pbc_requests")
+    .select("id, org_id, title, due_date")
+    .in("status", ["pending"])
+    .lt("due_date", today);
+
+  if (overdueItems && overdueItems.length > 0) {
+    // Dedupe: only one reminder per item per day by scanning existing activity_events.
+    const nowIso = new Date().toISOString();
+    for (const pbc of overdueItems) {
+      const daysOverdue = Math.max(1, Math.floor((Date.now() - new Date(pbc.due_date).getTime()) / 86400000));
+      // Skip if we already fired a reminder for this pbc in the last 20 hours.
+      const { data: recent } = await supabase
+        .from("activity_events")
+        .select("id")
+        .eq("org_id", pbc.org_id)
+        .eq("type", "pbc_overdue")
+        .gt("timestamp", new Date(Date.now() - 20 * 3600 * 1000).toISOString())
+        .ilike("detail", `%${pbc.id}%`)
+        .limit(1);
+      if (recent && recent.length > 0) continue;
+
+      await supabase.from("activity_events").insert({
+        org_id: pbc.org_id,
+        type: "pbc_overdue",
+        title: `PBC overdue: ${pbc.title}`,
+        detail: `Due ${pbc.due_date} (${daysOverdue}d overdue) · ${pbc.id}`,
+        timestamp: nowIso,
+      });
+    }
+  }
+
+  return NextResponse.json({ ok: true, triggered: results, overdue_pbc: overdueItems?.length ?? 0 });
 }
 
 export const GET = run;

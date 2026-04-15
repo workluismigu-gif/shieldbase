@@ -86,11 +86,35 @@ export default function PbcPage() {
             </p>
           </div>
           {isAuditor && (
-            <button onClick={() => setShowCreate(true)}
-              className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 text-sm px-4 py-2 rounded-lg font-medium transition flex-shrink-0">
-              <Plus className="w-4 h-4" strokeWidth={1.8} />
-              New request
-            </button>
+            <div className="flex gap-2 flex-shrink-0">
+              <button onClick={async () => {
+                if (!org?.id) return;
+                if (!confirm("Create standard SOC 2 PBC request list (~37 items)? You can edit or delete individually after.")) return;
+                const { data: s } = await supabase.auth.getSession();
+                const token = s?.session?.access_token;
+                if (!token) return;
+                const res = await fetch("/api/pbc/templates", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ org_id: org.id }),
+                });
+                const j = await res.json();
+                if (res.ok) {
+                  alert(`Created ${j.created} PBC requests from the standard library.`);
+                  load();
+                } else {
+                  alert(`Error: ${j.error}`);
+                }
+              }}
+                className="inline-flex items-center gap-2 bg-[var(--color-bg)] text-[var(--color-foreground)] border border-[var(--color-border)] hover:bg-[var(--color-surface-2)] text-sm px-4 py-2 rounded-lg font-medium transition">
+                Load SOC 2 library
+              </button>
+              <button onClick={() => setShowCreate(true)}
+                className="inline-flex items-center gap-2 bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 text-sm px-4 py-2 rounded-lg font-medium transition">
+                <Plus className="w-4 h-4" strokeWidth={1.8} />
+                New request
+              </button>
+            </div>
           )}
         </div>
 
@@ -151,6 +175,7 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
   const [responseUrl, setResponseUrl] = useState(item.response_url ?? "");
   const [responseFile, setResponseFile] = useState<File | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [rejectOpen, setRejectOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -329,15 +354,38 @@ function PbcCard({ item, role, canWrite, controls, onChanged }: {
                   className="inline-flex items-center gap-1.5 bg-[var(--color-success)] text-white hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
                   <Check className="w-4 h-4" strokeWidth={2} /> Accept
                 </button>
-                <button onClick={() => {
-                  const r = window.prompt("Why is this evidence insufficient? (sent back to the client)");
-                  if (r) post({ action: "review", request_id: item.id, decision: "rejected", rejection_reason: r });
-                }}
+                <button onClick={() => setRejectOpen(true)}
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 bg-[var(--color-danger)] text-white hover:opacity-90 disabled:opacity-50 text-sm px-4 py-2 rounded-lg font-medium transition">
                   <X className="w-4 h-4" strokeWidth={2} /> Reject
                 </button>
               </div>
+
+              {rejectOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setRejectOpen(false)}>
+                  <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6 max-w-lg w-full space-y-3" onClick={e => e.stopPropagation()}>
+                    <h3 className="font-semibold text-[var(--color-foreground)]">Reject evidence</h3>
+                    <p className="text-sm text-[var(--color-muted)]">Explain why this response isn&apos;t sufficient. The client sees your note verbatim.</p>
+                    <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} rows={5}
+                      autoFocus
+                      placeholder="e.g. The screenshot shows the policy was last reviewed in 2024. For this period (Jan–Mar 2026) we need evidence of quarterly review within the engagement window."
+                      className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground-subtle)] resize-y" />
+                    <div className="flex justify-end gap-2 pt-1">
+                      <button onClick={() => setRejectOpen(false)} className="px-4 py-2 text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-foreground)]">Cancel</button>
+                      <button onClick={() => {
+                        if (!rejectReason.trim()) return;
+                        post({ action: "review", request_id: item.id, decision: "rejected", rejection_reason: rejectReason.trim() });
+                        setRejectOpen(false);
+                        setRejectReason("");
+                      }}
+                        disabled={!rejectReason.trim()}
+                        className="bg-[var(--color-danger)] text-white hover:opacity-90 disabled:opacity-40 text-sm px-4 py-2 rounded-lg font-medium">
+                        Send rejection
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
