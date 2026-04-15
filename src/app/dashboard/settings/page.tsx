@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
-import { Cloud, Mail, MessageSquare, Shield as ShieldIcon, CheckCircle2, AlertTriangle, PartyPopper, Lock, ExternalLink } from "lucide-react";
+import { Cloud, Mail, MessageSquare, Shield as ShieldIcon, CheckCircle2, AlertTriangle, PartyPopper, Lock, ExternalLink, Globe2 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
 import ConnectionHealthPanel from "@/components/ConnectionHealthPanel";
 
@@ -403,6 +403,8 @@ export default function ConnectPage() {
 
         </div>
 
+        <TrustCenterPanel org={org} />
+
         <div className="text-center pt-2">
           <a href="mailto:hello@shieldbase.io?subject=Integration request"
             className="text-sm text-[var(--color-info)] hover:underline font-medium">
@@ -635,4 +637,140 @@ export default function ConnectPage() {
   }
 
   return null;
+}
+
+function slugify(s: string): string {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+}
+
+function TrustCenterPanel({ org }: { org: import("@/lib/supabase").OrgRow | null }) {
+  const initial = {
+    slug: org?.trust_slug ?? slugify(org?.name ?? ""),
+    published: org?.trust_published ?? false,
+    tagline: org?.trust_tagline ?? "",
+    description: org?.trust_description ?? "",
+    website: org?.trust_website ?? "",
+    contact_email: org?.trust_contact_email ?? "",
+  };
+  const [form, setForm] = useState(initial);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+
+  const publicUrl = form.slug ? `${SITE_ORIGIN}/trust/${form.slug}` : null;
+  const dirty = JSON.stringify(form) !== JSON.stringify(initial);
+
+  const save = async () => {
+    if (!org?.id) return;
+    if (!form.slug || !/^[a-z0-9-]{2,60}$/.test(form.slug)) {
+      setMsg({ kind: "err", text: "Slug must be 2–60 chars, lowercase letters, numbers, or hyphens." });
+      return;
+    }
+    setSaving(true);
+    setMsg(null);
+    const { error } = await supabase
+      .from("organizations")
+      .update({
+        trust_slug: form.slug,
+        trust_published: form.published,
+        trust_tagline: form.tagline || null,
+        trust_description: form.description || null,
+        trust_website: form.website || null,
+        trust_contact_email: form.contact_email || null,
+      })
+      .eq("id", org.id);
+    setSaving(false);
+    if (error) {
+      setMsg({ kind: "err", text: error.message.includes("unique") ? "That slug is already taken — pick another." : error.message });
+      return;
+    }
+    setMsg({ kind: "ok", text: form.published ? "Saved. Public trust page is live." : "Saved." });
+  };
+
+  return (
+    <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6">
+      <div className="flex items-start gap-3 mb-5">
+        <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center flex-shrink-0">
+          <Globe2 className="w-5 h-5 text-[var(--color-foreground-subtle)]" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-[var(--color-foreground)]">Trust Center</h3>
+            {form.published ? (
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-success)] bg-[var(--color-success-bg)] px-2 py-0.5 rounded-md">
+                <CheckCircle2 className="w-3 h-3" strokeWidth={2} /> Published
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-[var(--color-muted)] bg-[var(--color-surface-2)] px-2 py-0.5 rounded-md">Unpublished</span>
+            )}
+          </div>
+          <p className="text-sm text-[var(--color-muted)] mt-1">Share your live compliance posture at a public URL. Controls, policies, and integrations stay in sync automatically.</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <label className="flex items-center gap-2 text-sm text-[var(--color-foreground-subtle)]">
+          <input type="checkbox" checked={form.published} onChange={e => setForm({ ...form, published: e.target.checked })}
+            className="w-4 h-4 rounded border-[var(--color-border)]" />
+          Publish public trust page
+        </label>
+
+        <div>
+          <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Public URL slug</label>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-[var(--color-muted)] font-mono">{SITE_ORIGIN}/trust/</span>
+            <input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value.toLowerCase() })}
+              className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] font-mono text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground)]"
+              placeholder="your-company" />
+          </div>
+          {publicUrl && form.published && (
+            <a href={publicUrl} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-[var(--color-info)] hover:underline mt-1.5">
+              View live <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Tagline (optional)</label>
+          <input value={form.tagline} onChange={e => setForm({ ...form, tagline: e.target.value })}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm focus:outline-none focus:border-[var(--color-foreground)]"
+            placeholder="Building fast, staying secure." maxLength={120} />
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Description</label>
+          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
+            rows={3}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm focus:outline-none focus:border-[var(--color-foreground)] resize-y"
+            placeholder="A short paragraph about your company's security posture." maxLength={600} />
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Website</label>
+            <input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm focus:outline-none focus:border-[var(--color-foreground)]"
+              placeholder="https://yourcompany.com" type="url" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Security contact email</label>
+            <input value={form.contact_email} onChange={e => setForm({ ...form, contact_email: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm focus:outline-none focus:border-[var(--color-foreground)]"
+              placeholder="security@yourcompany.com" type="email" />
+          </div>
+        </div>
+
+        {msg && (
+          <div className={`text-sm px-3 py-2 rounded-lg ${msg.kind === "err" ? "bg-[var(--color-danger-bg)] text-[var(--color-danger)]" : "bg-[var(--color-success-bg)] text-[var(--color-success)]"}`}>
+            {msg.text}
+          </div>
+        )}
+
+        <button onClick={save} disabled={saving || !dirty}
+          className="bg-[var(--color-foreground)] hover:opacity-90 disabled:opacity-40 text-[var(--color-surface)] text-sm px-4 py-2 rounded-lg font-medium transition">
+          {saving ? "Saving..." : "Save trust center settings"}
+        </button>
+      </div>
+    </div>
+  );
 }
