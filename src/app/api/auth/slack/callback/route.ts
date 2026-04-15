@@ -21,7 +21,9 @@ export async function GET(req: NextRequest) {
   const redirectUri = `${SITE_URL}/api/auth/slack/callback`;
 
   const params = new URLSearchParams();
-  params.append("client_id", process.env.SLACK_CLIENT_ID ?? "");
+  // Public env var — exposed in the OAuth authorize URL anyway, but server reads
+  // the same value to keep client_id consistent across both phases of the flow.
+  params.append("client_id", process.env.NEXT_PUBLIC_SLACK_CLIENT_ID ?? "");
   params.append("client_secret", process.env.SLACK_CLIENT_SECRET ?? "");
   params.append("code", code);
   params.append("redirect_uri", redirectUri);
