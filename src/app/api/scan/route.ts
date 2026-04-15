@@ -84,13 +84,14 @@ export async function POST(req: NextRequest) {
       !serviceKey && auth_token ? { global: { headers: { Authorization: `Bearer ${auth_token}` } } } : undefined
     );
 
-    // Parse Prowler findings
+    // Parse findings through the SOC 2 mapper — any provider that emits
+    // unmapped.compliance.SOC2 will produce control rows.
     const controls = parseProwlerOutput(scan_data);
     let summary = generateSummary(controls);
 
-    // For non-AWS providers (GitHub etc), controls won't map to SOC2
-    // Build summary directly from raw findings
-    if (provider !== "aws" && Array.isArray(scan_data) && scan_data.length > 0) {
+    // Fallback: if the mapper produced no controls (e.g. legacy GitHub Prowler output
+    // without SOC 2 mapping), compute a raw pass/fail summary so the UI still renders.
+    if (controls.length === 0 && Array.isArray(scan_data) && scan_data.length > 0) {
       const rawTotal = scan_data.length;
       const rawPass = scan_data.filter((f: Record<string,string>) => (f.status_code || f.status) === "PASS").length;
       const rawFail = scan_data.filter((f: Record<string,string>) => (f.status_code || f.status) === "FAIL").length;
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
         nonCompliant: rawFail,
         notAssessed: 0,
         critical: 0,
-        score: Math.round((rawPass / rawTotal) * 100),
+        score: rawTotal > 0 ? Math.round((rawPass / rawTotal) * 100) : 0,
       };
     }
 
@@ -205,7 +206,13 @@ export async function POST(req: NextRequest) {
           (f) => {
             const checkId = f.check_id as string | undefined;
             const compliance = f.compliance as Record<string, string[]> | undefined;
-            return checkId === ctrl.control_id || compliance?.soc2_aws?.includes(ctrl.control_id);
+            const unmapped = f.unmapped as { compliance?: Record<string, string[]> } | undefined;
+            // Match on prowler AWS mapping, our OCSF-style SOC2 mapping, or direct control_id
+            const soc2List = unmapped?.compliance?.SOC2 ?? unmapped?.compliance?.soc2 ?? [];
+            const normalizedSoc2 = soc2List.map(r => r.toUpperCase().replace(/_/g, "."));
+            return checkId === ctrl.control_id
+              || compliance?.soc2_aws?.includes(ctrl.control_id)
+              || normalizedSoc2.includes(ctrl.control_id);
           }
         );
         if (rawFinding) {

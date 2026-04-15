@@ -76,6 +76,8 @@ export async function POST(req: NextRequest) {
         if (!token) continue;
         payload.slack_access_token = token;
         payload.slack_team_id = techStack.slack_team_id ?? "";
+        payload.slack_admin_threshold = techStack.slack_admin_threshold ?? "5";
+        payload.slack_required_domain = techStack.slack_required_domain ?? "";
       } else {
         const roleArn = techStack.aws_role_arn;
         if (!roleArn) continue;
