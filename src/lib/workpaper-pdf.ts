@@ -81,6 +81,119 @@ export function generateWorkpaperPdf(data: WorkpaperData): Blob {
     doc.text(wrapped, 14, 137);
   }
 
+  // ---------- Independent Service Auditor's Report (template) ----------
+  doc.addPage();
+  header(doc, "Independent Service Auditor's Report", data.org_name);
+  {
+    doc.setFontSize(9);
+    doc.setTextColor(...GREY);
+    const isar = [
+      `To the management of ${data.org_name}:`,
+      "",
+      `We have examined ${data.org_name}'s accompanying description of its system and the suitability of the design and operating effectiveness of controls to meet the criteria for the ${data.frameworks.join(", ") || "SOC 2"} trust services criteria throughout the period ${fmtDate(data.audit_period_start)} to ${fmtDate(data.audit_period_end)}.`,
+      "",
+      "Management's responsibility: Management is responsible for preparing the description and assertion, providing the services covered, specifying the service commitments and system requirements, identifying risks that threaten the achievement of the service commitments and system requirements, designing and implementing effective controls, and evaluating their effectiveness throughout the period.",
+      "",
+      "Our responsibility: Our responsibility is to express an opinion on the description, and on the suitability of the design and operating effectiveness of the controls to achieve the related criteria stated in the description.",
+      "",
+      "Scope: Our examination was conducted in accordance with attestation standards established by the AICPA. Those standards require that we plan and perform our examination to obtain reasonable assurance about whether, in all material respects, the description is presented in accordance with the description criteria and the controls were suitably designed and operating effectively.",
+      "",
+      "[OPINION PARAGRAPH — to be populated from exceptions + conclusions]",
+      "",
+      "— This page is a generated template. Populate [bracketed] fields with firm-specific details before issuance.",
+    ].join("\n");
+    const wrapped = doc.splitTextToSize(isar, 180);
+    doc.text(wrapped, 14, 48);
+  }
+
+  // ---------- Management Assertion (template) ----------
+  doc.addPage();
+  header(doc, "Management Assertion", data.org_name);
+  {
+    doc.setFontSize(9);
+    doc.setTextColor(...GREY);
+    const assertion = [
+      `We, the management of ${data.org_name}, are responsible for:`,
+      "• designing, implementing, and operating the controls to provide reasonable assurance that the service commitments and system requirements related to the trust services criteria are achieved;",
+      "• selecting the trust services categories covered by this report;",
+      "• identifying the risks that threaten the achievement of those service commitments and system requirements;",
+      "• preparing the accompanying description of our system.",
+      "",
+      `We assert that the description fairly presents ${data.org_name}'s ${data.frameworks.join(", ") || "SOC 2"} system throughout the period ${fmtDate(data.audit_period_start)} to ${fmtDate(data.audit_period_end)} and that the controls stated in the description were suitably designed and operating effectively throughout that period.`,
+      "",
+      "Signature: _________________________________",
+      "Name/Title: _______________________________",
+      "Date: _____________________________________",
+    ].join("\n");
+    const wrapped = doc.splitTextToSize(assertion, 180);
+    doc.text(wrapped, 14, 48);
+  }
+
+  // ---------- System Description (template) ----------
+  doc.addPage();
+  header(doc, "System Description", data.org_name);
+  {
+    doc.setFontSize(10);
+    doc.setTextColor(...NAVY);
+    doc.text("Services provided", 14, 48);
+    doc.setFontSize(9);
+    doc.setTextColor(...GREY);
+    doc.text(data.scope_notes ? doc.splitTextToSize(data.scope_notes, 180) : "[describe the services in scope, user entities, sub-service organizations, and carve-out/inclusive choices]", 14, 54);
+
+    doc.setFontSize(10);
+    doc.setTextColor(...NAVY);
+    doc.text("Frameworks covered", 14, 100);
+    doc.setFontSize(9);
+    doc.setTextColor(...GREY);
+    doc.text(data.frameworks.join(", ") || "—", 14, 106);
+
+    doc.setFontSize(10);
+    doc.setTextColor(...NAVY);
+    doc.text("Infrastructure, software, people, procedures, data", 14, 120);
+    doc.setFontSize(9);
+    doc.setTextColor(...GREY);
+    doc.text(
+      [
+        "[Infrastructure: list cloud providers, datacenters, and network segments in scope.]",
+        "[Software: list key applications, security tools, and monitoring platforms.]",
+        "[People: describe roles (engineering, security, support) with access to in-scope systems.]",
+        "[Procedures: reference the organization's key policies and standard operating procedures.]",
+        "[Data: describe data types processed, classification, and retention.]",
+      ].join("\n"),
+      14, 126
+    );
+  }
+
+  // ---------- Control matrix by TSC ----------
+  doc.addPage();
+  header(doc, "Control matrix by TSC category", data.org_name);
+  {
+    const byCat: Record<string, { total: number; compliant: number }> = {};
+    for (const c of data.sample_controls) {
+      const cat = c.control_id.split(".")[0] || "Other";
+      const b = (byCat[cat] ||= { total: 0, compliant: 0 });
+      b.total += 1;
+      if (c.status === "compliant") b.compliant += 1;
+    }
+    const rows = Object.entries(byCat).map(([cat, b]) => [
+      cat, String(b.total), String(b.compliant), String(b.total - b.compliant),
+      `${b.total ? Math.round((b.compliant / b.total) * 100) : 0}%`,
+    ]);
+    if (rows.length === 0) {
+      doc.setFontSize(10);
+      doc.setTextColor(...GREY);
+      doc.text("No in-sample controls to aggregate.", 14, 50);
+    } else {
+      autoTable(doc, {
+        startY: 45,
+        head: [["TSC category", "Total", "Compliant", "Not compliant", "Pass rate"]],
+        body: rows,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: NAVY, textColor: 255 },
+      });
+    }
+  }
+
   // ---------- Sample summary ----------
   doc.addPage();
   header(doc, "Sample tested", data.org_name);

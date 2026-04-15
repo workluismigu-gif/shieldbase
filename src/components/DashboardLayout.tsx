@@ -6,7 +6,7 @@ import { useOrg } from "@/lib/org-context";
 import { signOut } from "@/lib/supabase";
 import {
   LayoutDashboard, Activity, FileText, Target, SlidersHorizontal,
-  ShieldCheck, Folder, Wrench, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2, AlertOctagon, Beaker, Grid3x3
+  ShieldCheck, Folder, Wrench, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2, AlertOctagon, Beaker, Grid3x3, Briefcase, FileSearch
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string };
@@ -24,7 +24,9 @@ const navSections: { label: string; items: NavItem[] }[] = [
     label: "Compliance",
     items: [
       { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel, badge: "New" },
+      { href: "/dashboard/engagements", label: "Engagements", Icon: Briefcase },
       { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon },
+      { href: "/dashboard/ipe", label: "IPE Walkthroughs", Icon: FileSearch },
       { href: "/dashboard/controls", label: "Controls", Icon: Target },
       { href: "/dashboard/sampling", label: "Sampling", Icon: Beaker },
       { href: "/dashboard/crosswalk", label: "Crosswalk", Icon: Grid3x3 },
