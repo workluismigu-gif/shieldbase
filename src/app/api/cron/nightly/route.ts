@@ -2,13 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
-// Scheduled scan endpoint — runs every 12 hours via EventBridge
-// Expected schedule: rate(12 hours) or cron(0 */12 * * ? *)
-// Scans all orgs with connected integrations (AWS, GitHub, Google Workspace, Slack)
-export async function POST(req: NextRequest) {
-  // Verify it's an internal call
+// Scheduled scan endpoint — runs daily at 06:00 UTC via Vercel cron.
+// Vercel cron invokes with GET + `Authorization: Bearer ${CRON_SECRET}`.
+// Manual triggers (from callbacks) use POST + `Authorization: Bearer ${INTERNAL_TRIGGER_SECRET}`.
+// Both call the same handler.
+async function run(req: NextRequest) {
+  // Vercel cron invocations include `x-vercel-cron: 1` (set by the platform, not spoofable from
+  // outside since Vercel strips the header on public requests). Manual invocations use the
+  // internal bearer secret.
+  const isVercelCron = req.headers.get("x-vercel-cron") === "1";
   const authHeader = req.headers.get("authorization");
-  if (process.env.INTERNAL_TRIGGER_SECRET && authHeader !== `Bearer ${process.env.INTERNAL_TRIGGER_SECRET}`) {
+  const internalSecret = process.env.INTERNAL_TRIGGER_SECRET;
+  const internalOk = internalSecret && authHeader === `Bearer ${internalSecret}`;
+  if (!isVercelCron && !internalOk) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -81,11 +87,23 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  console.log(`12h scheduled scan triggered for ${results.length} org/provider pairs`);
+  console.log(`Daily scheduled scan triggered for ${results.length} org/provider pairs`);
+
+  // Write one activity_events row per provider per org so the UI can show "scan triggered".
+  for (const r of results) {
+    const org = orgs.find(o => o.name === r.org);
+    if (!org) continue;
+    await supabase.from("activity_events").insert({
+      org_id: org.id,
+      type: "scan_triggered",
+      title: `Scheduled ${r.provider} scan triggered`,
+      detail: `Daily cron invoked Lambda for ${r.provider}`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   return NextResponse.json({ ok: true, triggered: results });
 }
 
-// Also support GET for simple health check
-export async function GET() {
-  return NextResponse.json({ ok: true, message: "Nightly scan endpoint ready" });
-}
+export const GET = run;
+export const POST = run;
