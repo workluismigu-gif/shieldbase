@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
-import { MessageSquare, Trash2, Send } from "lucide-react";
+import { MessageSquare, Trash2, Send, AlertOctagon } from "lucide-react";
 
 interface Props {
   controlId: string;
@@ -253,6 +253,33 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
                 {saving ? "Saving…" : "Save test record"}
               </button>
             </div>
+
+            {role === "auditor_readonly" && currentStatus === "non_compliant" && (
+              <button
+                onClick={async () => {
+                  if (!org?.id) return;
+                  const { data: s } = await supabase.auth.getSession();
+                  const token = s?.session?.access_token;
+                  if (!token) return;
+                  const res = await fetch("/api/findings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({
+                      org_id: org.id,
+                      control_id: controlId,
+                      title: `${controlId}: ${controlTitle}`,
+                      description: `Failing control flagged during testing on ${new Date().toLocaleDateString()}.`,
+                      severity: "high",
+                      disposition: "deficiency",
+                    }),
+                  });
+                  const j = await res.json();
+                  if (res.ok && j.finding?.id) window.location.href = `/dashboard/findings/${j.finding.id}`;
+                }}
+                className="w-full mt-2 inline-flex items-center justify-center gap-2 border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] py-2 rounded-lg font-medium text-sm">
+                <AlertOctagon className="w-4 h-4" /> Log as finding
+              </button>
+            )}
           </div>
         )}
 
