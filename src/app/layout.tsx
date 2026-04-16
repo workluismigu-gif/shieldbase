@@ -1,19 +1,29 @@
 import type { Metadata } from "next";
+import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "ShieldBase — SOC 2 Compliance in 30 Days",
-  description: "AI-powered SOC 2 compliance for startups. Get audit-ready in 30 days for a flat $5,000. Not $50,000+.",
+  title: "ShieldBase — Compliance, without the noise",
+  description: "Software for becoming SOC 2. A founder-mode readiness program with an auditor workbench built in.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={`scroll-smooth ${fraunces.variable} ${inter.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );
