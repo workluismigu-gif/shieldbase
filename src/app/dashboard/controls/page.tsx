@@ -26,6 +26,9 @@ export default function ControlsPage() {
   const isAuditor = role === "auditor_readonly";
   const isStaff = role === "auditor_staff";
   const isLead = role === "owner" || role === "admin" || role === "auditor_readonly";
+  const auditModeOn = !!org?.audit_mode_enabled;
+  // Founder view when owner/admin isn't in audit mode — hide SMPL/STAFF/sign-off noise.
+  const founderView = !isAuditor && !isStaff && !auditModeOn;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
@@ -143,6 +146,8 @@ export default function ControlsPage() {
             ? `Showing ${myAssignedControlIds.size} control${myAssignedControlIds.size === 1 ? "" : "s"} assigned to you by the lead auditor.`
             : isAuditor
             ? "View the client's SOC 2 controls. Mark items as in-sample to track which ones you'll test for this engagement."
+            : founderView
+            ? "These are the SOC 2 controls your scans produced. Focus on the failing rows — each is a specific thing to fix before your auditor arrives."
             : "Test, annotate, and sign off on individual controls for SOC 2 audit."}
         </p>
       </div>
@@ -164,44 +169,46 @@ export default function ControlsPage() {
           <option value="">All categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button onClick={() => setSampleFilter(sampleFilter === "all" ? "in_sample" : "all")}
-          title={sampleFilter === "in_sample" ? "Click to show all controls" : "Click to show only in-sample controls"}
-          className={`inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border transition ${
-            sampleFilter === "in_sample"
-              ? "bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]"
-              : "bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] hover:text-[var(--color-foreground)]"
-          }`}>
-          <Beaker className="w-3.5 h-3.5" strokeWidth={1.8} />
-          {sampleFilter === "in_sample" ? "In-sample only" : "All controls"}
-          {sampleCount > 0 && (
-            <span className={`ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+        {!founderView && (
+          <button onClick={() => setSampleFilter(sampleFilter === "all" ? "in_sample" : "all")}
+            title={sampleFilter === "in_sample" ? "Click to show all controls" : "Click to show only in-sample controls"}
+            className={`inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-lg border transition ${
               sampleFilter === "in_sample"
-                ? "bg-[var(--color-info)] text-white"
-                : "bg-[var(--color-info-bg)] text-[var(--color-info)]"
-            }`}>{sampleCount}</span>
-          )}
-        </button>
+                ? "bg-[var(--color-info-bg)] text-[var(--color-info)] border-[var(--color-info)]"
+                : "bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] hover:text-[var(--color-foreground)]"
+            }`}>
+            <Beaker className="w-3.5 h-3.5" strokeWidth={1.8} />
+            {sampleFilter === "in_sample" ? "In-sample only" : "All controls"}
+            {sampleCount > 0 && (
+              <span className={`ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                sampleFilter === "in_sample"
+                  ? "bg-[var(--color-info)] text-white"
+                  : "bg-[var(--color-info-bg)] text-[var(--color-info)]"
+              }`}>{sampleCount}</span>
+            )}
+          </button>
+        )}
       </div>
 
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] overflow-hidden">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-[var(--color-surface)]">
             <tr className="text-left text-[11px] uppercase tracking-wider text-[var(--color-muted)]">
-              <th className="px-4 py-3 w-[60px]">Smpl</th>
+              {!founderView && <th className="px-4 py-3 w-[60px]">Smpl</th>}
               <th className="px-4 py-3 w-[90px]">ID</th>
               <th className="px-4 py-3 w-[140px]">Category</th>
               <th className="px-4 py-3">Title</th>
               <th className="px-4 py-3 w-[120px]">Status</th>
               <th className="px-4 py-3 w-[90px]">Severity</th>
-              {isLead && <th className="px-4 py-3 w-[130px]">Staff</th>}
+              {isLead && !founderView && <th className="px-4 py-3 w-[130px]">Staff</th>}
               <th className="px-4 py-3 w-[140px]"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--color-border)]">
             {loading ? (
-              <tr><td colSpan={isLead ? 8 : 7} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
+              <tr><td colSpan={founderView ? 6 : isLead ? 8 : 7} className="px-4 py-8 text-center text-sm text-[var(--color-muted)]">Loading…</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={isLead ? 8 : 7} className="px-4 py-12 text-center">
+              <tr><td colSpan={founderView ? 6 : isLead ? 8 : 7} className="px-4 py-12 text-center">
                 <div className="text-sm font-medium text-[var(--color-foreground)]">No controls match</div>
                 <div className="text-xs text-[var(--color-muted)] mt-1">
                   {isStaff ? "No controls are assigned to you yet — ask the lead auditor." : "Run a scan to populate findings, or clear filters above."}
@@ -212,13 +219,15 @@ export default function ControlsPage() {
                 const sampled = inSample(c.control_id, c.in_sample);
                 return (
                   <tr key={c.control_id} className="hover:bg-[var(--color-surface)]">
-                    <td className="px-4 py-3">
-                      <input type="checkbox" checked={sampled}
-                        disabled={!isAuditor}
-                        onChange={() => isAuditor && toggleSample(c.control_id, sampled)}
-                        title={isAuditor ? (sampled ? "In sample — uncheck to remove" : "Add to sample") : "Only the auditor can change the sample"}
-                        className="accent-[var(--color-info)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" />
-                    </td>
+                    {!founderView && (
+                      <td className="px-4 py-3">
+                        <input type="checkbox" checked={sampled}
+                          disabled={!isAuditor}
+                          onChange={() => isAuditor && toggleSample(c.control_id, sampled)}
+                          title={isAuditor ? (sampled ? "In sample — uncheck to remove" : "Add to sample") : "Only the auditor can change the sample"}
+                          className="accent-[var(--color-info)] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" />
+                      </td>
+                    )}
                     <td className="px-4 py-3 font-mono text-xs text-[var(--color-muted)] truncate">{c.control_id}</td>
                     <td className="px-4 py-3 text-xs text-[var(--color-muted)] truncate">{c.category}</td>
                     <td className="px-4 py-3 text-[var(--color-foreground)] truncate" title={c.title}>{c.title}</td>
@@ -228,7 +237,7 @@ export default function ControlsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--color-muted)]">{c.severity ?? "-"}</td>
-                    {isLead && (
+                    {isLead && !founderView && (
                       <td className="px-4 py-3">
                         <button onClick={() => setAssignPickerFor(c.control_id)}
                           className="inline-flex items-center gap-1 text-xs text-[var(--color-muted)] hover:text-[var(--color-foreground)] bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-2 py-1">
@@ -267,7 +276,7 @@ export default function ControlsPage() {
                         )}
                         <button onClick={() => setSelected({ id: c.control_id, title: c.title, status: c.status })}
                           className="text-xs bg-[var(--color-foreground)] text-[var(--color-surface)] hover:opacity-90 px-3 py-1.5 rounded-md font-medium">
-                          {canWrite ? "Test & sign off" : "Open"}
+                          {founderView ? "View detail" : canWrite ? "Test & sign off" : "Open"}
                         </button>
                       </div>
                     </td>

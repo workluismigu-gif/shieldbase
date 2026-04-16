@@ -42,16 +42,24 @@ export default function FounderHero() {
     return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
   }, [connectCount, taskProgress, ctrlScore, controls.length]);
 
-  // "Fastest wins" — surface the 3 most impactful undone things
+  // "Fastest wins" — always surface 3 by falling back through a standard
+  // readiness ladder: integrations → open checklist items → policy gaps → evidence.
   const fastestWins = useMemo(() => {
     const wins: { title: string; href: string; impact: string }[] = [];
     if (!connected.aws) wins.push({ title: "Connect AWS", href: "/dashboard/settings", impact: "Unblocks ~30 automated controls" });
     if (!connected.github) wins.push({ title: "Connect GitHub", href: "/dashboard/settings", impact: "Code-review & branch-protection evidence" });
     if (!connected.google) wins.push({ title: "Connect Google Workspace", href: "/dashboard/settings", impact: "Identity, MFA, domain evidence" });
     if (!connected.slack) wins.push({ title: "Connect Slack", href: "/dashboard/settings", impact: "Workforce 2FA + guest channel checks" });
-    for (const t of openTasks.slice(0, 5)) {
+    if (!connected.azure) wins.push({ title: "Connect Azure", href: "/dashboard/settings", impact: "Cloud infrastructure evidence" });
+    // Fill from open checklist tasks if still short
+    for (const t of openTasks.slice(0, 6)) {
+      if (wins.length >= 3) break;
       wins.push({ title: t.task, href: "/dashboard/checklist", impact: t.phase ?? "Checklist task" });
     }
+    // Static fallbacks when brand new org has no tasks yet
+    if (wins.length < 3) wins.push({ title: "Upload your first policy", href: "/dashboard/policies", impact: "Documented policies anchor 8+ SOC 2 controls" });
+    if (wins.length < 3) wins.push({ title: "Define your audit scope", href: "/dashboard/scope", impact: "Scope narrows what your auditor tests" });
+    if (wins.length < 3) wins.push({ title: "Add your first vendor", href: "/dashboard/vendors", impact: "Vendor register is CC9.2 evidence" });
     return wins.slice(0, 3);
   }, [connected, openTasks]);
 

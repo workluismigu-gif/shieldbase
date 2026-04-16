@@ -9,7 +9,7 @@ import {
   ShieldCheck, Folder, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2, AlertOctagon, Beaker, Grid3x3, Briefcase, FileSearch
 } from "lucide-react";
 
-type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string; hideFromAuditors?: boolean; auditorWorkbench?: boolean };
+type NavItem = { href: string; label: string; founderLabel?: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string; hideFromAuditors?: boolean; auditorWorkbench?: boolean };
 
 const navSections: { label: string; items: NavItem[] }[] = [
   {
@@ -26,7 +26,7 @@ const navSections: { label: string; items: NavItem[] }[] = [
       { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel, auditorWorkbench: true },
       { href: "/dashboard/engagements", label: "Engagements", Icon: Briefcase, auditorWorkbench: true },
       { href: "/dashboard/sampling", label: "Sampling", Icon: Beaker, auditorWorkbench: true },
-      { href: "/dashboard/pbc", label: "PBC Requests", Icon: ClipboardList },
+      { href: "/dashboard/pbc", label: "PBC Requests", founderLabel: "Evidence Requests", Icon: ClipboardList },
       { href: "/dashboard/ipe", label: "IPE Walkthroughs", Icon: FileSearch, auditorWorkbench: true },
       { href: "/dashboard/controls", label: "Controls", Icon: Target },
       { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon, auditorWorkbench: true },
@@ -137,7 +137,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           : "text-[var(--color-muted)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-2)]"
                       }`}>
                       <item.Icon className="w-[17px] h-[17px]" strokeWidth={1.6} />
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1">{!isAuditor && !auditMode && item.founderLabel ? item.founderLabel : item.label}</span>
                       {item.badge && (
                         <span className="text-[10px] bg-[var(--color-info)]/15 text-[var(--color-info)] px-1.5 py-0.5 rounded-full">{item.badge}</span>
                       )}
@@ -188,9 +188,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]" />
               {frameworkLabel}
             </span>
-            {dayOfJourney !== null && role !== "auditor_readonly" && (
+            {dayOfJourney !== null && dayOfJourney <= 90 && role !== "auditor_readonly" && role !== "auditor_staff" && (
               <span className="text-xs font-medium text-[var(--color-info)] bg-[var(--color-info-bg)] px-2.5 py-1 rounded-md">
-                Day {dayOfJourney} of 90
+                Day {dayOfJourney} of 90 · readiness
               </span>
             )}
           </div>

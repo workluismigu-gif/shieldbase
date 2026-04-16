@@ -649,9 +649,19 @@ function AuditModePanel({ org }: { org: import("@/lib/supabase").OrgRow | null }
   const toggle = async (next: boolean) => {
     if (!org?.id) return;
     setSaving(true); setMsg(null);
-    const { error } = await supabase.from("organizations").update({ audit_mode_enabled: next }).eq("id", org.id);
+    const { data, error } = await supabase
+      .from("organizations")
+      .update({ audit_mode_enabled: next })
+      .eq("id", org.id)
+      .select("audit_mode_enabled")
+      .maybeSingle();
     setSaving(false);
     if (error) { setMsg(`Error: ${error.message}`); return; }
+    // Confirm the write actually stuck (RLS silent-deny protection).
+    if (!data || data.audit_mode_enabled !== next) {
+      setMsg(`Save failed silently — your role may not have permission to change audit mode. Ask an owner.`);
+      return;
+    }
     setEnabled(next);
     setMsg(next ? "Audit mode on — auditor pages now visible in the sidebar." : "Audit mode off — back to founder view.");
     setTimeout(() => window.location.reload(), 800);
