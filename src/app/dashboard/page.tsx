@@ -789,7 +789,10 @@ export default function DashboardPage() {
         {slackConnected ? (
           <a href="/dashboard/monitoring?provider=slack" className="inline-flex items-center gap-1.5 text-xs bg-[var(--color-surface-2)] text-[var(--color-foreground-subtle)] border border-[var(--color-border)] px-2.5 py-1 rounded-md font-medium hover:border-[var(--color-border-strong)] transition">
             <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.8} /> Slack
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)]" title="Awaiting Lambda support" />
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${hasSlackData ? "bg-[var(--color-success)] animate-pulse" : "bg-[var(--color-warning)]"}`}
+              title={hasSlackData ? `Last scan: ${slackTotal} checks, ${slackPct}% passing` : "Scan pending"}
+            />
           </a>
         ) : (
           <a href="/dashboard/settings" className="inline-flex items-center gap-1.5 text-xs text-[var(--color-muted)] border border-dashed border-[var(--color-border-strong)] px-2.5 py-1 rounded-md hover:text-[var(--color-foreground)] transition">
