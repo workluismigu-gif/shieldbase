@@ -595,18 +595,23 @@ export default function DashboardPage() {
   const githubTotal = githubScans.length > 0 ? (githubScans[0].summary?.total ?? 0) : 0;
   const githubPct = githubTotal > 0 ? Math.round((githubCompliant / githubTotal) * 100) : 0;
   const hasGithubData = githubTotal > 0;
-  const hasSlackData = slackFindings.length > 0;
+
+  const slackCompliant = slackFindings.filter(f => (f.status_code || f.status) === "PASS").length;
+  const slackTotal = slackFindings.length;
+  const slackPct = slackTotal > 0 ? Math.round((slackCompliant / slackTotal) * 100) : 0;
+  const hasSlackData = slackTotal > 0;
 
   // Combined score across all connected integrations + manual tasks
   const awsScore = hasRealData ? Math.round((realCompliant / realTotal) * 100) : null;
   const githubScore = hasGithubData ? githubPct : null;
+  const slackScore = hasSlackData ? slackPct : null;
   const manualScore = totalTaskCount > 0 ? Math.round((doneTasks / totalTaskCount) * 100) : null;
 
-  const scores = [awsScore, githubScore, manualScore].filter(s => s !== null) as number[];
+  const scores = [awsScore, githubScore, slackScore, manualScore].filter(s => s !== null) as number[];
   // Weighted by check count so Overall matches what users expect from Automated + Manual:
-  // (AWS pass + GitHub pass + tasks done) / (AWS total + GitHub total + task total)
-  const totalPassing = (hasRealData ? realCompliant : 0) + (hasGithubData ? githubCompliant : 0) + doneTasks;
-  const totalItems = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0) + totalTaskCount;
+  // (AWS pass + GitHub pass + Slack pass + tasks done) / (AWS total + GitHub total + Slack total + task total)
+  const totalPassing = (hasRealData ? realCompliant : 0) + (hasGithubData ? githubCompliant : 0) + (hasSlackData ? slackCompliant : 0) + doneTasks;
+  const totalItems = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0) + (hasSlackData ? slackTotal : 0) + totalTaskCount;
   const combinedScore = totalItems > 0 ? Math.round((totalPassing / totalItems) * 100) : 0;
   const score = combinedScore;
   const connectedIntegrations = [awsConnected, githubConnected, slackConnected, googleConnected, azureConnected].filter(Boolean).length;
@@ -700,14 +705,30 @@ export default function DashboardPage() {
                 {hasGithubData && <span className="text-xs font-bold text-[var(--color-foreground-subtle)] w-8 text-right">{githubPct}%</span>}
               </div>
             )}
+            {slackConnected && (
+              <div className="flex items-center gap-2">
+                <MessageSquare className="w-3.5 h-3.5 text-[var(--color-muted)]" strokeWidth={1.8} />
+                <div className="flex-1">
+                  <div className="flex justify-between text-xs mb-0.5">
+                    <span className="text-[var(--color-muted)]">Slack</span>
+                    <span className="text-[var(--color-muted)]">{hasSlackData ? `${slackCompliant}/${slackTotal}` : "pending..."}</span>
+                  </div>
+                  <div className="w-full bg-[var(--color-surface-2)] rounded-full h-1.5">
+                    <div className={`h-full rounded-full transition-all duration-700 ${hasSlackData ? "bg-pink-500" : "bg-pink-300 animate-pulse"}`}
+                      style={{ width: hasSlackData ? `${slackPct}%` : "30%" }} />
+                  </div>
+                </div>
+                {hasSlackData && <span className="text-xs font-bold text-[var(--color-foreground-subtle)] w-8 text-right">{slackPct}%</span>}
+              </div>
+            )}
           </div>
 
           {(() => {
-            const autoScores = [awsScore, githubScore].filter(s => s !== null) as number[];
+            const autoScores = [awsScore, githubScore, slackScore].filter(s => s !== null) as number[];
             const autoAvg = autoScores.length > 0 ? Math.round(autoScores.reduce((a,b)=>a+b,0)/autoScores.length) : 0;
-            const totalChecks = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0);
-            const totalPass = (hasRealData ? realCompliant : 0) + (hasGithubData ? githubCompliant : 0);
-            const totalFail = (hasRealData ? realNonCompliant : 0) + (hasGithubData ? githubTotal - githubCompliant : 0);
+            const totalChecks = (hasRealData ? realTotal : 0) + (hasGithubData ? githubTotal : 0) + (hasSlackData ? slackTotal : 0);
+            const totalPass = (hasRealData ? realCompliant : 0) + (hasGithubData ? githubCompliant : 0) + (hasSlackData ? slackCompliant : 0);
+            const totalFail = (hasRealData ? realNonCompliant : 0) + (hasGithubData ? githubTotal - githubCompliant : 0) + (hasSlackData ? slackTotal - slackCompliant : 0);
             return (
               <div>
                 <div className="flex items-center justify-between">
@@ -804,6 +825,7 @@ export default function DashboardPage() {
             <div className="mt-2 text-xs text-[var(--color-muted)] text-center space-y-1">
               {awsScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><Cloud className="w-3 h-3" strokeWidth={1.8} /> AWS: {awsScore}%</div>}
               {githubScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><Github className="w-3 h-3" strokeWidth={1.8} /> GitHub: {githubScore}%</div>}
+              {slackScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><MessageSquare className="w-3 h-3" strokeWidth={1.8} /> Slack: {slackScore}%</div>}
               {manualScore !== null && <div className="inline-flex items-center gap-1.5 justify-center"><ListChecks className="w-3 h-3" strokeWidth={1.8} /> Tasks: {manualScore}%</div>}
             </div>
           )}
