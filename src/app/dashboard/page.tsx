@@ -834,7 +834,7 @@ export default function DashboardPage() {
         <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-[var(--color-foreground)]">Active Tasks</h2>
-            <a href="/dashboard/remediation" className="text-xs text-[var(--color-info)] font-medium hover:underline">View all →</a>
+            <a href="/dashboard/checklist" className="text-xs text-[var(--color-info)] font-medium hover:underline">View all →</a>
           </div>
           <div className="space-y-2">
             {activeTasks.length === 0 ? (

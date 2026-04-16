@@ -25,7 +25,10 @@ const PRIORITY_STYLE = {
 } as const;
 
 export default function NextBestActions() {
-  const { org, controls, scanHistory } = useOrg();
+  const { org, role, controls, scanHistory } = useOrg();
+  const auditModeOn = !!org?.audit_mode_enabled;
+  const isAuditor = role === "auditor_readonly" || role === "auditor_staff";
+  const auditContext = auditModeOn || isAuditor;
   const [overduePbc, setOverduePbc] = useState(0);
   const [openPbc, setOpenPbc] = useState(0);
 
@@ -134,20 +137,23 @@ export default function NextBestActions() {
       });
     }
 
-    // 5. In-sample controls without test attributes
-    type SampleControl = (typeof controls)[number] & { test_attributes?: unknown };
-    const inSample = controls.filter(c => (c as SampleControl).in_sample);
-    const untested = inSample.filter(c => !(c as SampleControl).test_attributes);
-    if (inSample.length > 0 && untested.length > 0) {
-      out.push({
-        id: "untested-sample",
-        priority: "medium",
-        Icon: Beaker,
-        title: `${untested.length} sample control${untested.length === 1 ? "" : "s"} not tested yet`,
-        detail: "Fill out test attributes (complete/accurate/authorized/timely)",
-        href: "/dashboard/audit",
-        cta: "Open audit workspace",
-      });
+    // 5. In-sample controls without test attributes — auditor-workbench action,
+    // only surface when audit mode is on or user is an auditor.
+    if (auditContext) {
+      type SampleControl = (typeof controls)[number] & { test_attributes?: unknown };
+      const inSample = controls.filter(c => (c as SampleControl).in_sample);
+      const untested = inSample.filter(c => !(c as SampleControl).test_attributes);
+      if (inSample.length > 0 && untested.length > 0) {
+        out.push({
+          id: "untested-sample",
+          priority: "medium",
+          Icon: Beaker,
+          title: `${untested.length} sample control${untested.length === 1 ? "" : "s"} not tested yet`,
+          detail: "Fill out test attributes (complete/accurate/authorized/timely)",
+          href: "/dashboard/audit",
+          cta: "Open audit workspace",
+        });
+      }
     }
 
     // 6. No policies (CC2.x gap)
@@ -156,7 +162,7 @@ export default function NextBestActions() {
     return out
       .sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority])
       .slice(0, 5);
-  }, [controls, scanHistory, org, overduePbc, openPbc]);
+  }, [controls, scanHistory, org, overduePbc, openPbc, auditContext]);
 
   if (actions.length === 0) {
     return (

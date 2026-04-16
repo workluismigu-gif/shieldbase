@@ -54,7 +54,9 @@
       "Bash(aws --version)",
       "Bash(aws sts:*)",
       "Bash(git commit:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "mcp__playwright__browser_handle_dialog",
+      "mcp__playwright__browser_type"
     ]
   }
 }
