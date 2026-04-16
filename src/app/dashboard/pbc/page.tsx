@@ -7,6 +7,7 @@ import {
   CheckCircle2, AlertCircle, Clock, FileQuestion
 } from "lucide-react";
 import { formatDateOnly, isPast } from "@/lib/dates";
+import Glossary from "@/components/Glossary";
 
 type Status = "requested" | "provided" | "accepted" | "rejected";
 
@@ -81,7 +82,7 @@ export default function PbcPage() {
               <ClipboardList className="w-3.5 h-3.5" strokeWidth={1.8} />
               Provided By Client
             </div>
-            <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight">PBC Requests</h1>
+            <h1 className="text-2xl font-semibold text-[var(--color-foreground)] tracking-tight"><Glossary term="PBC">PBC</Glossary> Requests</h1>
             <p className="text-sm text-[var(--color-muted)] mt-1.5 max-w-2xl">
               {isAuditor
                 ? "Request specific evidence from the client. They\u2019ll respond, you\u2019ll review, and the trail is captured for your workpapers."

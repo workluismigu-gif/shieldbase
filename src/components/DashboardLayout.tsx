@@ -9,7 +9,7 @@ import {
   ShieldCheck, Folder, Users, Settings, LogOut, Menu, Shield, ClipboardList, Gavel, UserCheck, Building2, AlertOctagon, Beaker, Grid3x3, Briefcase, FileSearch
 } from "lucide-react";
 
-type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string; hideFromAuditors?: boolean };
+type NavItem = { href: string; label: string; Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; badge?: string; hideFromAuditors?: boolean; auditorWorkbench?: boolean };
 
 const navSections: { label: string; items: NavItem[] }[] = [
   {
@@ -23,20 +23,20 @@ const navSections: { label: string; items: NavItem[] }[] = [
   {
     label: "Fieldwork",
     items: [
-      { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel },
-      { href: "/dashboard/engagements", label: "Engagements", Icon: Briefcase },
-      { href: "/dashboard/sampling", label: "Sampling", Icon: Beaker },
+      { href: "/dashboard/audit", label: "Audit Workspace", Icon: Gavel, auditorWorkbench: true },
+      { href: "/dashboard/engagements", label: "Engagements", Icon: Briefcase, auditorWorkbench: true },
+      { href: "/dashboard/sampling", label: "Sampling", Icon: Beaker, auditorWorkbench: true },
       { href: "/dashboard/pbc", label: "PBC Requests", Icon: ClipboardList },
-      { href: "/dashboard/ipe", label: "IPE Walkthroughs", Icon: FileSearch },
+      { href: "/dashboard/ipe", label: "IPE Walkthroughs", Icon: FileSearch, auditorWorkbench: true },
       { href: "/dashboard/controls", label: "Controls", Icon: Target },
-      { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon },
+      { href: "/dashboard/findings", label: "Findings", Icon: AlertOctagon, auditorWorkbench: true },
       { href: "/dashboard/evidence", label: "Evidence", Icon: Folder },
     ],
   },
   {
     label: "Reference",
     items: [
-      { href: "/dashboard/crosswalk", label: "Crosswalk", Icon: Grid3x3 },
+      { href: "/dashboard/crosswalk", label: "Crosswalk", Icon: Grid3x3, auditorWorkbench: true },
       { href: "/dashboard/policies", label: "Policies", Icon: ShieldCheck },
       { href: "/dashboard/scope", label: "Audit Scope", Icon: SlidersHorizontal },
       { href: "/dashboard/vendors", label: "Vendor Risk", Icon: Building2 },
@@ -114,7 +114,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-3 py-5 space-y-6 overflow-y-auto">
           {navSections.map((section) => {
             const isAuditor = role === "auditor_readonly" || role === "auditor_staff";
-            const items = section.items.filter(i => !(isAuditor && i.hideFromAuditors));
+            const auditMode = !!org?.audit_mode_enabled;
+            const items = section.items.filter(i => {
+              if (isAuditor && i.hideFromAuditors) return false;
+              // Founder-mode: owners/admins don't see auditor workbench until they
+              // flip audit_mode_enabled. Auditors always see everything they can.
+              if (!isAuditor && !auditMode && i.auditorWorkbench) return false;
+              return true;
+            });
             if (items.length === 0) return null;
             return (
             <div key={section.label}>

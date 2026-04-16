@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import { FileSearch, Plus, Check, X as XIcon } from "lucide-react";
+import Glossary from "@/components/Glossary";
 
 interface Ipe {
   id: string;
@@ -45,7 +46,7 @@ export default function IpePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
-            <FileSearch className="w-6 h-6 text-[var(--color-foreground-subtle)]" strokeWidth={1.8} /> IPE Walkthroughs
+            <FileSearch className="w-6 h-6 text-[var(--color-foreground-subtle)]" strokeWidth={1.8} /> <Glossary term="IPE">IPE</Glossary> <Glossary term="walkthrough">Walkthroughs</Glossary>
           </h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">Information Produced by Entity — track reports you rely on as audit evidence, plus completeness and accuracy testing.</p>
         </div>

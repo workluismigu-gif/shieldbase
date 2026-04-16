@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
 import NextBestActions from "@/components/NextBestActions";
+import FounderHero from "@/components/FounderHero";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -635,6 +636,8 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <FounderHero />
 
       <NextBestActions />
 

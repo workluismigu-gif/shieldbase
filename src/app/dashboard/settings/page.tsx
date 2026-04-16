@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
-import { Cloud, Mail, MessageSquare, Shield as ShieldIcon, CheckCircle2, AlertTriangle, PartyPopper, Lock, ExternalLink, Globe2 } from "lucide-react";
+import { Cloud, Mail, MessageSquare, Shield as ShieldIcon, CheckCircle2, AlertTriangle, PartyPopper, Lock, ExternalLink, Globe2, Gavel } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
 import ConnectionHealthPanel from "@/components/ConnectionHealthPanel";
 
@@ -403,6 +403,8 @@ export default function ConnectPage() {
 
         </div>
 
+        <AuditModePanel org={org} />
+
         <TrustCenterPanel org={org} />
 
         <div className="text-center pt-2">
@@ -637,6 +639,45 @@ export default function ConnectPage() {
   }
 
   return null;
+}
+
+function AuditModePanel({ org }: { org: import("@/lib/supabase").OrgRow | null }) {
+  const [enabled, setEnabled] = useState(!!org?.audit_mode_enabled);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const toggle = async (next: boolean) => {
+    if (!org?.id) return;
+    setSaving(true); setMsg(null);
+    const { error } = await supabase.from("organizations").update({ audit_mode_enabled: next }).eq("id", org.id);
+    setSaving(false);
+    if (error) { setMsg(`Error: ${error.message}`); return; }
+    setEnabled(next);
+    setMsg(next ? "Audit mode on — auditor pages now visible in the sidebar." : "Audit mode off — back to founder view.");
+    setTimeout(() => window.location.reload(), 800);
+  };
+
+  return (
+    <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-6">
+      <div className="flex items-start gap-3 mb-4">
+        <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-2)] flex items-center justify-center flex-shrink-0">
+          <Gavel className="w-5 h-5 text-[var(--color-foreground-subtle)]" strokeWidth={1.8} />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-[var(--color-foreground)]">Audit mode</h3>
+          <p className="text-sm text-[var(--color-muted)] mt-1">
+            When you&apos;re actively mid-engagement with an auditor, turn this on to reveal the auditor workbench — Findings, Sampling, IPE walkthroughs, Engagements, and Crosswalk. Leave it off while you&apos;re still getting ready; those pages are built for auditors and just add noise.
+          </p>
+        </div>
+      </div>
+      <label className="flex items-center gap-2 text-sm text-[var(--color-foreground-subtle)] cursor-pointer">
+        <input type="checkbox" checked={enabled} disabled={saving} onChange={e => toggle(e.target.checked)}
+          className="w-4 h-4 rounded border-[var(--color-border)]" />
+        Enable audit mode
+      </label>
+      {msg && <div className="text-sm text-[var(--color-info)] mt-2">{msg}</div>}
+    </div>
+  );
 }
 
 function slugify(s: string): string {

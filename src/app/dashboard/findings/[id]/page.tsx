@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useOrg } from "@/lib/org-context";
 import { supabase } from "@/lib/supabase";
 import { ArrowLeft, MessageSquare, Send, Trash2, Save } from "lucide-react";
+import Glossary from "@/components/Glossary";
 
 interface Finding {
   id: string;
@@ -159,7 +160,7 @@ export default function FindingDetailPage({ params }: { params: Promise<{ id: st
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1">Disposition {!isAuditor && <span className="text-[var(--color-muted)]">(auditor only)</span>}</label>
+            <label className="text-xs font-medium text-[var(--color-foreground-subtle)] block mb-1"><Glossary term="disposition">Disposition</Glossary> {!isAuditor && <span className="text-[var(--color-muted)]">(auditor only)</span>}</label>
             <select value={disposition} onChange={e => { setDisposition(e.target.value as Finding["disposition"]); patch({ disposition: e.target.value as Finding["disposition"] }); }}
               disabled={!isAuditor || saving}
               className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm disabled:opacity-60">
