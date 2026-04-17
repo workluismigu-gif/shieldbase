@@ -56,7 +56,17 @@
       "Bash(git commit:*)",
       "Bash(npx tsc:*)",
       "mcp__playwright__browser_handle_dialog",
-      "mcp__playwright__browser_type"
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_tabs",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_resize",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_close",
+      "Bash(pkill -f \"next dev\")",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_type"
     ]
   }
 }

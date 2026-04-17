@@ -27,36 +27,47 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="text-2xl font-extrabold text-gray-900"><span className="inline-flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[var(--color-foreground)]/10 flex items-center justify-center"><Shield className="w-4 h-4" strokeWidth={2}/></span>ShieldBase</span></Link>
-          <p className="text-sm text-gray-500 mt-2">Sign in to your compliance dashboard</p>
+    <div className="min-h-screen bg-[var(--color-surface)] flex items-center justify-center px-4 relative overflow-hidden">
+      <div
+        className="absolute inset-0 pointer-events-none opacity-50"
+        style={{ background: "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(204,120,92,0.18), transparent 70%)" }}
+      />
+      <div className="w-full max-w-md relative">
+        <div className="text-center mb-10">
+          <Link href="/" className="inline-flex items-center gap-2.5 text-[17px] text-[var(--color-foreground)]" style={{ fontFamily: "var(--font-fraunces)" }}>
+            <span className="w-7 h-7 rounded-md bg-[var(--color-foreground)] text-[var(--color-surface)] flex items-center justify-center">
+              <Shield className="w-3.5 h-3.5" strokeWidth={2} />
+            </span>
+            <span className="italic">ShieldBase</span>
+          </Link>
+          <h1 className="text-[32px] text-[var(--color-foreground)] mt-8 mb-2" style={{ fontFamily: "var(--font-fraunces)", fontWeight: 400, lineHeight: 1.1 }}>
+            Welcome back.
+          </h1>
+          <p className="text-sm text-[var(--color-muted)]">Sign in to your compliance program.</p>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+        <div className="bg-[var(--color-bg)] rounded-2xl border border-[var(--color-border)] p-8">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-xs font-medium text-[var(--color-foreground-subtle)] mb-1.5">Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                 placeholder="you@company.com"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                className="w-full border border-[var(--color-border)] bg-[var(--color-surface)] rounded-lg px-4 py-2.5 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground)] transition" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-xs font-medium text-[var(--color-foreground-subtle)] mb-1.5">Password</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
                 placeholder="••••••••"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                className="w-full border border-[var(--color-border)] bg-[var(--color-surface)] rounded-lg px-4 py-2.5 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-foreground)] transition" />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-[var(--color-danger)] text-sm bg-[var(--color-danger-bg)] px-3 py-2 rounded-md">{error}</p>}
             <button type="submit" disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white py-2.5 rounded-lg font-semibold text-sm transition">
-              {loading ? "Signing in..." : "Sign In"}
+              className="w-full bg-[var(--color-foreground)] hover:opacity-90 disabled:opacity-60 text-[var(--color-surface)] py-2.5 rounded-lg font-medium text-sm transition">
+              {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
-
         </div>
-        <p className="text-center text-xs text-gray-400 mt-6">
-          No account? <Link href="/auth/signup" className="text-blue-600 hover:underline">Start free assessment →</Link>
+        <p className="text-center text-xs text-[var(--color-muted)] mt-6">
+          No account? <Link href="/auth/signup" className="text-[var(--color-foreground)] underline underline-offset-4 decoration-[var(--color-border)] hover:decoration-[var(--color-foreground)]">Start free →</Link>
         </p>
       </div>
     </div>

@@ -1,38 +1,38 @@
 @import "tailwindcss";
 
 @theme {
-  --font-inter: "Inter", sans-serif;
-  --color-navy: #0f172a;
-  --color-navy-light: #1e293b;
-  --color-navy-lighter: #334155;
-  --color-blue: #3b82f6;
-  --color-blue-dark: #2563eb;
-  --color-blue-light: #60a5fa;
-  --color-green: #22c55e;
-  --color-slate: #94a3b8;
-  --color-slate-light: #cbd5e1;
-  --color-purple: #7c3aed;
-  --color-purple-light: #a78bfa;
+  /* Legacy colors — kept for back-compat where hardcoded */
+  --color-navy: #141413;
+  --color-navy-light: #2C2521;
+  --color-navy-lighter: #4A3F35;
+  --color-blue: #CC785C;
+  --color-blue-dark: #B45A3C;
+  --color-blue-light: #D4876E;
+  --color-green: #2F6B3A;
+  --color-slate: #6B6359;
+  --color-slate-light: #8C8376;
+  --color-purple: #8B4513;
+  --color-purple-light: #B87355;
 
-  /* Semantic neutrals — dark theme */
-  --color-bg: #0b1120;
-  --color-surface: #070b15;
-  --color-surface-2: #111a2e;
-  --color-border: #1e293b;
-  --color-border-strong: #334155;
-  --color-muted: #94a3b8;
-  --color-foreground: #f8fafc;
-  --color-foreground-subtle: #cbd5e1;
+  /* Semantic neutrals — warm editorial theme */
+  --color-bg: #FAF9F5;         /* slightly warmer cream for raised surfaces */
+  --color-surface: #F4F1EA;    /* paper latte, page background */
+  --color-surface-2: #EBE5D8;  /* warm raised chips / highlights */
+  --color-border: #E4DFD4;     /* warm tan hairline */
+  --color-border-strong: #C8BFAE;
+  --color-muted: #6B6359;      /* warm stone — secondary text */
+  --color-foreground: #141413; /* espresso — primary text */
+  --color-foreground-subtle: #2C2521;
 
-  /* Semantic states — dark-adjusted */
-  --color-success: #4ade80;
-  --color-success-bg: rgba(34, 197, 94, 0.15);
-  --color-warning: #fbbf24;
-  --color-warning-bg: rgba(217, 119, 6, 0.15);
-  --color-danger: #f87171;
-  --color-danger-bg: rgba(220, 38, 38, 0.15);
-  --color-info: #60a5fa;
-  --color-info-bg: rgba(37, 99, 235, 0.15);
+  /* Semantic states — warm-light adjusted so pills remain legible on cream */
+  --color-success: #2F6B3A;
+  --color-success-bg: #E5EFD4;
+  --color-warning: #8B5A14;
+  --color-warning-bg: #F6E8C8;
+  --color-danger: #B8443E;
+  --color-danger-bg: #F5DED8;
+  --color-info: #3E5A7A;
+  --color-info-bg: #DEE6F0;
 
   /* Radii */
   --radius-sm: 6px;
@@ -49,7 +49,7 @@ body {
   font-family: var(--font-inter);
   background: var(--color-surface);
   color: var(--color-foreground);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 /* Scroll-triggered fade-in animations */
