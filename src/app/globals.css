@@ -14,15 +14,15 @@
   --color-purple: #8B4513;
   --color-purple-light: #B87355;
 
-  /* Semantic neutrals — warm editorial theme */
-  --color-bg: #FAF9F5;         /* slightly warmer cream for raised surfaces */
-  --color-surface: #F4F1EA;    /* paper latte, page background */
-  --color-surface-2: #EBE5D8;  /* warm raised chips / highlights */
-  --color-border: #E4DFD4;     /* warm tan hairline */
-  --color-border-strong: #C8BFAE;
-  --color-muted: #6B6359;      /* warm stone — secondary text */
+  /* Semantic neutrals — light gray with warm-neutral cast for easier reading */
+  --color-bg: #FAFAF9;         /* raised cards — near-white with a hair of warmth */
+  --color-surface: #F3F3F2;    /* page background — light warm gray */
+  --color-surface-2: #E8E7E3;  /* chips / highlights */
+  --color-border: #E2E1DD;     /* hairline */
+  --color-border-strong: #C4C2BB;
+  --color-muted: #605D57;      /* stone grey — secondary text */
   --color-foreground: #141413; /* espresso — primary text */
-  --color-foreground-subtle: #2C2521;
+  --color-foreground-subtle: #2C2A26;
 
   /* Semantic states — warm-light adjusted so pills remain legible on cream */
   --color-success: #2F6B3A;
