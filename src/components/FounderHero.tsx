@@ -7,7 +7,7 @@ import { Compass, Sparkles, ArrowRight, CalendarCheck, Gavel } from "lucide-reac
 // Founder-mode dashboard hero. Shown for owners who haven't flipped audit_mode_enabled.
 // Gives the "here's where you are, here's the next step" framing Priya asked for.
 export default function FounderHero() {
-  const { org, role, tasks, controls, lastScan } = useOrg();
+  const { org, role, tasks, controls, policies, lastScan } = useOrg();
   const auditModeOn = !!org?.audit_mode_enabled;
   const isOwner = role === "owner" || role === "admin";
 
@@ -42,26 +42,63 @@ export default function FounderHero() {
     return Math.round(parts.reduce((a, b) => a + b, 0) / parts.length);
   }, [connectCount, taskProgress, ctrlScore, controls.length]);
 
-  // "Fastest wins" — always surface 3 by falling back through a standard
-  // readiness ladder: integrations → open checklist items → policy gaps → evidence.
+  // State-aware checks for fallbacks
+  const hasPolicies = policies.length > 0;
+  const hasScope = !!((org?.scope_config ?? {}) as Record<string, unknown>).audit_period_start;
+
+  // Failing controls sorted by severity (most impactful fix first)
+  const failingControls = useMemo(() => {
+    const sevOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+    return controls
+      .filter(c => c.status === "non_compliant" || c.status === "partial")
+      .sort((a, b) => (sevOrder[a.severity] ?? 4) - (sevOrder[b.severity] ?? 4));
+  }, [controls]);
+
+  // Fastest wins — state-aware ladder: unconnected integrations → failing controls
+  // → open checklist tasks → verified gaps (policies/scope/vendors). Never shows
+  // something the user already did.
   const fastestWins = useMemo(() => {
     const wins: { title: string; href: string; impact: string }[] = [];
+
+    // Layer 1: unconnected integrations
     if (!connected.aws) wins.push({ title: "Connect AWS", href: "/dashboard/settings", impact: "Unblocks ~30 automated controls" });
     if (!connected.github) wins.push({ title: "Connect GitHub", href: "/dashboard/settings", impact: "Code-review & branch-protection evidence" });
     if (!connected.google) wins.push({ title: "Connect Google Workspace", href: "/dashboard/settings", impact: "Identity, MFA, domain evidence" });
     if (!connected.slack) wins.push({ title: "Connect Slack", href: "/dashboard/settings", impact: "Workforce 2FA + guest channel checks" });
     if (!connected.azure) wins.push({ title: "Connect Azure", href: "/dashboard/settings", impact: "Cloud infrastructure evidence" });
-    // Fill from open checklist tasks if still short
-    for (const t of openTasks.slice(0, 6)) {
+
+    // Layer 2: failing controls — the most practical "fix this now" step
+    for (const c of failingControls) {
+      if (wins.length >= 3) break;
+      const label = c.status === "non_compliant" ? "Failing" : "Partial";
+      wins.push({
+        title: `Fix ${c.control_id}: ${c.title.length > 50 ? c.title.slice(0, 47) + "…" : c.title}`,
+        href: "/dashboard/controls",
+        impact: `${label} · ${c.severity} severity · your auditor will test this`,
+      });
+    }
+
+    // Layer 3: open checklist tasks
+    for (const t of openTasks) {
       if (wins.length >= 3) break;
       wins.push({ title: t.task, href: "/dashboard/checklist", impact: t.phase ?? "Checklist task" });
     }
-    // Static fallbacks when brand new org has no tasks yet
-    if (wins.length < 3) wins.push({ title: "Upload your first policy", href: "/dashboard/policies", impact: "Documented policies anchor 8+ SOC 2 controls" });
-    if (wins.length < 3) wins.push({ title: "Define your audit scope", href: "/dashboard/scope", impact: "Scope narrows what your auditor tests" });
-    if (wins.length < 3) wins.push({ title: "Add your first vendor", href: "/dashboard/vendors", impact: "Vendor register is CC9.2 evidence" });
+
+    // Layer 4: verified-state fallbacks (only if the thing is actually undone)
+    if (wins.length < 3 && !hasPolicies) {
+      wins.push({ title: "Upload your first policy", href: "/dashboard/policies", impact: "Documented policies anchor 8+ SOC 2 controls" });
+    }
+    if (wins.length < 3 && !hasScope) {
+      wins.push({ title: "Define your audit scope", href: "/dashboard/scope", impact: "Scope narrows what your auditor tests" });
+    }
+
+    // Layer 5: if EVERYTHING is done, show the finish line
+    if (wins.length === 0) {
+      wins.push({ title: "Enable audit mode", href: "/dashboard/settings", impact: "You're ready — flip the toggle to invite your auditor" });
+    }
+
     return wins.slice(0, 3);
-  }, [connected, openTasks]);
+  }, [connected, failingControls, openTasks, hasPolicies, hasScope]);
 
   const ready = readiness >= 80 && controls.length > 0 && connectCount >= 2;
 
