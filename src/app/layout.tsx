@@ -17,7 +17,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ShieldBase — Compliance, without the noise",
+  title: "ShieldBase | Compliance, without the headache.",
   description: "Software for becoming SOC 2. A founder-mode readiness program with an auditor workbench built in.",
 };
 

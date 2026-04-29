@@ -94,7 +94,7 @@ function Hero() {
           >
             Compliance,
             <br />
-            <span className="italic text-[#CC785C]" style={{ fontWeight: 400 }}>without the noise.</span>
+            <span className="italic text-[#CC785C]" style={{ fontWeight: 400 }}>without the headache.</span>
           </h1>
         </Reveal>
 
@@ -103,7 +103,7 @@ function Hero() {
             className="text-[#6B6359] max-w-xl text-lg md:text-xl leading-relaxed mb-10"
             style={{ fontFamily: "var(--font-inter)", fontWeight: 400 }}
           >
-            Most compliance software is built for the auditor. ShieldBase is built for the founder who has to ship tomorrow — with a full auditor workbench that flips on when you&apos;re ready.
+            Most compliance software is built for the auditor. ShieldBase is built for the founder who has to ship tomorrow, with a full auditor workbench that flips on when you&apos;re ready.
           </p>
         </Reveal>
 
@@ -303,7 +303,7 @@ function SplitBrain() {
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="max-w-2xl mb-20">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 01 — Product</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 01 Product</div>
             <h2 className="text-[#141413] mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
               Two modes,<br /><span className="italic text-[#CC785C]">One place.</span>
             </h2>
@@ -352,7 +352,7 @@ function SplitBrain() {
                 The firm is on site.
               </h3>
               <p className="text-[#D4A27F] text-[15px] leading-relaxed mb-8" style={{ fontFamily: "var(--font-inter)" }}>
-                Flip one toggle. The sidebar reveals the auditor workbench — findings log with formal dispositions, AICPA sampling rigor, test iteration history, Type II workpaper PDF with service-auditor report.
+                Flip one toggle. The sidebar reveals the auditor workbench: findings log with formal dispositions, AICPA sampling rigor, test iteration history, Type II workpaper PDF with service-auditor report.
               </p>
               <ul className="space-y-3 text-[14px]" style={{ fontFamily: "var(--font-inter)" }}>
                 {[
@@ -381,8 +381,8 @@ function Automation() {
     { name: "AWS", Icon: Cloud, status: "live", detail: "~30 controls · Prowler-native · nightly + webhooks" },
     { name: "GitHub", Icon: Github, status: "live", detail: "49 controls · push webhooks · real-time drift" },
     { name: "Slack", Icon: MessageSquare, status: "live", detail: "6 SOC 2 controls · 2FA, admins, guests, shared channels" },
-    { name: "Google Workspace", Icon: Mail, status: "beta", detail: "Identity, MFA, domain — wiring through Lambda" },
-    { name: "Azure", Icon: Hexagon, status: "beta", detail: "IAM, Defender, Storage, SQL — Prowler Azure" },
+    { name: "Google Workspace", Icon: Mail, status: "beta", detail: "Identity, MFA, domain. Wiring through Lambda." },
+    { name: "Azure", Icon: Hexagon, status: "beta", detail: "IAM, Defender, Storage, SQL. Prowler Azure." },
   ];
 
   return (
@@ -390,12 +390,12 @@ function Automation() {
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="max-w-2xl mb-16">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 02 — Automation</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 02 Automation</div>
             <h2 className="text-[#141413] mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
               Evidence that <span className="italic text-[#CC785C]">collects itself.</span>
             </h2>
             <p className="text-[#6B6359] text-lg leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
-              Connect your stack. We scan nightly, map every finding to SOC 2 TSC criteria, and write the evidence chain your auditor needs — without asking you to upload another screenshot.
+              Connect your stack. We scan nightly, map every finding to SOC 2 TSC criteria, and write the evidence chain your auditor needs. No more screenshots.
             </p>
           </div>
         </Reveal>
@@ -423,7 +423,7 @@ function Automation() {
 
         <Reveal>
           <p className="text-[#6B6359] text-[14px] mt-12 max-w-2xl leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
-            Every scan result writes into the same controls table. Each finding comes with its SOC 2 TSC mapping, a raw-payload snapshot for Year-2 re-performance, and participates in sample selection — no special-casing per provider.
+            Every scan result writes into the same controls table. Each finding comes with its SOC 2 TSC mapping, a raw-payload snapshot for Year-2 re-performance, and participates in sample selection. No special-casing per provider.
           </p>
         </Reveal>
       </div>
@@ -449,13 +449,13 @@ function AuditorGlimpse() {
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="max-w-2xl mb-16">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#D4A27F] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 03 — The auditor workbench</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#D4A27F] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 03 The auditor workbench</div>
             <h2 className="mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
               When it&apos;s audit time,<br />
               <span className="italic text-[#CC785C]">flip a toggle.</span>
             </h2>
             <p className="text-[#D4A27F] text-lg leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
-              The room doesn&apos;t change — you just see more of it. Every tool a SOC 2 Type II engagement needs, built to the AICPA&apos;s standards.
+              The room doesn&apos;t change. You just see more of it. Every tool a SOC 2 Type II engagement needs, built to the AICPA&apos;s standards.
             </p>
           </div>
         </Reveal>
@@ -491,7 +491,7 @@ function Frameworks() {
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="max-w-2xl mb-16">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 04 — Frameworks</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 04 Frameworks</div>
             <h2 className="text-[#141413] mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
               One program.<br />
               <span className="italic text-[#CC785C]">Five frameworks.</span>
@@ -546,7 +546,7 @@ function TrustCenterCta() {
             />
             <div className="relative grid md:grid-cols-[1fr_auto] gap-12 items-end">
               <div>
-                <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 05 — Trust center</div>
+                <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 05 Trust center</div>
                 <h2 className="text-[#141413] mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(28px, 4vw, 48px)", fontWeight: 400, lineHeight: 1.05 }}>
                   The page your prospect asks for,<br />
                   <span className="italic text-[#CC785C]">ready in 15 minutes.</span>
@@ -631,13 +631,13 @@ function Pricing() {
       <div className="max-w-6xl mx-auto px-6">
         <Reveal>
           <div className="max-w-2xl mb-16">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 06 — Pricing</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 06 Pricing</div>
             <h2 className="text-[#141413] mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
               Every feature,<br />
               <span className="italic text-[#CC785C]">free while we&apos;re building.</span>
             </h2>
             <p className="text-[#6B6359] text-lg leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
-              We&apos;re in early access. Everything shipped today — scanners, trust center, auditor workbench — is free. Pricing below previews how it&apos;ll tier when we&apos;re out of beta.
+              We&apos;re in early access. Everything shipped today (scanners, trust center, auditor workbench) is free. Pricing below previews how it&apos;ll tier when we&apos;re out of beta.
             </p>
           </div>
         </Reveal>
@@ -700,15 +700,15 @@ function Faq() {
   const items = [
     {
       q: "How is this different from Vanta or Drata?",
-      a: "Vanta and Drata are company-facing dashboards — when your auditor shows up, they still use their own tooling. ShieldBase is the first platform with a full auditor workbench built in: findings log, AICPA sampling rigor, test iterations, workpaper PDF. Your audit firm works inside your tenant. Everything is provably defensible.",
+      a: "Vanta and Drata are company-facing dashboards. When your auditor shows up, they still use their own tooling. ShieldBase is the first platform with a full auditor workbench built in: findings log, AICPA sampling rigor, test iterations, workpaper PDF. Your audit firm works inside your tenant. Everything is provably defensible.",
     },
     {
       q: "What do I actually do in the first week?",
-      a: "Connect AWS, GitHub, Slack. The scanners run. You read your readiness score, click the top three fastest wins, upload your first policy. That's it. No spreadsheets, no screenshots, no AICPA vocabulary — we call this founder mode. Audit-speak stays hidden until you flip audit mode.",
+      a: "Connect AWS, GitHub, Slack. The scanners run. You read your readiness score, click the top three fastest wins, upload your first policy. That's it. No spreadsheets, no screenshots, no AICPA vocabulary. We call this founder mode. Audit-speak stays hidden until you flip audit mode.",
     },
     {
       q: "Can my auditor actually use this?",
-      a: "Yes — we built it for them first. The audit mode surfaces: findings with formal dispositions (observation / deficiency / significant deficiency / material weakness), deterministic seeded sampling with AICPA-aligned size guidance, test iterations with period coverage, workpaper PDF with service-auditor report and management assertion templates. Your firm can bring their own auditors in; we support lead + staff roles with per-control assignments.",
+      a: "Yes, we built it for them first. The audit mode surfaces findings with formal dispositions (observation / deficiency / significant deficiency / material weakness), deterministic seeded sampling with AICPA-aligned size guidance, test iterations with period coverage, workpaper PDF with service-auditor report and management assertion templates. Your firm can bring their own auditors in. We support lead + staff roles with per-control assignments.",
     },
     {
       q: "What evidence does it collect automatically?",
@@ -729,7 +729,7 @@ function Faq() {
       <div className="max-w-4xl mx-auto px-6">
         <Reveal>
           <div className="mb-14">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 07 — Questions</div>
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 07 Questions</div>
             <h2 className="text-[#141413]" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
               Asked before you.
             </h2>
@@ -781,13 +781,13 @@ function FinalCta() {
       <div className="max-w-4xl mx-auto px-6 text-center">
         <Reveal>
           <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-6" style={{ fontFamily: "var(--font-inter)" }}>
-            § 08 — Start
+            § 08 Start
           </div>
         </Reveal>
         <Reveal>
           <h2 className="text-[#141413] mb-8" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(40px, 6vw, 80px)", fontWeight: 300, lineHeight: 1.0 }}>
             Your audit,<br />
-            <span className="italic text-[#CC785C]">without the noise.</span>
+            <span className="italic text-[#CC785C]">without the headache.</span>
           </h2>
         </Reveal>
         <Reveal>
