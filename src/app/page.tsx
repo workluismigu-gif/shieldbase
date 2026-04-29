@@ -305,7 +305,7 @@ function SplitBrain() {
           <div className="max-w-2xl mb-20">
             <div className="text-[11px] uppercase tracking-[0.2em] text-[#6B6359] mb-5" style={{ fontFamily: "var(--font-inter)" }}>§ 01 — Product</div>
             <h2 className="text-[#141413] mb-5" style={{ fontFamily: "var(--font-fraunces)", fontSize: "clamp(32px, 4.5vw, 56px)", fontWeight: 400, lineHeight: 1.05 }}>
-              Two modes,<br /><span className="italic text-[#CC785C]">one codebase.</span>
+              Two modes,<br /><span className="italic text-[#CC785C]">One place.</span>
             </h2>
             <p className="text-[#6B6359] text-lg leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
               Every other compliance tool makes you choose: software for the company, or software for the auditor. We built both and put them behind one toggle.
