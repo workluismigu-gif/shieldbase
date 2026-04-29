@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useOrg } from "@/lib/org-context";
 import { MessageSquare, Trash2, Send, AlertOctagon, History, Calendar } from "lucide-react";
+import ControlFixGuide from "@/components/ControlFixGuide";
 
 interface TestInstance {
   id: string;
@@ -236,6 +237,11 @@ export default function ControlTestModal({ controlId, controlTitle, currentStatu
           <p className="text-xs text-[var(--color-muted)] mt-1">
             Current status: <span className="font-medium text-[var(--color-foreground-subtle)]">{currentStatus.replace("_", " ")}</span>
           </p>
+          {(currentStatus === "non_compliant" || currentStatus === "partial") && (
+            <div className="mt-3">
+              <ControlFixGuide controlId={controlId} status={currentStatus} />
+            </div>
+          )}
         </div>
 
         {/* Test history — visible to all org members */}

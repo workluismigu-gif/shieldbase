@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef, startTransition } from "react";
 import { useOrg } from "@/lib/org-context";
 import ControlTestModal from "@/components/ControlTestModal";
 import { supabase } from "@/lib/supabase";
@@ -13,7 +13,8 @@ interface StaffMember { user_id: string; email: string; role: string }
 export default function ControlsPage() {
   const { org, controls, loading, canWrite, role } = useOrg();
   const [filter, setFilter] = useState<FilterStatus>("all");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");     // immediate for input value
+  const [search, setSearch] = useState("");                // debounced for filtering
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [sampleFilter, setSampleFilter] = useState<"all" | "in_sample">("all");
   const [selected, setSelected] = useState<{ id: string; title: string; status: string } | null>(null);
@@ -22,17 +23,28 @@ export default function ControlsPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [assignPickerFor, setAssignPickerFor] = useState<string | null>(null);
+  const authTokenRef = useRef<string | null>(null);       // cached session token
 
   const isAuditor = role === "auditor_readonly";
   const isStaff = role === "auditor_staff";
   const isLead = role === "owner" || role === "admin" || role === "auditor_readonly";
   const auditModeOn = !!org?.audit_mode_enabled;
-  // Founder view when owner/admin isn't in audit mode — hide SMPL/STAFF/sign-off noise.
   const founderView = !isAuditor && !isStaff && !auditModeOn;
 
+  // Cache auth token once at mount so per-click handlers don't re-fetch session.
   useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      authTokenRef.current = data.session?.access_token ?? null;
+    });
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
   }, []);
+
+  // Debounce search: input updates immediately (responsive typing), filter
+  // updates after 250ms pause (avoids 50-row recompute per keystroke).
+  useEffect(() => {
+    const t = setTimeout(() => startTransition(() => setSearch(searchInput)), 250);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   useEffect(() => {
     if (!org?.id) return;
@@ -68,10 +80,10 @@ export default function ControlsPage() {
     return Array.from(set).sort();
   }, [controls]);
 
-  const inSample = (control_id: string, dbValue?: boolean) => {
+  const inSample = useCallback((control_id: string, dbValue?: boolean) => {
     if (control_id in sampleOverrides) return sampleOverrides[control_id];
     return !!dbValue;
-  };
+  }, [sampleOverrides]);
 
   const sampleCount = useMemo(() =>
     controls.filter(c => inSample(c.control_id, c.in_sample)).length,
@@ -93,8 +105,7 @@ export default function ControlsPage() {
 
   const toggleAssignment = async (control_id: string, assigned_to: string) => {
     if (!org?.id) return;
-    const { data: s } = await supabase.auth.getSession();
-    const token = s?.session?.access_token;
+    const token = authTokenRef.current;
     if (!token) return;
     const existing = assignments.find(a => a.control_id === control_id && a.assigned_to === assigned_to);
     if (existing) {
@@ -118,12 +129,12 @@ export default function ControlsPage() {
   const toggleSample = async (control_id: string, current: boolean) => {
     const next = !current;
     setSampleOverrides(o => ({ ...o, [control_id]: next }));
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session) return;
+    const token = authTokenRef.current;
+    if (!token) return;
     const res = await fetch("/api/controls/sample", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ control_id, in_sample: next, auth_token: session.session.access_token }),
+      body: JSON.stringify({ control_id, in_sample: next, auth_token: token }),
     });
     if (!res.ok) {
       // Revert on failure.
@@ -153,7 +164,7 @@ export default function ControlsPage() {
       </div>
 
       <div className="bg-[var(--color-bg)] rounded-xl border border-[var(--color-border)] p-4 flex flex-wrap gap-3 items-center">
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+        <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)}
           placeholder="Search by control ID or title…"
           className="flex-1 min-w-[200px] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-border-strong)]" />
         <select value={filter} onChange={(e) => setFilter(e.target.value as FilterStatus)}
@@ -252,8 +263,7 @@ export default function ControlsPage() {
                           <button title="Flag as finding"
                             onClick={async () => {
                               if (!org?.id) return;
-                              const { data: sess } = await supabase.auth.getSession();
-                              const token = sess?.session?.access_token;
+                              const token = authTokenRef.current;
                               if (!token) return;
                               const res = await fetch("/api/findings", {
                                 method: "POST",
