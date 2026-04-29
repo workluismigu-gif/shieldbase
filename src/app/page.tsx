@@ -184,9 +184,7 @@ function DashboardPreview() {
             <span className="w-2.5 h-2.5 rounded-full bg-[#D8D5CE]" />
             <span className="w-2.5 h-2.5 rounded-full bg-[#D8D5CE]" />
             <div className="flex-1 mx-8">
-              <div className="bg-[#E8E7E3] rounded-md px-3 py-1 text-[11px] text-[#605D57] text-center" style={{ fontFamily: "var(--font-inter)" }}>
-                shieldbase.vercel.app/dashboard
-              </div>
+              <div className="bg-[#E8E7E3] rounded-md h-5" />
             </div>
           </div>
 
