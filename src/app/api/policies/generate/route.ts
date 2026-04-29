@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const rows = POLICY_TEMPLATES.map(t => ({
     org_id,
-    type: t.type,
+    type: "policy",          // documents_type_check only allows: policy, gap_analysis, evidence_runbook, remediation_plan
     title: t.title,
     content: t.generate(answers),
     status: "draft",
