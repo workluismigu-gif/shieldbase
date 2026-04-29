@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 
 function userClient(authToken: string) {
   return createClient(
@@ -35,6 +36,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(rateLimitKey(req, "findings-create"), { max: 30, windowMs: 60_000 });
+  if (!rl.ok) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+
   const authToken = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!authToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

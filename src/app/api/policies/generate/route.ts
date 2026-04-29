@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { POLICY_TEMPLATES, type PolicyAnswers } from "@/lib/policy-templates";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(rateLimitKey(req, "policies-gen"), { max: 5, windowMs: 300_000 });
+  if (!rl.ok) return NextResponse.json({ error: "Rate limit exceeded. Try again in 5 minutes." }, { status: 429 });
+
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

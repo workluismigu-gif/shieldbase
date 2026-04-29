@@ -435,9 +435,11 @@ function MonitoringPage() {
       timestamp: new Date().toISOString(),
     });
     try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token;
       const res = await fetch("/api/scan/trigger", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer shieldbase-internal-2026" },
+        headers: { "Content-Type": "application/json", ...(token ? { "Authorization": `Bearer ${token}` } : {}) },
         body: JSON.stringify({ org_id: org?.id, provider }),
       });
       const json = await res.json();

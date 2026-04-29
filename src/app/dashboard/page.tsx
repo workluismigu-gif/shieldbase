@@ -10,6 +10,7 @@ import { Github } from "@/components/icons/GithubIcon";
 import NextBestActions from "@/components/NextBestActions";
 import FounderHero from "@/components/FounderHero";
 import GettingStartedGuide from "@/components/GettingStartedGuide";
+import { supabase } from "@/lib/supabase";
 
 type LucideIcon = React.ComponentType<{ className?: string; strokeWidth?: number }>;
 
@@ -474,9 +475,11 @@ function useGithubAutoPoll(
     const ts = new Date().toISOString();
     pushActivityEvent({ type: "scan", title: "GitHub auto-scan initiated", detail: "Scheduled 15-min poll", timestamp: ts });
     try {
+      const { data: sess } = await supabase.auth.getSession();
+      const authToken = sess?.session?.access_token;
       const res = await fetch("/api/scan/trigger", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer shieldbase-internal-2026" },
+        headers: { "Content-Type": "application/json", ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {}) },
         body: JSON.stringify({ org_id: orgId, provider: "github" }),
       });
       if (!res.ok) {

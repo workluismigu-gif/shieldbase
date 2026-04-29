@@ -2,14 +2,35 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { decryptToken } from "@/lib/crypto";
+import { rateLimit, rateLimitKey } from "@/lib/rate-limit";
 
 // Triggered by: onboarding (when ARN saved) or EventBridge nightly cron
 export async function POST(req: NextRequest) {
   try {
-    // Verify internal secret to prevent abuse
+    // Rate limit: 10 triggers per 5 min per IP (prevents scan-spam abuse)
+    const rl = rateLimit(rateLimitKey(req, "scan-trigger"), { max: 10, windowMs: 300_000 });
+    if (!rl.ok) return NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+
+    // Auth: accept EITHER the internal trigger secret (server-to-server, cron,
+    // OAuth callbacks) OR a valid user session token (dashboard manual triggers).
     const authHeader = req.headers.get("authorization");
     const internalSecret = process.env.INTERNAL_TRIGGER_SECRET;
-    if (internalSecret && authHeader !== `Bearer ${internalSecret}`) {
+    const bearerToken = authHeader?.replace(/^Bearer\s+/i, "") ?? "";
+    const isInternalOk = internalSecret && bearerToken === internalSecret;
+
+    let isUserOk = false;
+    if (!isInternalOk && bearerToken) {
+      // Verify as a user session token
+      const userClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { global: { headers: { Authorization: `Bearer ${bearerToken}` } } },
+      );
+      const { data: userData } = await userClient.auth.getUser(bearerToken);
+      isUserOk = !!userData?.user?.id;
+    }
+
+    if (!isInternalOk && !isUserOk) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
