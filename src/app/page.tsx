@@ -5,7 +5,7 @@ import {
   Shield, Cloud, MessageSquare, Mail, Hexagon,
   Gavel, Compass, Beaker, AlertOctagon, FileSearch,
   ClipboardList, Target, Folder, Grid3x3, Briefcase,
-  ArrowRight, Plus, Check, CheckCircle2,
+  ArrowRight, Plus, Check, CheckCircle2, Sparkles,
 } from "lucide-react";
 import { Github } from "@/components/icons/GithubIcon";
 
@@ -147,6 +147,152 @@ function Hero() {
             </div>
           </div>
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* ─── ANIMATED DASHBOARD PREVIEW ─── */
+function DashboardPreview() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); obs.unobserve(el); } },
+      { threshold: 0.2 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const d = (ms: number) => ({ transitionDelay: `${ms}ms` });
+  const base = "transition-all duration-700 ease-out";
+  const hidden = inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6";
+
+  return (
+    <section className="pb-20 -mt-4">
+      <div className="max-w-5xl mx-auto px-6" ref={ref}>
+        <div
+          className={`rounded-xl border border-[#E2E1DD] bg-[#FAFAF9] shadow-2xl shadow-black/5 overflow-hidden ${base} ${inView ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-12 scale-[0.97]"}`}
+          style={d(100)}
+        >
+          {/* Browser chrome */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-[#E2E1DD] bg-[#F3F3F2]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D8D5CE]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D8D5CE]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D8D5CE]" />
+            <div className="flex-1 mx-8">
+              <div className="bg-[#E8E7E3] rounded-md px-3 py-1 text-[11px] text-[#605D57] text-center" style={{ fontFamily: "var(--font-inter)" }}>
+                shieldbase.vercel.app/dashboard
+              </div>
+            </div>
+          </div>
+
+          {/* Mock dashboard */}
+          <div className="flex min-h-[420px]">
+            {/* Sidebar */}
+            <div className={`w-48 border-r border-[#E2E1DD] bg-[#F3F3F2] p-4 hidden md:block ${base} ${hidden}`} style={d(200)}>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-5 h-5 rounded bg-[#141413] flex items-center justify-center">
+                  <Shield className="w-2.5 h-2.5 text-[#FAFAF9]" />
+                </div>
+                <span className="text-[11px] font-medium text-[#141413] italic" style={{ fontFamily: "var(--font-fraunces)" }}>ShieldBase</span>
+              </div>
+              <div className="space-y-1">
+                {["Overview", "Monitoring", "Gap Analysis"].map((l, i) => (
+                  <div key={i} className={`text-[11px] px-2 py-1.5 rounded ${i === 0 ? "bg-[#141413]/10 text-[#141413] font-medium" : "text-[#605D57]"}`}
+                    style={{ fontFamily: "var(--font-inter)" }}>{l}</div>
+                ))}
+                <div className="text-[9px] uppercase tracking-wider text-[#C4C2BB] mt-3 mb-1 px-2" style={{ fontFamily: "var(--font-inter)" }}>Fieldwork</div>
+                {["Evidence Requests", "Controls", "Evidence"].map((l, i) => (
+                  <div key={i} className="text-[11px] text-[#605D57] px-2 py-1.5" style={{ fontFamily: "var(--font-inter)" }}>{l}</div>
+                ))}
+              </div>
+            </div>
+
+            {/* Main content */}
+            <div className="flex-1 p-6 space-y-5">
+              {/* Hero card */}
+              <div className={`bg-[#F3F3F2] rounded-xl border border-[#E2E1DD] p-5 ${base} ${hidden}`} style={d(350)}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 text-[10px] text-[#CC785C] mb-2" style={{ fontFamily: "var(--font-inter)" }}>
+                      <Compass className="w-3 h-3" /> Getting SOC 2 ready
+                    </div>
+                    <div className="text-[15px] font-semibold text-[#141413]" style={{ fontFamily: "var(--font-fraunces)" }}>
+                      You&apos;re building momentum
+                    </div>
+                    <div className="text-[11px] text-[#605D57] mt-1" style={{ fontFamily: "var(--font-inter)" }}>
+                      Keep closing the fastest wins below.
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-[#141413] tabular-nums" style={{ fontFamily: "var(--font-fraunces)" }}>
+                      {inView ? "38" : "0"}%
+                    </div>
+                    <div className="text-[9px] text-[#605D57]" style={{ fontFamily: "var(--font-inter)" }}>Readiness</div>
+                  </div>
+                </div>
+                <div className="w-full bg-[#E2E1DD] rounded-full h-1.5 mt-4 overflow-hidden">
+                  <div className={`h-full bg-[#CC785C] rounded-full transition-all duration-1000 ease-out`}
+                    style={{ width: inView ? "38%" : "0%", transitionDelay: "600ms" }} />
+                </div>
+              </div>
+
+              {/* Fastest wins row */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { title: "Connect Google", impact: "Identity & MFA evidence" },
+                  { title: "Fix CC7.4: GuardDuty", impact: "Failing · high severity" },
+                  { title: "Block public S3", impact: "Checklist task" },
+                ].map((w, i) => (
+                  <div key={i} className={`bg-[#F3F3F2] rounded-lg border border-[#E2E1DD] p-3 ${base} ${hidden}`} style={d(500 + i * 100)}>
+                    <div className="flex items-center gap-1 mb-1.5">
+                      <Sparkles className="w-3 h-3 text-[#CC785C]" />
+                      <span className="text-[9px] uppercase tracking-wider text-[#605D57]" style={{ fontFamily: "var(--font-inter)" }}>Win #{i + 1}</span>
+                    </div>
+                    <div className="text-[11px] font-medium text-[#141413]" style={{ fontFamily: "var(--font-inter)" }}>{w.title}</div>
+                    <div className="text-[9px] text-[#605D57] mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>{w.impact}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Two track row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`bg-[#F3F3F2] rounded-lg border border-[#E2E1DD] p-4 ${base} ${hidden}`} style={d(800)}>
+                  <div className="text-[10px] font-medium text-[#141413] mb-3" style={{ fontFamily: "var(--font-inter)" }}>Automated Checks</div>
+                  {[
+                    { name: "AWS", val: 39, color: "#4A7C59" },
+                    { name: "GitHub", val: 10, color: "#5A7A8A" },
+                    { name: "Slack", val: 67, color: "#CC785C" },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-2 mb-2">
+                      <span className="text-[9px] text-[#605D57] w-10" style={{ fontFamily: "var(--font-inter)" }}>{s.name}</span>
+                      <div className="flex-1 bg-[#E2E1DD] rounded-full h-1 overflow-hidden">
+                        <div className="h-full rounded-full transition-all duration-1000 ease-out"
+                          style={{ width: inView ? `${s.val}%` : "0%", backgroundColor: s.color, transitionDelay: `${900 + i * 100}ms` }} />
+                      </div>
+                      <span className="text-[9px] text-[#605D57] tabular-nums w-6 text-right" style={{ fontFamily: "var(--font-inter)" }}>{inView ? s.val : 0}%</span>
+                    </div>
+                  ))}
+                </div>
+                <div className={`bg-[#F3F3F2] rounded-lg border border-[#E2E1DD] p-4 ${base} ${hidden}`} style={d(900)}>
+                  <div className="text-[10px] font-medium text-[#141413] mb-2" style={{ fontFamily: "var(--font-inter)" }}>Manual Evidence</div>
+                  <div className="text-2xl font-bold text-[#141413] tabular-nums" style={{ fontFamily: "var(--font-fraunces)" }}>
+                    {inView ? "14" : "0"}%
+                  </div>
+                  <div className="text-[9px] text-[#605D57]" style={{ fontFamily: "var(--font-inter)" }}>3/22 complete</div>
+                  <div className="w-full bg-[#E2E1DD] rounded-full h-1 mt-2 overflow-hidden">
+                    <div className="h-full bg-[#5A7A8A] rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: inView ? "14%" : "0%", transitionDelay: "1000ms" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -707,6 +853,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#F4F1EA] text-[#141413]" style={{ fontFamily: "var(--font-inter)" }}>
       <Header />
       <Hero />
+      <DashboardPreview />
       <SplitBrain />
       <Automation />
       <AuditorGlimpse />
