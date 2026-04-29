@@ -141,59 +141,39 @@ function CornerFrame({ children, className = "" }: { children: React.ReactNode; 
 }
 
 function RadialGauge({ value }: { value: number }) {
-  const size = 220;
-  const stroke = 10;
+  const size = 200;
+  const stroke = 6;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (value / 100) * c;
-  const color =
-    value >= 90 ? "var(--color-success)"
-      : value >= 75 ? "var(--color-info)"
-        : value >= 50 ? "var(--color-warning)"
-          : "var(--color-danger)";
 
-  // decorative tick marks
-  const ticks = Array.from({ length: 60 });
+  // Muted editorial tones that blend with warm-gray palette.
+  // Avoid saturated red/green — use the same espresso/terracotta family.
+  const color =
+    value >= 90 ? "#4A7C59"   // muted sage green
+      : value >= 75 ? "#5A7A8A" // slate blue-grey
+        : value >= 50 ? "#8B6914" // warm amber (from --color-warning)
+          : "#8B5A3C";            // muted terracotta (not bright red)
+
+  const trackColor = "#D8D5CE";   // warm border tone for the inactive ring
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      {/* tick ring */}
-      <svg className="absolute inset-0" viewBox={`0 0 ${size} ${size}`}>
-        {ticks.map((_, i) => {
-          const angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
-          const inner = r - 16;
-          const outer = r - 10;
-          const x1 = size / 2 + Math.cos(angle) * inner;
-          const y1 = size / 2 + Math.sin(angle) * inner;
-          const x2 = size / 2 + Math.cos(angle) * outer;
-          const y2 = size / 2 + Math.sin(angle) * outer;
-          const active = i / 60 <= value / 100;
-          return (
-            <line
-              key={i}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke={active ? color : "var(--color-border)"}
-              strokeWidth={i % 5 === 0 ? 1.6 : 1}
-              opacity={active ? 0.9 : 0.45}
-            />
-          );
-        })}
-      </svg>
-      {/* main progress arc */}
+      {/* main progress arc — thin, clean, no glow */}
       <svg className="absolute inset-0 -rotate-90" viewBox={`0 0 ${size} ${size}`}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke="var(--color-border)" strokeWidth={stroke} opacity={0.5} />
+          stroke={trackColor} strokeWidth={stroke} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none"
           stroke={color} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={offset}
-          style={{ filter: `drop-shadow(0 0 12px ${color})` }} />
+          strokeDasharray={c} strokeDashoffset={offset} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-[11px] font-mono uppercase tracking-[0.2em] text-[var(--color-muted)]">Readiness</div>
-        <div className="text-6xl font-bold tabular-nums text-[var(--color-foreground)] leading-none mt-1"
+        <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]"
+          style={{ fontFamily: "var(--font-inter)" }}>Readiness</div>
+        <div className="text-5xl font-semibold tabular-nums text-[var(--color-foreground)] leading-none mt-1"
           style={{ fontVariantNumeric: "tabular-nums" }}>
           {value}
-          <span className="text-2xl align-super text-[var(--color-foreground-subtle)] ml-0.5">%</span>
+          <span className="text-xl align-super text-[var(--color-muted)] ml-0.5">%</span>
         </div>
       </div>
     </div>
