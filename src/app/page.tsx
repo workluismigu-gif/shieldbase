@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { saveLead } from "@/lib/supabase";
+// Lead capture goes through /api/leads (rate-limited, server-side validated)
 import {
   Shield, Cloud, MessageSquare, Mail, Hexagon,
   Gavel, Compass, Beaker, AlertOctagon, FileSearch,
@@ -768,7 +768,12 @@ function FinalCta() {
     if (!email || !email.includes("@")) { setStatus("error"); return; }
     setStatus("submitting");
     try {
-      await saveLead(email);
+      const res = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error("Failed");
       setStatus("sent");
       setEmail("");
     } catch {
